@@ -28,8 +28,20 @@ const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const HEADERS = { "Content-Type": "application/json", "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Prefer": "return=representation" };
 
 async function sbGet(table, params = "") {
-  const r = await fetch(`${SB_URL}/rest/v1/${table}?order=id.asc${params}`, { headers: HEADERS });
-  return r.json();
+  let all = [];
+  let from = 0;
+  const size = 1000;
+  while (true) {
+    const r = await fetch(`${SB_URL}/rest/v1/${table}?order=id.asc${params}&offset=${from}&limit=${size}`, {
+      headers: { ...HEADERS, "Range": `${from}-${from+size-1}`, "Range-Unit": "items" }
+    });
+    const data = await r.json();
+    if (!Array.isArray(data) || data.length === 0) break;
+    all = [...all, ...data];
+    if (data.length < size) break;
+    from += size;
+  }
+  return all;
 }
 async function sbInsert(table, data) {
   const r = await fetch(`${SB_URL}/rest/v1/${table}`, { method:"POST", headers: HEADERS, body: JSON.stringify(data) });
@@ -66,8 +78,8 @@ function leadToRow(l) {
 }
 
 // ── constants ─────────────────────────────────────────────────────────────────
-const STAGES = ["Cold","Message Sent","Connected","Follow Up","Won","Lost"];
-const STAGE_COLORS = { "Cold":"#6366f1","Message Sent":"#f59e0b","Connected":"#3b82f6","Follow Up":"#a855f7","Won":"#22c55e","Lost":"#ef4444" };
+const STAGES = ["Cold","Connection Sent","Connected","Follow Up","Won","Lost"];
+const STAGE_COLORS = { "Cold":"#6366f1","Connection Sent":"#f59e0b","Connected":"#3b82f6","Follow Up":"#a855f7","Won":"#22c55e","Lost":"#ef4444" };
 const TABS = ["Kanban","Contacts","Calendar","Templates","Analytics","Sales"];
 const TAG_COLORS = ["#6366f1","#f59e0b","#22c55e","#ef4444","#3b82f6","#a855f7","#ec4899","#14b8a6","#f97316","#64748b"];
 const todayStr = () => new Date().toISOString().split("T")[0];
@@ -212,12 +224,12 @@ function KanbanCol({ stage, leads, onDragStart, onDrop, onDragOver, onDragLeave,
   const c = STAGE_COLORS[stage];
   return (
     <div onDrop={e=>onDrop(e,stage)} onDragOver={e=>{e.preventDefault();onDragOver(stage);}} onDragLeave={onDragLeave}
-      style={{ minWidth:210, flex:"0 0 210px", background:isDragOver?"#1e1e3a":"#10101a", border:`1px solid ${isDragOver?c:c+"33"}`, borderRadius:14, padding:"0 0 10px", display:"flex", flexDirection:"column", transition:"all .15s" }}>
-      <div style={{ padding:"11px 13px 9px", borderBottom:`2px solid ${c}66`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+      style={{ minWidth:210, flex:"0 0 210px", background:isDragOver?"#1e1e3a":"#10101a", border:`1px solid ${isDragOver?c:c+"33"}`, borderRadius:14, display:"flex", flexDirection:"column", transition:"all .15s", height:"calc(100vh - 240px)" }}>
+      <div style={{ padding:"11px 13px 9px", borderBottom:`2px solid ${c}66`, display:"flex", justifyContent:"space-between", alignItems:"center", flexShrink:0 }}>
         <span style={{ fontWeight:800, fontSize:12, color:c }}>{stage}</span>
         <span style={{ background:c+"22", color:c, borderRadius:20, padding:"2px 8px", fontSize:11, fontWeight:700 }}>{leads.length}</span>
       </div>
-      <div style={{ padding:"9px 9px 0", flex:1, minHeight:70 }}>
+      <div style={{ padding:"9px 9px 0", flex:1, overflowY:"auto", minHeight:0 }}>
         {leads.map(l => <LeadCard key={l.id} lead={l} onDragStart={onDragStart} onClick={onClick} allTags={allTags} today={today} />)}
         {!leads.length && <div style={{ color:"#2d2d3f", fontSize:11, textAlign:"center", paddingTop:18 }}>Drop here</div>}
       </div>
@@ -630,7 +642,44 @@ function AnalyticsTab({ leads }) {
   );
 }
 
-// ── Upload Modal ──────────────────────────────────────────────────────────────
+// ── Password Protection ───────────────────────────────────────────────────────
+const CRM_PASSWORD = "LinkedIn@7865";
+
+function PasswordScreen({ onUnlock }) {
+  const [input, setInput] = useState("");
+  const [err, setErr] = useState("");
+  const [show, setShow] = useState(false);
+  const submit = () => {
+    if (input === CRM_PASSWORD) { onUnlock(); }
+    else { setErr("Incorrect password. Please try again."); setInput(""); }
+  };
+  return (
+    <div style={{ minHeight:"100vh", background:"#0d0d17", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',system-ui,sans-serif" }}>
+      <div style={{ background:"#13131f", border:"1px solid #2d2d3f", borderRadius:20, padding:"40px 36px", width:380, maxWidth:"90vw", textAlign:"center" }}>
+        <div style={{ background:"#6366f1", borderRadius:16, width:56, height:56, display:"flex", alignItems:"center", justifyContent:"center", fontSize:26, margin:"0 auto 20px" }}>🚀</div>
+        <div style={{ fontWeight:800, fontSize:22, color:"#e2e8f0", marginBottom:6 }}>AffiLinks.io</div>
+        <div style={{ fontSize:13, color:"#64748b", marginBottom:28 }}>Enter your password to access the CRM</div>
+        <div style={{ position:"relative", marginBottom:16 }}>
+          <input
+            type={show?"text":"password"}
+            value={input}
+            onChange={e => { setInput(e.target.value); setErr(""); }}
+            onKeyDown={e => e.key==="Enter" && submit()}
+            placeholder="Enter password..."
+            style={{ ...IS, paddingRight:44, textAlign:"left", fontSize:15 }}
+            autoFocus
+          />
+          <button onClick={() => setShow(v=>!v)} style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", color:"#64748b", cursor:"pointer", fontSize:16 }}>
+            {show?"🙈":"👁"}
+          </button>
+        </div>
+        {err && <div style={{ color:"#ef4444", fontSize:12, marginBottom:12 }}>⚠ {err}</div>}
+        <Btn onClick={submit} style={{ width:"100%", padding:"11px", fontSize:15 }}>🔓 Unlock CRM</Btn>
+        <div style={{ fontSize:11, color:"#2d2d3f", marginTop:20 }}>Protected by AffiLinks.io</div>
+      </div>
+    </div>
+  );
+}
 function UploadModal({ onClose, onImport, parseCSV }) {
   const [preview, setPreview] = useState(null);
   const [err, setErr] = useState("");
@@ -688,6 +737,9 @@ function UploadModal({ onClose, onImport, parseCSV }) {
 
 // ── ROOT APP ──────────────────────────────────────────────────────────────────
 function App() {
+  const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem("affi_auth")==="1");
+  const unlock = () => { sessionStorage.setItem("affi_auth","1"); setUnlocked(true); };
+  if (!unlocked) return <PasswordScreen onUnlock={unlock} />;
   const [leads, setLeads] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [allTags, setAllTags] = useState([{name:"hot-lead",color:"#ef4444"},{name:"vip",color:"#f59e0b"},{name:"tech",color:"#3b82f6"}]);

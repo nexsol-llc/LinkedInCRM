@@ -4,8 +4,8 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>AffiLinks.io — LinkedCRM</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -797,12 +797,16 @@ function App() {
 
   // Load data from Supabase
   useEffect(() => {
+    if (!unlocked) return;
     Promise.all([sbGet("leads"), sbGet("templates")]).then(([l, t]) => {
       if (Array.isArray(l)) setLeads(l.map(rowToLead));
       if (Array.isArray(t)) setTemplates(t);
       setLoading(false);
-    }).catch(() => setLoading(false));
-  }, []);
+    }).catch(err => {
+      console.error("Supabase error:", err);
+      setLoading(false);
+    });
+  }, [unlocked]);
 
   // Auto-register tags
   useEffect(() => {

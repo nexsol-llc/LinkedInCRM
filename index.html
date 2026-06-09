@@ -744,8 +744,13 @@ function UploadModal({ onClose, onImport, parseCSV }) {
 
 // ── ROOT APP ──────────────────────────────────────────────────────────────────
 function App() {
-  const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem("affi_auth")==="1");
-  const unlock = () => { sessionStorage.setItem("affi_auth","1"); setUnlocked(true); };
+  const [unlocked, setUnlocked] = useState(() => {
+    try { return sessionStorage.getItem("affi_auth")==="1"; } catch(e) { return false; }
+  });
+  const unlock = () => {
+    try { sessionStorage.setItem("affi_auth","1"); } catch(e) {}
+    setUnlocked(true);
+  };
   if (!unlocked) return <PasswordScreen onUnlock={unlock} />;
   const [leads, setLeads] = useState([]);
   const [templates, setTemplates] = useState([]);

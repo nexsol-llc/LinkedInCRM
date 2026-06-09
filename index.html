@@ -657,8 +657,12 @@ function PasswordScreen({ onUnlock }) {
   const [err, setErr] = useState("");
   const [show, setShow] = useState(false);
   const submit = () => {
-    if (input === CRM_PASSWORD) { onUnlock(); }
-    else { setErr("Incorrect password. Please try again."); setInput(""); }
+    if (input.trim() === CRM_PASSWORD) {
+      onUnlock();
+    } else {
+      setErr("Incorrect password. Please try again.");
+      setInput("");
+    }
   };
   return (
     <div style={{ minHeight:"100vh", background:"#0d0d17", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',system-ui,sans-serif" }}>
@@ -668,21 +672,24 @@ function PasswordScreen({ onUnlock }) {
         <div style={{ fontSize:13, color:"#64748b", marginBottom:28 }}>Enter your password to access the CRM</div>
         <div style={{ position:"relative", marginBottom:16 }}>
           <input
-            type={show?"text":"password"}
+            type={show ? "text" : "password"}
             value={input}
             onChange={e => { setInput(e.target.value); setErr(""); }}
-            onKeyDown={e => e.key==="Enter" && submit()}
+            onKeyDown={e => { if (e.key === "Enter") submit(); }}
             placeholder="Enter password..."
-            style={{ ...IS, paddingRight:44, textAlign:"left", fontSize:15 }}
+            style={{ ...IS, paddingRight:44, fontSize:15 }}
             autoFocus
           />
-          <button onClick={() => setShow(v=>!v)} style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", color:"#64748b", cursor:"pointer", fontSize:16 }}>
-            {show?"🙈":"👁"}
+          <button onClick={() => setShow(v => !v)}
+            style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", color:"#64748b", cursor:"pointer", fontSize:16 }}>
+            {show ? "🙈" : "👁"}
           </button>
         </div>
         {err && <div style={{ color:"#ef4444", fontSize:12, marginBottom:12 }}>⚠ {err}</div>}
-        <Btn onClick={submit} style={{ width:"100%", padding:"11px", fontSize:15 }}>🔓 Unlock CRM</Btn>
-        <div style={{ fontSize:11, color:"#2d2d3f", marginTop:20 }}>Protected by AffiLinks.io</div>
+        <button onClick={submit}
+          style={{ width:"100%", padding:"11px", fontSize:15, background:"#6366f1", color:"#fff", border:"none", borderRadius:8, cursor:"pointer", fontWeight:600 }}>
+          🔓 Unlock CRM
+        </button>
       </div>
     </div>
   );

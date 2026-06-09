@@ -246,9 +246,10 @@ function KanbanCol({ stage, leads, onDragStart, onDrop, onDragOver, onDragLeave,
 
 // ── Modals ────────────────────────────────────────────────────────────────────
 function FollowUpModal({ lead, onClose, onSave }) {
-  const attempt = (lead.followUpHistory||[]).length + 1;
+  const attempt = ((lead && lead.followUpHistory)||[]).length + 1;
   const [date, setDate] = useState(addDays(7));
   const [notes, setNotes] = useState("");
+  if (!lead) return null;
   return (
     <Modal title={`📅 Follow-Up #${attempt} — ${lead.firstName} ${lead.lastName}`} onClose={onClose}>
       <div style={{ background:"#a855f715", border:"1px solid #a855f733", borderRadius:10, padding:"10px 14px", marginBottom:14, fontSize:13, color:"#c084fc" }}>
@@ -282,10 +283,11 @@ function FollowUpModal({ lead, onClose, onSave }) {
 }
 
 function FollowUpReviewModal({ lead, onClose, onReschedule, onReplied, onLost }) {
-  const attempt = (lead.followUpHistory||[]).length + 1;
+  const attempt = ((lead && lead.followUpHistory)||[]).length + 1;
   const [date, setDate] = useState(addDays(7));
   const [notes, setNotes] = useState("");
   const [action, setAction] = useState(null);
+  if (!lead) return null;
   return (
     <Modal title={`🔔 No Response — ${lead.firstName} ${lead.lastName}`} onClose={onClose}>
       <div style={{ background:"#f59e0b15", border:"1px solid #f59e0b44", borderRadius:10, padding:"12px 14px", marginBottom:16, fontSize:13, color:"#fbbf24" }}>
@@ -749,8 +751,11 @@ function UploadModal({ onClose, onImport, parseCSV }) {
   );
 }
 
+// ── ROOT APP ──────────────────────────────────────────────────────────────────
 function App() {
   const [unlocked, setUnlocked] = useState(false);
+  const unlock = () => setUnlocked(true);
+  if (!unlocked) return <PasswordScreen onUnlock={unlock} />;
   const [leads, setLeads] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [allTags, setAllTags] = useState(SAMPLE_TAGS);
@@ -925,8 +930,8 @@ function App() {
     alert(`✅ ${inserted.length} contacts imported\n⚠️ ${skipped.length} duplicates skipped`);
   };
 
-if (!unlocked) return <PasswordScreen onUnlock={() => setUnlocked(true)} />;
   if (loading) return <Spinner />;
+
   return (
     <div style={{ minHeight:"100vh", background:"#0d0d17", color:"#e2e8f0", fontFamily:"'Inter',system-ui,sans-serif" }}>
       {/* Header */}

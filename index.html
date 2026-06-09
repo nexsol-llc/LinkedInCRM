@@ -78,11 +78,18 @@ function leadToRow(l) {
 }
 
 // ── constants ─────────────────────────────────────────────────────────────────
-const STAGES = ["Cold","Connection Sent","Connected","Follow Up","Won","Lost"];
-const STAGE_COLORS = { "Cold":"#6366f1","Connection Sent":"#f59e0b","Connected":"#3b82f6","Follow Up":"#a855f7","Won":"#22c55e","Lost":"#ef4444" };
+const STAGES = ["Cold","Connection Sent","Connected","Follow Up","Sales Navigator","Won","Lost"];
+const STAGE_COLORS = { "Cold":"#6366f1","Connection Sent":"#f59e0b","Connected":"#3b82f6","Follow Up":"#a855f7","Sales Navigator":"#14b8a6","Won":"#22c55e","Lost":"#ef4444" };
 const TABS = ["Kanban","Contacts","Calendar","Templates","Analytics","Sales"];
-const TAG_COLORS = ["#6366f1","#f59e0b","#22c55e","#ef4444","#3b82f6","#a855f7","#ec4899","#14b8a6","#f97316","#64748b"];
 const todayStr = () => new Date().toISOString().split("T")[0];
+const SAMPLE_TAGS = [
+  { name:"hot-lead", color:"#ef4444" }, { name:"vip", color:"#f59e0b" },
+  { name:"tech", color:"#3b82f6" }, { name:"cold", color:"#6366f1" },
+  { name:"follow-up", color:"#a855f7" }, { name:"saas", color:"#14b8a6" },
+  { name:"agency", color:"#ec4899" }, { name:"lead", color:"#22c55e" },
+  { name:"wholesale", color:"#f97316" }, { name:"profiles", color:"#8b5cf6" },
+  { name:"not-interested", color:"#64748b" },
+];
 const addDays = n => { const d = new Date(); d.setDate(d.getDate()+n); return d.toISOString().split("T")[0]; };
 
 const IS = { width:"100%", background:"#13131f", border:"1px solid #2d2d3f", borderRadius:8, padding:"8px 11px", color:"#e2e8f0", fontSize:13, outline:"none", boxSizing:"border-box" };
@@ -742,7 +749,7 @@ function App() {
   if (!unlocked) return <PasswordScreen onUnlock={unlock} />;
   const [leads, setLeads] = useState([]);
   const [templates, setTemplates] = useState([]);
-  const [allTags, setAllTags] = useState([{name:"hot-lead",color:"#ef4444"},{name:"vip",color:"#f59e0b"},{name:"tech",color:"#3b82f6"}]);
+  const [allTags, setAllTags] = useState(SAMPLE_TAGS);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("Kanban");
   const [modal, setModal] = useState(null); // null | "add" | lead-obj
@@ -751,6 +758,7 @@ function App() {
   const [followUpPending, setFollowUpPending] = useState(null);
   const [wonPending, setWonPending] = useState(null);
   const [reviewPending, setReviewPending] = useState(null);
+  const [lostPending, setLostPending] = useState(null);
   const [saving, setSaving] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
@@ -871,6 +879,7 @@ function App() {
     if (!lead||lead.stage===stage) { setDragId(null); return; }
     if (stage==="Follow Up") setFollowUpPending(lead);
     else if (stage==="Won") setWonPending(lead);
+    else if (stage==="Lost") setLostPending(lead);
     else updateLead(dragId, { stage });
     setDragId(null);
   };
@@ -889,15 +898,23 @@ function App() {
     setWonPending(null);
   };
 
-  // Import CSV — insert all rows to Supabase
+  // Import CSV with duplicate detection
   const importLeads = async (rows) => {
     const inserted = [];
+    const skipped = [];
     for (const row of rows) {
+      const isDuplicate = leads.some(l =>
+        (row.email && l.email && l.email.toLowerCase().trim() === row.email.toLowerCase().trim()) ||
+        (l.firstName?.toLowerCase().trim() === row.firstName?.toLowerCase().trim() &&
+         l.lastName?.toLowerCase().trim() === row.lastName?.toLowerCase().trim())
+      );
+      if (isDuplicate) { skipped.push(row); continue; }
       const res = await sbInsert("leads", leadToRow(row));
       if (Array.isArray(res) && res[0]) inserted.push(rowToLead(res[0]));
     }
-    setLeads(p => [...p, ...inserted]);
+    if (inserted.length > 0) setLeads(p => [...p, ...inserted]);
     setShowUpload(false);
+    alert(`✅ ${inserted.length} contacts imported\n⚠️ ${skipped.length} duplicates skipped`);
   };
 
   if (loading) return <Spinner />;
@@ -1011,7 +1028,16 @@ function App() {
       )}
       {followUpPending && <FollowUpModal lead={followUpPending} onClose={()=>setFollowUpPending(null)} onSave={saveFollowUp} />}
       {wonPending      && <WonModal lead={wonPending} onClose={()=>setWonPending(null)} onSave={saveWon} />}
-      {reviewPending   && (
+      {lostPending && (
+        <LostTagModal lead={lostPending} onClose={() => setLostPending(null)}
+          onSave={(tags) => {
+            const existingTags = lostPending.tags || [];
+            const mergedTags = [...new Set([...existingTags, ...tags])];
+            updateLead(lostPending.id, { stage:"Lost", tags:mergedTags });
+            setLostPending(null);
+          }}
+        />
+      )}
         <FollowUpReviewModal lead={reviewPending} onClose={()=>setReviewPending(null)}
           onReplied={()=>updateLead(reviewPending.id,{stage:"Connected"})}
           onLost={()=>updateLead(reviewPending.id,{stage:"Lost"})}

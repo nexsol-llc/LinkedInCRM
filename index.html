@@ -749,12 +749,10 @@ function UploadModal({ onClose, onImport, parseCSV }) {
   );
 }
 
-// ── ROOT APP ──────────────────────────────────────────────────────────────────
 function App() {
   const [unlocked, setUnlocked] = useState(false);
-  const unlock = () => setUnlocked(true);
-  if (!unlocked) return <PasswordScreen onUnlock={unlock} />;
   const [leads, setLeads] = useState([]);
+  const [templates, setTemplates] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [allTags, setAllTags] = useState(SAMPLE_TAGS);
   const [loading, setLoading] = useState(true);
@@ -928,8 +926,8 @@ function App() {
     alert(`✅ ${inserted.length} contacts imported\n⚠️ ${skipped.length} duplicates skipped`);
   };
 
+if (!unlocked) return <PasswordScreen onUnlock={() => setUnlocked(true)} />;
   if (loading) return <Spinner />;
-
   return (
     <div style={{ minHeight:"100vh", background:"#0d0d17", color:"#e2e8f0", fontFamily:"'Inter',system-ui,sans-serif" }}>
       {/* Header */}

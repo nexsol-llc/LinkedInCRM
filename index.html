@@ -120,7 +120,8 @@ const DEFAULT_TAGS = [
   { name:"lead", color:"#22c55e" },
   { name:"wholesale", color:"#f97316" },
   { name:"profiles", color:"#8b5cf6" },
-  { name:"not-interested", color:"#64748b" }
+  { name:"not-interested", color:"#64748b" },
+  { name:"sales-navigator", color:"#14b8a6" }
 ];
 
 const todayStr = () => new Date().toISOString().split("T")[0];
@@ -974,7 +975,69 @@ function AnalyticsTab({ leads }) {
   );
 }
 
-// ── ROOT APP ──────────────────────────────────────────────────────────────────
+function SNUploadModal({ onClose, onImport }) {
+  const [preview, setPreview] = useState(null);
+  const [err, setErr] = useState("");
+  const [importing, setImporting] = useState(false);
+  const fileRef = useRef();
+
+  function handle(text) {
+    const rows = parseCSV(text);
+    if (!rows.length) { setErr("Could not parse. Check headers."); setPreview(null); }
+    else {
+      // Force Sales Navigator stage and add sales-navigator tag
+      const snRows = rows.map(r => ({ ...r, stage:"Sales Navigator", tags:[...new Set([...(r.tags||[]), "sales-navigator"])] }));
+      setErr(""); setPreview(snRows);
+    }
+  }
+
+  async function doImport() {
+    if (!preview) return;
+    setImporting(true);
+    await onImport(preview);
+    setImporting(false);
+  }
+
+  return (
+    <Modal title="📥 Import — Sales Navigator" onClose={onClose} wide>
+      <div style={{ background:"#14b8a615", border:"1px solid #14b8a633", borderRadius:10, padding:"10px 14px", marginBottom:14, fontSize:13, color:"#2dd4bf" }}>
+        Contacts will be imported directly into <strong>Sales Navigator</strong> stage with <strong>sales-navigator</strong> tag applied automatically.
+      </div>
+      <div style={{ background:"#0d0d17", border:"1px solid #2d2d3f", borderRadius:10, padding:12, marginBottom:14 }}>
+        <div style={{ fontSize:12, color:"#64748b", marginBottom:6, fontWeight:600 }}>CSV Headers:</div>
+        <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+          {["firstname","lastname","linkedinurl","website","industry","affiliatenetwork","email"].map(h => (
+            <span key={h} style={{ background:"#6366f122", color:"#818cf8", border:"1px solid #6366f144", borderRadius:6, padding:"2px 8px", fontSize:11 }}>{h}</span>
+          ))}
+        </div>
+      </div>
+      <input ref={fileRef} type="file" accept=".csv" onChange={e => {
+        const f = e.target.files[0];
+        if (f) { const r = new FileReader(); r.onload = ev => handle(ev.target.result); r.readAsText(f); }
+      }} style={{ display:"none" }} />
+      <div onClick={() => fileRef.current.click()} style={{ border:"2px dashed #14b8a644", borderRadius:10, padding:20, textAlign:"center", cursor:"pointer", color:"#64748b", fontSize:13, marginBottom:12 }}>
+        📂 Click to choose CSV file
+      </div>
+      <Tex label="Or paste CSV text" onChange={e => handle(e.target.value)} style={{ fontFamily:"monospace", fontSize:12 }} />
+      {err && <div style={{ color:"#ef4444", fontSize:12, marginBottom:8 }}>⚠ {err}</div>}
+      {preview && (
+        <div style={{ background:"#0d0d17", border:"1px solid #14b8a633", borderRadius:8, padding:10, marginBottom:10 }}>
+          <div style={{ fontSize:12, color:"#14b8a6", marginBottom:4, fontWeight:600 }}>✓ {preview.length} contacts ready → Sales Navigator</div>
+          {preview.slice(0,5).map((r,i) => (
+            <div key={i} style={{ fontSize:11, color:"#94a3b8", padding:"2px 0" }}>{r.firstName} {r.lastName} · {r.industry} · {r.email}</div>
+          ))}
+          {preview.length > 5 && <div style={{ fontSize:11, color:"#64748b" }}>...and {preview.length-5} more</div>}
+        </div>
+      )}
+      <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
+        <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
+        <button onClick={doImport} style={{ background:"#14b8a6", color:"#fff", border:"none", borderRadius:8, padding:"8px 16px", cursor:"pointer", fontSize:13, fontWeight:600, opacity:preview&&!importing?1:0.4 }}>
+          {importing ? "Importing..." : `Import ${preview?.length||0} to Sales Navigator`}
+        </button>
+      </div>
+    </Modal>
+  );
+}
 function App() {
   // ── ALL useState hooks first ──────────────────────────────────────────────
   const [unlocked, setUnlocked] = useState(false);
@@ -993,6 +1056,7 @@ function App() {
   const [saving, setSaving] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
+  const [showSNUpload, setShowSNUpload] = useState(false);
   const [search, setSearch] = useState("");
   const today = todayStr();
 
@@ -1240,6 +1304,7 @@ function App() {
           )}
         </div>
         <button onClick={() => setShowUpload(true)} style={{ background:"#2d2d3f", color:"#fff", border:"none", borderRadius:8, padding:"8px 14px", cursor:"pointer", fontSize:12, fontWeight:600 }}>📥 Import</button>
+        <button onClick={() => setShowSNUpload(true)} style={{ background:"#14b8a622", color:"#14b8a6", border:"1px solid #14b8a644", borderRadius:8, padding:"8px 14px", cursor:"pointer", fontSize:12, fontWeight:600 }}>🔍 SN Import</button>
         <button onClick={() => setModal({ stage:"Cold", tags:[], followUpHistory:[] })} style={{ background:"#6366f1", color:"#fff", border:"none", borderRadius:8, padding:"8px 14px", cursor:"pointer", fontSize:12, fontWeight:600 }}>+ Add</button>
         <button onClick={() => exportCSV(leads)} style={{ background:"#22c55e22", color:"#22c55e", border:"1px solid #22c55e44", borderRadius:8, padding:"8px 14px", cursor:"pointer", fontSize:12, fontWeight:600 }}>⬇ Export</button>
       </div>
@@ -1291,6 +1356,7 @@ function App() {
 
       {/* Modals */}
       {showUpload && <UploadModal onClose={() => setShowUpload(false)} onImport={importLeads} />}
+      {showSNUpload && <SNUploadModal onClose={() => setShowSNUpload(false)} onImport={importLeads} />}
       {modal && typeof modal === "object" && (
         <LeadModal lead={modal} onClose={() => setModal(null)} onSave={saveLead} onDelete={deleteLead} allTags={allTags} templates={templates} saving={saving} />
       )}

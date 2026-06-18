@@ -70,10 +70,10 @@ function leadToRow(l) {
 
 // ── Hot Pipeline mappers ──────────────────────────────────────────────────────
 function rowToHP(r) {
-  return { id:r.id, firstName:r.first_name||"", lastName:r.last_name||"", linkedinUrl:r.linkedin_url||"", website:r.website||"", industry:r.industry||"", email:r.email||"", source:r.source||"", stage:r.stage||"Fiverr", saleValue:parseFloat(r.sale_value)||0, tags:r.tags||[], followUp:r.follow_up||null, deal:r.deal||null, followUpHistory:r.follow_up_history||[] };
+  return { id:r.id, firstName:r.first_name||"", lastName:r.last_name||"", linkedinUrl:r.linkedin_url||"", website:r.website||"", industry:r.industry||"", email:r.email||"", accountName:r.account_name||"", source:r.source||"", stage:r.stage||"Fiverr", saleValue:parseFloat(r.sale_value)||0, tags:r.tags||[], followUp:r.follow_up||null, deal:r.deal||null, followUpHistory:r.follow_up_history||[] };
 }
 function hpToRow(l) {
-  return { first_name:l.firstName||"", last_name:l.lastName||"", linkedin_url:l.linkedinUrl||"", website:l.website||"", industry:l.industry||"", email:l.email||"", source:l.source||"", stage:l.stage||"Fiverr", sale_value:l.saleValue||0, tags:l.tags||[], follow_up:l.followUp||null, deal:l.deal||null, follow_up_history:l.followUpHistory||[] };
+  return { first_name:l.firstName||"", last_name:l.lastName||"", linkedin_url:l.linkedinUrl||"", website:l.website||"", industry:l.industry||"", email:l.email||"", account_name:l.accountName||"", source:l.source||"", stage:l.stage||"Fiverr", sale_value:l.saleValue||0, tags:l.tags||[], follow_up:l.followUp||null, deal:l.deal||null, follow_up_history:l.followUpHistory||[] };
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -432,14 +432,23 @@ function LinkedInGate(){
 // ══════════════════════════════════════════════════════════════════════════════
 
 function HPAddModal({onClose,onSave,defaultStage}){
-  const [form,setForm]=useState({firstName:"",lastName:"",email:"",linkedinUrl:"",website:"",industry:"",stage:defaultStage||"Fiverr",source:defaultStage||"Fiverr",saleValue:0,tags:[],followUp:null,deal:null,followUpHistory:[]});
+  const [form,setForm]=useState({firstName:"",lastName:"",email:"",accountName:"",linkedinUrl:"",website:"",industry:"",stage:defaultStage||"Fiverr",source:defaultStage&&HP_SOURCES.includes(defaultStage)?defaultStage:"Fiverr",saleValue:0,tags:[],followUp:null,deal:null,followUpHistory:[]});
+  const [saving,setSaving]=useState(false);
   const f=(k,v)=>setForm(p=>({...p,[k]:v}));
+  async function submit(){
+    if(!form.firstName){return;}
+    setSaving(true);
+    await onSave(form);
+    setSaving(false);
+    onClose();
+  }
   return (
     <Modal title="➕ Add Contact — Hot Pipeline" onClose={onClose}>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 12px"}}>
         <Inp label="First Name *" value={form.firstName} onChange={e=>f("firstName",e.target.value)}/>
         <Inp label="Last Name" value={form.lastName} onChange={e=>f("lastName",e.target.value)}/>
       </div>
+      <Inp label="Account Name" value={form.accountName} onChange={e=>f("accountName",e.target.value)} placeholder="Company or account name..."/>
       <Inp label="Email" type="email" value={form.email} onChange={e=>f("email",e.target.value)}/>
       <Inp label="LinkedIn URL" value={form.linkedinUrl} onChange={e=>f("linkedinUrl",e.target.value)}/>
       <Inp label="Industry" value={form.industry} onChange={e=>f("industry",e.target.value)}/>
@@ -455,7 +464,7 @@ function HPAddModal({onClose,onSave,defaultStage}){
       </div>
       <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
         <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
-        <Btn onClick={()=>{if(form.firstName){onSave(form);onClose();}}}>Add Contact</Btn>
+        <Btn onClick={submit} style={{opacity:saving?0.6:1}}>{saving?"Saving...":"Add Contact"}</Btn>
       </div>
     </Modal>
   );
@@ -468,7 +477,8 @@ function HPCard({contact,onDragStart,onClick,color}){
       onMouseEnter={e=>e.currentTarget.style.borderColor=color+"88"}
       onMouseLeave={e=>e.currentTarget.style.borderColor=color+"33"}>
       <div style={{fontWeight:700,color:"#e2e8f0",fontSize:13,marginBottom:3}}>{contact.firstName} {contact.lastName}</div>
-      {contact.industry&&<div style={{fontSize:11,color:"#64748b",marginBottom:2}}>🏢 {contact.industry}</div>}
+      {contact.accountName&&<div style={{fontSize:11,color:"#e2e8f0",opacity:.7,marginBottom:2}}>🏢 {contact.accountName}</div>}
+      {contact.industry&&<div style={{fontSize:11,color:"#64748b",marginBottom:2}}>📂 {contact.industry}</div>}
       {contact.email&&<div style={{fontSize:11,color:"#64748b",marginBottom:2}}>✉️ {contact.email}</div>}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:6}}>
         <span style={{background:color+"22",color,border:`1px solid ${color}44`,borderRadius:20,padding:"1px 8px",fontSize:10,fontWeight:700}}>📌 {contact.source}</span>
@@ -527,9 +537,28 @@ function HotPipelineGate(){
 
   const onDrop=useCallback((e,stage)=>{ e.preventDefault();setDragOver(null); if(dragId==null)return; const c=contacts.find(x=>x.id===dragId); if(!c||c.stage===stage){setDragId(null);return;} updateContact(dragId,{stage}); setDragId(null); },[dragId,contacts,updateContact]);
 
-  async function addContact(form){ const res=await sbInsert("hot_pipeline",hpToRow(form)); if(Array.isArray(res)&&res[0])setContacts(p=>[...p,rowToHP(res[0])]); setAddModal(null); }
-  async function saveContact(form){ const res=await sbUpdate("hot_pipeline",form.id,hpToRow(form)); if(Array.isArray(res)&&res[0])setContacts(p=>p.map(x=>x.id===form.id?rowToHP(res[0]):x)); setEditModal(null); }
-  async function deleteContact(id){ await sbDelete("hot_pipeline",id);setContacts(p=>p.filter(x=>x.id!==id));setEditModal(null); }
+  async function addContact(form){
+    try {
+      const res = await sbInsert("hot_pipeline", hpToRow(form));
+      if(Array.isArray(res) && res[0]) {
+        setContacts(p => [...p, rowToHP(res[0])]);
+      }
+    } catch(e) { console.error("Insert error:", e); }
+  }
+  async function saveContact(form){
+    try {
+      const res = await sbUpdate("hot_pipeline", form.id, hpToRow(form));
+      if(Array.isArray(res) && res[0]) {
+        setContacts(p => p.map(x => x.id===form.id ? rowToHP(res[0]) : x));
+      }
+    } catch(e) { console.error("Update error:", e); }
+    setEditModal(null);
+  }
+  async function deleteContact(id){
+    await sbDelete("hot_pipeline", id);
+    setContacts(p => p.filter(x => x.id!==id));
+    setEditModal(null);
+  }
 
   if(loading)return <Spinner text="Loading Hot Pipeline..."/>;
 
@@ -575,6 +604,7 @@ function HotPipelineGate(){
             <Inp label="First Name" value={editModal.firstName} onChange={e=>setEditModal(p=>({...p,firstName:e.target.value}))}/>
             <Inp label="Last Name" value={editModal.lastName} onChange={e=>setEditModal(p=>({...p,lastName:e.target.value}))}/>
           </div>
+          <Inp label="Account Name" value={editModal.accountName||""} onChange={e=>setEditModal(p=>({...p,accountName:e.target.value}))} placeholder="Company or account name..."/>
           <Inp label="Email" value={editModal.email} onChange={e=>setEditModal(p=>({...p,email:e.target.value}))}/>
           <Inp label="Industry" value={editModal.industry} onChange={e=>setEditModal(p=>({...p,industry:e.target.value}))}/>
           <Sel label="Source (Origin — permanent)" value={editModal.source} onChange={e=>setEditModal(p=>({...p,source:e.target.value}))}>

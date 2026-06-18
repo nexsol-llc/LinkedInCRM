@@ -70,7 +70,7 @@ function leadToRow(l) {
 
 // ── Hot Pipeline mappers ──────────────────────────────────────────────────────
 function rowToHP(r) {
-  return { id:r.id, firstName:r.first_name||"", lastName:r.last_name||"", linkedinUrl:r.linkedin_url||"", website:r.website||"", industry:r.industry||"", email:r.email||"", accountName:r.account_name||"", source:r.source||"", stage:r.stage||"Fiverr", saleValue:parseFloat(r.sale_value)||0, tags:r.tags||[], followUp:r.follow_up||null, deal:r.deal||null, followUpHistory:r.follow_up_history||[] };
+  return { id:r.id, firstName:r.first_name||"", lastName:r.last_name||"", linkedinUrl:r.linkedin_url||"", website:r.website||"", industry:r.industry||"", email:r.email||"", accountName:r.account_name||"", source:r.source||"", stage:r.stage||"Fiverr", saleValue:parseFloat(r.sale_value)||0, tags:r.tags||[], followUp:r.follow_up||null, deal:r.deal||null, followUpHistory:r.follow_up_history||[], createdAt:r.created_at||null };
 }
 function hpToRow(l) {
   return { first_name:l.firstName||"", last_name:l.lastName||"", linkedin_url:l.linkedinUrl||"", website:l.website||"", industry:l.industry||"", email:l.email||"", account_name:l.accountName||"", source:l.source||"", stage:l.stage||"Fiverr", sale_value:l.saleValue||0, tags:l.tags||[], follow_up:l.followUp||null, deal:l.deal||null, follow_up_history:l.followUpHistory||[] };
@@ -505,9 +505,60 @@ function HPKanbanCol({stage,contacts,onDragStart,onDrop,onDragOver,onDragLeave,o
         {contacts.map(c=><HPCard key={c.id} contact={c} onDragStart={onDragStart} onClick={onClick} color={HP_COLORS[stage]||"#6366f1"}/>)}
         {!contacts.length&&<div style={{color:"#2d2d3f",fontSize:11,textAlign:"center",paddingTop:18}}>Drop here</div>}
       </div>
-      <div style={{padding:"8px 9px",borderTop:`1px solid ${c}22`,flexShrink:0}}>
+      {onAdd&&<div style={{padding:"8px 9px",borderTop:`1px solid ${c}22`,flexShrink:0}}>
         <button onClick={()=>onAdd(stage)} style={{width:"100%",background:c+"15",color:c,border:`1px dashed ${c}44`,borderRadius:8,padding:"6px",cursor:"pointer",fontSize:11,fontWeight:600}}>+ Add Contact</button>
-      </div>
+      </div>}
+    </div>
+  );
+}
+
+function MonthPicker({selectedMonth,currentMonth,availableMonths,onChange}){
+  const [open,setOpen]=useState(false);
+  const [viewYear,setViewYear]=useState(()=>parseInt(selectedMonth.split('-')[0]));
+  const ref=useRef();
+  useEffect(()=>{ function h(e){if(ref.current&&!ref.current.contains(e.target))setOpen(false);} if(open)document.addEventListener('mousedown',h); return()=>document.removeEventListener('mousedown',h); },[open]);
+  const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const curY=parseInt(currentMonth.split('-')[0]); const curM=parseInt(currentMonth.split('-')[1]);
+  const selY=parseInt(selectedMonth.split('-')[0]); const selM=parseInt(selectedMonth.split('-')[1]);
+  function ym(m){return `${viewYear}-${String(m).padStart(2,'0')}`;}
+  function isFuture(m){return viewYear>curY||(viewYear===curY&&m>curM);}
+  function isSel(m){return viewYear===selY&&m===selM;}
+  function isCur(m){return viewYear===curY&&m===curM;}
+  function hasData(m){return availableMonths.includes(ym(m));}
+  function fmtLabel(s){const[y,m]=s.split('-');return new Date(parseInt(y),parseInt(m)-1,1).toLocaleString('default',{month:'long',year:'numeric'});}
+  return (
+    <div ref={ref} style={{position:'relative',display:'inline-block'}}>
+      <button onClick={()=>setOpen(v=>!v)}
+        style={{background:'#1e1e2e',color:'#f59e0b',border:'1px solid #f59e0b44',borderRadius:9,padding:'6px 14px',cursor:'pointer',fontSize:12,fontWeight:700,display:'flex',alignItems:'center',gap:7,whiteSpace:'nowrap'}}>
+        📅 {fmtLabel(selectedMonth)} <span style={{fontSize:10,opacity:.7}}>{open?'▲':'▼'}</span>
+      </button>
+      {open&&(
+        <div style={{position:'absolute',top:'calc(100% + 6px)',left:0,background:'#1a1a2e',border:'1px solid #2d2d3f',borderRadius:14,padding:14,zIndex:400,width:236,boxShadow:'0 10px 36px #000b'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+            <button onClick={()=>setViewYear(v=>v-1)} style={{background:'#2d2d3f',color:'#e2e8f0',border:'none',borderRadius:7,width:28,height:28,cursor:'pointer',fontSize:15,fontWeight:700}}>‹</button>
+            <span style={{fontWeight:800,color:'#e2e8f0',fontSize:15}}>{viewYear}</span>
+            <button onClick={()=>setViewYear(v=>v+1)} disabled={viewYear>=curY}
+              style={{background:viewYear>=curY?'#13131f':'#2d2d3f',color:viewYear>=curY?'#3d3d4f':'#e2e8f0',border:'none',borderRadius:7,width:28,height:28,cursor:viewYear>=curY?'default':'pointer',fontSize:15,fontWeight:700}}>›</button>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:5}}>
+            {MONTHS.map((name,i)=>{
+              const m=i+1; const future=isFuture(m); const sel=isSel(m); const cur=isCur(m); const data=hasData(m);
+              return (
+                <button key={m} onClick={()=>{if(!future){onChange(ym(m));setOpen(false);}}} disabled={future}
+                  style={{position:'relative',background:sel?'#f59e0b33':cur?'#22c55e15':data?'#6366f115':'#13131f',color:sel?'#f59e0b':cur?'#22c55e':future?'#2d2d3f':data?'#e2e8f0':'#64748b',border:`1px solid ${sel?'#f59e0b55':cur?'#22c55e44':data?'#6366f133':'#1e1e2e'}`,borderRadius:8,padding:'9px 4px',cursor:future?'default':'pointer',fontSize:12,fontWeight:700,transition:'all .1s'}}>
+                  {name}
+                  {cur&&<span style={{position:'absolute',top:3,right:4,width:5,height:5,background:'#22c55e',borderRadius:'50%',display:'block'}}/>}
+                  {data&&!sel&&!cur&&<span style={{position:'absolute',bottom:3,left:'50%',transform:'translateX(-50%)',width:3,height:3,background:'#6366f1',borderRadius:'50%',display:'block'}}/>}
+                </button>
+              );
+            })}
+          </div>
+          <div style={{marginTop:10,paddingTop:8,borderTop:'1px solid #2d2d3f',display:'flex',gap:5,fontSize:10,color:'#64748b',alignItems:'center',flexWrap:'wrap'}}>
+            <span style={{width:8,height:8,background:'#22c55e',borderRadius:'50%',display:'inline-block'}}/>Current
+            <span style={{width:8,height:8,background:'#6366f1',borderRadius:'50%',display:'inline-block',marginLeft:6}}/>Has data
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -516,18 +567,23 @@ function HotPipelineGate(){
   const [contacts,setContacts]=useState([]); const [loading,setLoading]=useState(true);
   const [dragId,setDragId]=useState(null); const [dragOver,setDragOver]=useState(null);
   const [addModal,setAddModal]=useState(null); const [editModal,setEditModal]=useState(null);
+  const currentMonth=useMemo(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;},[]);
+  const [selectedMonth,setSelectedMonth]=useState(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;});
 
   useEffect(()=>{ setLoading(true); sbGetAll("hot_pipeline").then(data=>{ if(Array.isArray(data))setContacts(data.map(rowToHP)); setLoading(false); }).catch(()=>setLoading(false)); },[]);
 
-  const byStage=useMemo(()=>{ const m={}; HP_STAGES.forEach(s=>m[s]=contacts.filter(c=>c.stage===s)); return m; },[contacts]);
+  const availableMonths=useMemo(()=>{ const s=new Set(contacts.map(c=>c.createdAt?c.createdAt.slice(0,7):currentMonth)); s.add(currentMonth); return [...s].sort().reverse(); },[contacts,currentMonth]);
+  const filteredContacts=useMemo(()=>contacts.filter(c=>(c.createdAt?c.createdAt.slice(0,7):currentMonth)===selectedMonth),[contacts,selectedMonth,currentMonth]);
+
+  const byStage=useMemo(()=>{ const m={}; HP_STAGES.forEach(s=>m[s]=filteredContacts.filter(c=>c.stage===s)); return m; },[filteredContacts]);
 
   const stats=useMemo(()=>{
     const result={};
-    HP_SOURCES.forEach(src=>{ result[src]=contacts.filter(c=>c.source===src).reduce((s,c)=>s+(c.saleValue||0),0); });
-    result.total=contacts.reduce((s,c)=>s+(c.saleValue||0),0);
-    result.won=contacts.filter(c=>c.stage==="Won").reduce((s,c)=>s+(c.saleValue||0),0);
+    HP_SOURCES.forEach(src=>{ result[src]=filteredContacts.filter(c=>c.source===src).reduce((s,c)=>s+(c.saleValue||0),0); });
+    result.total=filteredContacts.reduce((s,c)=>s+(c.saleValue||0),0);
+    result.won=filteredContacts.filter(c=>c.stage==="Won").reduce((s,c)=>s+(c.saleValue||0),0);
     return result;
-  },[contacts]);
+  },[filteredContacts]);
 
   const onDragStart=useCallback((e,id)=>{setDragId(id);e.dataTransfer.effectAllowed="move";},[]);
   const onDragOver=useCallback(stage=>setDragOver(stage),[]);
@@ -562,6 +618,8 @@ function HotPipelineGate(){
 
   if(loading)return <Spinner text="Loading Hot Pipeline..."/>;
 
+  const isCurrentMonth=selectedMonth===currentMonth;
+
   const STAT_BOXES=[
     {label:"Fiverr Sales",val:stats["Fiverr"]||0,c:"#1dbf73"},
     {label:"Upwork Sales",val:stats["Upwork"]||0,c:"#6fda44"},
@@ -575,14 +633,20 @@ function HotPipelineGate(){
 
   return (
     <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-      {/* Stat boxes */}
-      <div style={{background:"#13131f",borderBottom:"1px solid #2d2d3f",padding:"10px 16px",display:"flex",gap:8,flexWrap:"wrap"}}>
-        {STAT_BOXES.map(s=>(
-          <div key={s.label} style={{background:s.c+"12",border:`1px solid ${s.c}33`,borderRadius:10,padding:"8px 14px",display:"flex",flexDirection:"column",gap:2,minWidth:110}}>
-            <div style={{fontWeight:800,fontSize:16,color:s.c}}>${s.val.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
-            <div style={{fontSize:10,color:"#64748b"}}>{s.label}</div>
-          </div>
-        ))}
+      {/* Month selector + Stat boxes */}
+      <div style={{background:"#13131f",borderBottom:"1px solid #2d2d3f",padding:"8px 16px",display:"flex",flexDirection:"column",gap:8}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <MonthPicker selectedMonth={selectedMonth} currentMonth={currentMonth} availableMonths={availableMonths} onChange={setSelectedMonth}/>
+          {!isCurrentMonth&&<span style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:8,padding:"4px 12px",fontSize:11,fontWeight:700}}>👁 Read-only — Past Month</span>}
+        </div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          {STAT_BOXES.map(s=>(
+            <div key={s.label} style={{background:s.c+"12",border:`1px solid ${s.c}33`,borderRadius:10,padding:"8px 14px",display:"flex",flexDirection:"column",gap:2,minWidth:110}}>
+              <div style={{fontWeight:800,fontSize:16,color:s.c}}>${s.val.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+              <div style={{fontSize:10,color:"#64748b"}}>{s.label}</div>
+            </div>
+          ))}
+        </div>
       </div>
       {/* Kanban */}
       <div style={{flex:1,overflow:"auto",padding:"12px"}}>
@@ -591,7 +655,7 @@ function HotPipelineGate(){
             <HPKanbanCol key={stage} stage={stage} contacts={byStage[stage]||[]}
               onDragStart={onDragStart} onDrop={onDrop} onDragOver={onDragOver} onDragLeave={onDragLeave}
               onClick={c=>setEditModal(c)} isDragOver={dragOver===stage}
-              onAdd={stage=>setAddModal(stage)}
+              onAdd={isCurrentMonth ? stage=>setAddModal(stage) : null}
             />
           ))}
         </div>

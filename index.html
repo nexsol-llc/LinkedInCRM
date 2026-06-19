@@ -573,7 +573,19 @@ function HotPipelineGate(){
   useEffect(()=>{ setLoading(true); sbGetAll("hot_pipeline").then(data=>{ if(Array.isArray(data))setContacts(data.map(rowToHP)); setLoading(false); }).catch(()=>setLoading(false)); },[]);
 
   const availableMonths=useMemo(()=>{ const s=new Set(contacts.map(c=>c.createdAt?c.createdAt.slice(0,7):currentMonth)); s.add(currentMonth); return [...s].sort().reverse(); },[contacts,currentMonth]);
-  const filteredContacts=useMemo(()=>contacts.filter(c=>(c.createdAt?c.createdAt.slice(0,7):currentMonth)===selectedMonth),[contacts,selectedMonth,currentMonth]);
+  const filteredContacts=useMemo(()=>{
+    if(selectedMonth===currentMonth){
+      return contacts.filter(c=>{
+        // Won and Loss reset each month — only show contacts added in the current month
+        if(c.stage==="Won"||c.stage==="Loss"){
+          return (c.createdAt?c.createdAt.slice(0,7):currentMonth)===currentMonth;
+        }
+        // All active stages carry forward into the new month
+        return true;
+      });
+    }
+    return contacts.filter(c=>(c.createdAt?c.createdAt.slice(0,7):currentMonth)===selectedMonth);
+  },[contacts,selectedMonth,currentMonth]);
 
   const byStage=useMemo(()=>{ const m={}; HP_STAGES.forEach(s=>m[s]=filteredContacts.filter(c=>c.stage===s)); return m; },[filteredContacts]);
 
@@ -595,7 +607,9 @@ function HotPipelineGate(){
 
   async function addContact(form){
     try {
-      const res = await sbInsert("hot_pipeline", hpToRow(form));
+      const row = hpToRow(form);
+      if(selectedMonth !== currentMonth) row.created_at = `${selectedMonth}-01T00:00:00Z`;
+      const res = await sbInsert("hot_pipeline", row);
       if(Array.isArray(res) && res[0]) {
         setContacts(p => [...p, rowToHP(res[0])]);
       }
@@ -638,7 +652,7 @@ function HotPipelineGate(){
       <div style={{background:"#13131f",borderBottom:"1px solid #2d2d3f",padding:"8px 16px",display:"flex",flexDirection:"column",gap:8}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <MonthPicker selectedMonth={selectedMonth} currentMonth={currentMonth} availableMonths={availableMonths} onChange={setSelectedMonth}/>
-          {!isCurrentMonth&&<span style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:8,padding:"4px 12px",fontSize:11,fontWeight:700}}>👁 Read-only — Past Month</span>}
+          {!isCurrentMonth&&<span style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:8,padding:"4px 12px",fontSize:11,fontWeight:700}}>📅 Past Month</span>}
         </div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
           {STAT_BOXES.map(s=> s.label==="Revenue (Won)" ? (
@@ -661,7 +675,7 @@ function HotPipelineGate(){
             <HPKanbanCol key={stage} stage={stage} contacts={byStage[stage]||[]}
               onDragStart={onDragStart} onDrop={onDrop} onDragOver={onDragOver} onDragLeave={onDragLeave}
               onClick={c=>setEditModal(c)} isDragOver={dragOver===stage}
-              onAdd={isCurrentMonth ? stage=>setAddModal(stage) : null}
+              onAdd={stage=>setAddModal(stage)}
             />
           ))}
         </div>

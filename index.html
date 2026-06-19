@@ -663,8 +663,10 @@ function HotPipelineGate(){
           {STAT_BOXES.map(s=> s.compare ? (
             <div key={s.label} style={{background:"#13131f",border:"1px solid #2d2d3f",borderRadius:10,padding:"8px 14px",display:"flex",flexDirection:"column",gap:5,minWidth:160}}>
               <div style={{fontSize:10,color:"#64748b",fontWeight:700,marginBottom:1}}>Monthly Sales</div>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
-                <span style={{fontSize:11,color:"#818cf8",fontWeight:600}}>Last Month</span>
+              <div onClick={()=>setSelectedMonth(lastMonth)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,cursor:"pointer",borderRadius:6,padding:"2px 4px",margin:"0 -4px",transition:"background .15s"}}
+                onMouseEnter={e=>e.currentTarget.style.background="#818cf815"}
+                onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                <span style={{fontSize:11,color:"#818cf8",fontWeight:600}}>↩ Last Month</span>
                 <span style={{fontWeight:800,fontSize:14,color:"#818cf8"}}>${s.lastVal.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
               </div>
               <div style={{height:1,background:"#2d2d3f"}}/>
@@ -672,6 +674,7 @@ function HotPipelineGate(){
                 <span style={{fontSize:11,color:"#34d399",fontWeight:600}}>This Month</span>
                 <span style={{fontWeight:800,fontSize:14,color:"#34d399"}}>${s.thisVal.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
               </div>
+              {selectedMonth!==currentMonth&&<button onClick={()=>setSelectedMonth(currentMonth)} style={{width:"100%",background:"#ffffff",color:"#0f172a",border:"none",borderRadius:6,padding:"4px 0",cursor:"pointer",fontSize:10,fontWeight:500,marginTop:2}}>Go to Present →</button>}
             </div>
           ) : s.label==="Revenue (Won)" ? (
             <div key={s.label} style={{background:`linear-gradient(135deg,${s.c}22,${s.c}08)`,border:`2px solid ${s.c}`,borderRadius:14,padding:"12px 22px",display:"flex",flexDirection:"column",gap:4,minWidth:160,boxShadow:`0 0 18px ${s.c}55`,position:"relative"}}>

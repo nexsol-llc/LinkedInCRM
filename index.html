@@ -579,7 +579,7 @@ function HotPipelineGate(){
 
   const stats=useMemo(()=>{
     const result={};
-    HP_SOURCES.forEach(src=>{ result[src]=filteredContacts.filter(c=>c.source===src).reduce((s,c)=>s+(c.saleValue||0),0); });
+    HP_SOURCES.forEach(src=>{ result[src]=filteredContacts.filter(c=>c.source===src&&c.stage==="Won").reduce((s,c)=>s+(c.saleValue||0),0); });
     result.total=filteredContacts.reduce((s,c)=>s+(c.saleValue||0),0);
     result.won=filteredContacts.filter(c=>c.stage==="Won").reduce((s,c)=>s+(c.saleValue||0),0);
     return result;

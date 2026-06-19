@@ -627,8 +627,9 @@ function HotPipelineGate(){
     {label:"Email Sales",val:stats["Email"]||0,c:"#f59e0b"},
     {label:"WhatsApp",val:stats["WhatsApp"]||0,c:"#25d366"},
     {label:"Calling Sales",val:stats["Calling"]||0,c:"#a855f7"},
-    {label:"Total Sales",val:stats.total||0,c:"#22c55e"},
-    {label:"Revenue (Won)",val:stats.won||0,c:"#f97316"},
+    {label:"Total Sales",val:stats.total||0,c:"#f97316"},
+    {label:"Pending Revenue",val:(stats.total||0)-(stats.won||0),c:"#f43f5e"},
+    {label:"Revenue (Won)",val:stats.won||0,c:"#22c55e"},
   ];
 
   return (
@@ -639,8 +640,13 @@ function HotPipelineGate(){
           <MonthPicker selectedMonth={selectedMonth} currentMonth={currentMonth} availableMonths={availableMonths} onChange={setSelectedMonth}/>
           {!isCurrentMonth&&<span style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:8,padding:"4px 12px",fontSize:11,fontWeight:700}}>👁 Read-only — Past Month</span>}
         </div>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          {STAT_BOXES.map(s=>(
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+          {STAT_BOXES.map(s=> s.label==="Revenue (Won)" ? (
+            <div key={s.label} style={{background:`linear-gradient(135deg,${s.c}22,${s.c}08)`,border:`2px solid ${s.c}`,borderRadius:14,padding:"12px 22px",display:"flex",flexDirection:"column",gap:4,minWidth:160,boxShadow:`0 0 18px ${s.c}55`,position:"relative"}}>
+              <div style={{fontWeight:900,fontSize:26,color:s.c,lineHeight:1}}>${s.val.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+              <div style={{fontSize:12,color:s.c,fontWeight:700,opacity:.85}}>{s.label}</div>
+            </div>
+          ) : (
             <div key={s.label} style={{background:s.c+"12",border:`1px solid ${s.c}33`,borderRadius:10,padding:"8px 14px",display:"flex",flexDirection:"column",gap:2,minWidth:110}}>
               <div style={{fontWeight:800,fontSize:16,color:s.c}}>${s.val.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
               <div style={{fontSize:10,color:"#64748b"}}>{s.label}</div>

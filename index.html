@@ -470,13 +470,19 @@ function HPAddModal({onClose,onSave,defaultStage}){
   );
 }
 
-function HPCard({contact,onDragStart,onClick,color}){
+function HPCard({contact,onDragStart,onClick,color,selectedMonth}){
+  const createdMonth=contact.createdAt?contact.createdAt.slice(0,7):null;
+  const isCarryOver=selectedMonth&&createdMonth&&createdMonth!==selectedMonth;
+  const carryLabel=isCarryOver?new Date(createdMonth+'-15').toLocaleString('default',{month:'short',year:'2-digit'}):null;
   return (
     <div draggable onDragStart={e=>onDragStart(e,contact.id)} onClick={()=>onClick(contact)}
       style={{background:"#13131f",border:`1px solid ${color}33`,borderRadius:10,padding:"11px 13px",cursor:"grab",marginBottom:8,userSelect:"none",transition:"border-color .15s"}}
       onMouseEnter={e=>e.currentTarget.style.borderColor=color+"88"}
       onMouseLeave={e=>e.currentTarget.style.borderColor=color+"33"}>
-      <div style={{fontWeight:700,color:"#e2e8f0",fontSize:13,marginBottom:3}}>{contact.firstName} {contact.lastName}</div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:3}}>
+        <div style={{fontWeight:700,color:"#e2e8f0",fontSize:13}}>{contact.firstName} {contact.lastName}</div>
+        {isCarryOver&&<span style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:20,padding:"1px 7px",fontSize:9,fontWeight:700,whiteSpace:"nowrap",flexShrink:0,marginLeft:6}}>↩ {carryLabel}</span>}
+      </div>
       {contact.accountName&&<div style={{fontSize:11,color:"#e2e8f0",opacity:.7,marginBottom:2}}>🏢 {contact.accountName}</div>}
       {contact.industry&&<div style={{fontSize:11,color:"#64748b",marginBottom:2}}>📂 {contact.industry}</div>}
       {contact.email&&<div style={{fontSize:11,color:"#64748b",marginBottom:2}}>✉️ {contact.email}</div>}
@@ -488,7 +494,7 @@ function HPCard({contact,onDragStart,onClick,color}){
   );
 }
 
-function HPKanbanCol({stage,contacts,onDragStart,onDrop,onDragOver,onDragLeave,onClick,isDragOver,onAdd}){
+function HPKanbanCol({stage,contacts,onDragStart,onDrop,onDragOver,onDragLeave,onClick,isDragOver,onAdd,selectedMonth}){
   const c=HP_COLORS[stage]||"#6366f1";
   const total=contacts.reduce((s,c)=>s+(c.saleValue||0),0);
   return (
@@ -502,7 +508,7 @@ function HPKanbanCol({stage,contacts,onDragStart,onDrop,onDragOver,onDragLeave,o
         {total>0&&<div style={{fontSize:11,color:"#22c55e",fontWeight:600}}>💰 ${total.toLocaleString()}</div>}
       </div>
       <div style={{padding:"9px 9px 0",flex:1,overflowY:"auto",minHeight:0}}>
-        {contacts.map(c=><HPCard key={c.id} contact={c} onDragStart={onDragStart} onClick={onClick} color={HP_COLORS[stage]||"#6366f1"}/>)}
+        {contacts.map(c=><HPCard key={c.id} contact={c} onDragStart={onDragStart} onClick={onClick} color={HP_COLORS[stage]||"#6366f1"} selectedMonth={selectedMonth}/>)}
         {!contacts.length&&<div style={{color:"#2d2d3f",fontSize:11,textAlign:"center",paddingTop:18}}>Drop here</div>}
       </div>
       {onAdd&&<div style={{padding:"8px 9px",borderTop:`1px solid ${c}22`,flexShrink:0}}>
@@ -563,10 +569,185 @@ function MonthPicker({selectedMonth,currentMonth,availableMonths,onChange}){
   );
 }
 
+// ── Insight Charts ────────────────────────────────────────────────────────────
+function HPBarChart({data}){
+  const maxVal=Math.max(...data.map(d=>d.value),1);
+  const W=480,H=220,pL=58,pB=36,pT=24,pR=10;
+  const cW=W-pL-pR,cH=H-pT-pB;
+  const slot=cW/data.length;
+  const bW=Math.max(slot*0.6,22);
+  function fmt(v){return v>=1000?`$${(v/1000).toFixed(1)}k`:`$${Math.round(v)}`;}
+  return(
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{overflow:'visible'}}>
+      {[0,0.25,0.5,0.75,1].map(p=>{
+        const y=pT+cH-p*cH;
+        return <g key={p}>
+          <line x1={pL} y1={y} x2={pL+cW} y2={y} stroke="#2d2d3f" strokeDasharray="3,3" strokeWidth={0.7}/>
+          <text x={pL-5} y={y+4} textAnchor="end" fill="#64748b" fontSize={9}>{fmt(Math.round(p*maxVal))}</text>
+        </g>;
+      })}
+      <line x1={pL} y1={pT} x2={pL} y2={pT+cH} stroke="#3d3d4f" strokeWidth={1}/>
+      <line x1={pL} y1={pT+cH} x2={pL+cW} y2={pT+cH} stroke="#3d3d4f" strokeWidth={1}/>
+      {data.map((d,i)=>{
+        const bH=maxVal>0?(d.value/maxVal)*cH:0;
+        const x=pL+i*slot+(slot-bW)/2;
+        const y=pT+cH-bH;
+        return <g key={d.source}>
+          <rect x={x} y={bH>0?y:pT+cH-2} width={bW} height={bH>0?bH:2} fill={d.color} rx={4} opacity={0.85}/>
+          {bH>0&&<text x={x+bW/2} y={y-5} textAnchor="middle" fill={d.color} fontSize={9} fontWeight="bold">{fmt(d.value)}</text>}
+          <text x={x+bW/2} y={pT+cH+15} textAnchor="middle" fill="#94a3b8" fontSize={10}>{d.source}</text>
+        </g>;
+      })}
+    </svg>
+  );
+}
+
+function HPPieChart({won,pending,total}){
+  if(total<=0)return <div style={{textAlign:'center',color:'#64748b',padding:'30px 0',fontSize:13}}>No data for selected period</div>;
+  const cx=100,cy=100,r=82,ir=44;
+  function arcPath(startA,pct,color){
+    if(pct<=0)return null;
+    if(pct>=0.9999)return <circle cx={cx} cy={cy} r={r} fill={color} opacity={0.85} key={color}/>;
+    const endA=startA+pct*2*Math.PI;
+    const s=startA-Math.PI/2,e=endA-Math.PI/2;
+    const x1=cx+r*Math.cos(s),y1=cy+r*Math.sin(s);
+    const x2=cx+r*Math.cos(e),y2=cy+r*Math.sin(e);
+    const large=pct>0.5?1:0;
+    return <path d={`M${cx} ${cy} L${x1.toFixed(2)} ${y1.toFixed(2)} A${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`} fill={color} opacity={0.85} stroke="#1a1a2e" strokeWidth={2} key={color}/>;
+  }
+  const wonPct=won/total,pendPct=pending/total;
+  let a=0;
+  const paths=[{pct:wonPct,color:'#22c55e'},{pct:pendPct,color:'#f43f5e'}].map(s=>{const p=arcPath(a,s.pct,s.color);a+=s.pct*2*Math.PI;return p;});
+  const tf=total>=1000?`$${(total/1000).toFixed(1)}k`:`$${Math.round(total)}`;
+  return(
+    <svg width="200" height="200" viewBox="0 0 200 200">
+      {paths}
+      <circle cx={cx} cy={cy} r={ir} fill="#13131f"/>
+      <text x={cx} y={cy-5} textAnchor="middle" fill="#e2e8f0" fontSize={13} fontWeight="bold">{tf}</text>
+      <text x={cx} y={cy+11} textAnchor="middle" fill="#64748b" fontSize={9}>Total Sales</text>
+    </svg>
+  );
+}
+
+function HPInsightModal({contacts,onClose,currentMonth}){
+  const [dateMode,setDateMode]=useState("thisMonth");
+  const [customFrom,setCustomFrom]=useState(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-01`;});
+  const [customTo,setCustomTo]=useState(()=>todayStr());
+  const [confirmedSales,setConfirmedSales]=useState(true);
+  const [unconfirmedSales,setUnconfirmedSales]=useState(false);
+
+  const now=new Date();
+  const thisYear=now.getFullYear();
+  const thisMonthStr=`${thisYear}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const lmDate=new Date(now.getFullYear(),now.getMonth()-1,1);
+  const lastMonthStr=`${lmDate.getFullYear()}-${String(lmDate.getMonth()+1).padStart(2,'0')}`;
+
+  const dated=useMemo(()=>contacts.filter(c=>{
+    const cr=c.createdAt?c.createdAt.slice(0,10):null;
+    const cm=cr?cr.slice(0,7):currentMonth;
+    if(dateMode==="thisMonth")return cm===thisMonthStr;
+    if(dateMode==="lastMonth")return cm===lastMonthStr;
+    if(dateMode==="thisYear")return cr?cr.startsWith(String(thisYear)):(String(thisYear)===currentMonth.slice(0,4));
+    if(dateMode==="custom"){if(!cr)return false;return cr>=(customFrom||"0000-01-01")&&cr<=(customTo||"9999-12-31");}
+    return true;
+  }),[contacts,dateMode,customFrom,customTo,thisMonthStr,lastMonthStr,thisYear,currentMonth]);
+
+  const barData=useMemo(()=>HP_SOURCES.map(src=>{
+    let v=0;
+    if(confirmedSales)v+=dated.filter(c=>c.source===src&&c.stage==="Won").reduce((s,c)=>s+(c.saleValue||0),0);
+    if(unconfirmedSales)v+=dated.filter(c=>c.source===src&&c.stage!=="Won"&&c.stage!=="Loss").reduce((s,c)=>s+(c.saleValue||0),0);
+    const wonLeads=dated.filter(c=>c.source===src&&c.stage==="Won").length;
+    const totalLeads=dated.filter(c=>c.source===src).length;
+    const pct=totalLeads>0?Math.round(wonLeads/totalLeads*100):0;
+    return{source:src,value:v,color:HP_COLORS[src],wonLeads,totalLeads,pct};
+  }),[dated,confirmedSales,unconfirmedSales]);
+
+  const pie=useMemo(()=>{
+    const won=dated.filter(c=>c.stage==="Won").reduce((s,c)=>s+(c.saleValue||0),0);
+    const total=dated.reduce((s,c)=>s+(c.saleValue||0),0);
+    return{total,won,pending:total-won};
+  },[dated]);
+
+  const DATE_BTNS=[{k:"thisMonth",l:"This Month"},{k:"lastMonth",l:"Last Month"},{k:"thisYear",l:"This Year"},{k:"custom",l:"Custom Date"}];
+
+  return(
+    <div style={{position:"fixed",inset:0,background:"#000c",zIndex:400,display:"flex",alignItems:"center",justifyContent:"center"}}
+      onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <div style={{background:"#1a1a2e",border:"1px solid #2d2d3f",borderRadius:20,width:"92vw",maxWidth:1100,maxHeight:"90vh",overflowY:"auto",padding:"24px 28px"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+          <span style={{fontWeight:800,fontSize:18,color:"#e2e8f0"}}>📊 Pipeline Insights</span>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"#64748b",fontSize:22,cursor:"pointer"}}>✕</button>
+        </div>
+        {/* Filters */}
+        <div style={{background:"#13131f",border:"1px solid #2d2d3f",borderRadius:14,padding:"14px 16px",marginBottom:20}}>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",marginBottom:14}}>
+            <span style={{fontSize:12,color:"#64748b",fontWeight:700,marginRight:2}}>Period:</span>
+            {DATE_BTNS.map(b=>(
+              <button key={b.k} onClick={()=>setDateMode(b.k)}
+                style={{background:dateMode===b.k?"#6366f1":"#2d2d3f",color:dateMode===b.k?"#fff":"#94a3b8",border:"none",borderRadius:8,padding:"6px 14px",cursor:"pointer",fontSize:12,fontWeight:600,transition:"all .15s"}}>
+                {b.l}
+              </button>
+            ))}
+            {dateMode==="custom"&&(
+              <div style={{display:"flex",gap:8,alignItems:"center",marginLeft:4}}>
+                <input type="date" value={customFrom} onChange={e=>setCustomFrom(e.target.value)} style={{...IS,width:138,fontSize:11,colorScheme:"dark"}}/>
+                <span style={{color:"#64748b",fontSize:13}}>→</span>
+                <input type="date" value={customTo} onChange={e=>setCustomTo(e.target.value)} style={{...IS,width:138,fontSize:11,colorScheme:"dark"}}/>
+              </div>
+            )}
+          </div>
+          <div style={{display:"flex",gap:24,flexWrap:"wrap"}}>
+            <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",userSelect:"none"}}>
+              <input type="checkbox" checked={confirmedSales} onChange={e=>setConfirmedSales(e.target.checked)} style={{width:15,height:15,accentColor:"#22c55e",cursor:"pointer"}}/>
+              <span style={{color:"#22c55e",fontWeight:600,fontSize:13}}>Confirmed Sales</span>
+              <span style={{fontSize:11,color:"#64748b"}}>— reads from Won cards</span>
+            </label>
+            <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",userSelect:"none"}}>
+              <input type="checkbox" checked={unconfirmedSales} onChange={e=>setUnconfirmedSales(e.target.checked)} style={{width:15,height:15,accentColor:"#f59e0b",cursor:"pointer"}}/>
+              <span style={{color:"#f59e0b",fontWeight:600,fontSize:13}}>Pending Sales</span>
+              <span style={{fontSize:11,color:"#64748b"}}>— reads from active pipeline</span>
+            </label>
+          </div>
+        </div>
+        {/* Charts */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 340px",gap:16}}>
+          <div style={{background:"#13131f",border:"1px solid #2d2d3f",borderRadius:14,padding:"16px 20px"}}>
+            <div style={{fontWeight:700,color:"#e2e8f0",marginBottom:12,fontSize:14}}>📊 Total Sales by Source</div>
+            <HPBarChart data={barData}/>
+            <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:10,paddingTop:10,borderTop:"1px solid #2d2d3f"}}>
+              {barData.map(d=>(
+                <div key={d.source} style={{display:"flex",alignItems:"center",gap:5}}>
+                  <div style={{width:9,height:9,borderRadius:2,background:d.color}}/>
+                  <span style={{fontSize:11,color:"#94a3b8"}}>{d.source}: <strong style={{color:d.color}}>{d.pct}%</strong> <span style={{fontSize:10,color:"#64748b"}}>({d.wonLeads}/{d.totalLeads} leads)</span></span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{background:"#13131f",border:"1px solid #2d2d3f",borderRadius:14,padding:"16px 20px",display:"flex",flexDirection:"column",alignItems:"center"}}>
+            <div style={{fontWeight:700,color:"#e2e8f0",marginBottom:12,fontSize:14,alignSelf:"flex-start"}}>🥧 Revenue Breakdown</div>
+            <HPPieChart won={pie.won} pending={pie.pending} total={pie.total}/>
+            <div style={{width:"100%",display:"flex",flexDirection:"column",gap:8,marginTop:12}}>
+              {[{l:"Total Sales",v:pie.total,c:"#e2e8f0"},{l:"Revenue (Won)",v:pie.won,c:"#22c55e"},{l:"Pending Sales",v:pie.pending,c:"#f43f5e"}].map(item=>(
+                <div key={item.l} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#0d0d17",borderRadius:8,padding:"7px 11px"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:7}}>
+                    <div style={{width:9,height:9,borderRadius:"50%",background:item.c,flexShrink:0}}/>
+                    <span style={{fontSize:12,color:"#94a3b8"}}>{item.l}</span>
+                  </div>
+                  <span style={{fontWeight:700,fontSize:14,color:item.c}}>${item.v.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function HotPipelineGate(){
   const [contacts,setContacts]=useState([]); const [loading,setLoading]=useState(true);
   const [dragId,setDragId]=useState(null); const [dragOver,setDragOver]=useState(null);
-  const [addModal,setAddModal]=useState(null); const [editModal,setEditModal]=useState(null);
+  const [addModal,setAddModal]=useState(null); const [editModal,setEditModal]=useState(null); const [showInsight,setShowInsight]=useState(false);
   const currentMonth=useMemo(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;},[]);
   const [selectedMonth,setSelectedMonth]=useState(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;});
 
@@ -658,6 +839,7 @@ function HotPipelineGate(){
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <MonthPicker selectedMonth={selectedMonth} currentMonth={currentMonth} availableMonths={availableMonths} onChange={setSelectedMonth}/>
           {!isCurrentMonth&&<span style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:8,padding:"4px 12px",fontSize:11,fontWeight:700}}>📅 Past Month</span>}
+          <button onClick={()=>setShowInsight(true)} style={{background:"#818cf822",color:"#818cf8",border:"1px solid #818cf844",borderRadius:8,padding:"5px 14px",cursor:"pointer",fontSize:12,fontWeight:700}}>📊 Insight</button>
         </div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
           {STAT_BOXES.map(s=> s.compare ? (
@@ -696,7 +878,7 @@ function HotPipelineGate(){
             <HPKanbanCol key={stage} stage={stage} contacts={byStage[stage]||[]}
               onDragStart={onDragStart} onDrop={onDrop} onDragOver={onDragOver} onDragLeave={onDragLeave}
               onClick={c=>setEditModal(c)} isDragOver={dragOver===stage}
-              onAdd={stage=>setAddModal(stage)}
+              onAdd={stage=>setAddModal(stage)} selectedMonth={selectedMonth}
             />
           ))}
         </div>
@@ -729,6 +911,7 @@ function HotPipelineGate(){
           </div>
         </Modal>
       )}
+      {showInsight&&<HPInsightModal contacts={contacts} onClose={()=>setShowInsight(false)} currentMonth={currentMonth}/>}
     </div>
   );
 }

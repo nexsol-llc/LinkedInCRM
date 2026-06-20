@@ -1092,12 +1092,14 @@ function ProjectsModal({type,records,onClose}){
   function downloadCSV(){
     if(!records.length)return;
     const rows=isActive
-      ?records.map(r=({"Name":`${r.firstName} ${r.lastName}`.trim(),"Company":r.company||"","Email":r.email||"","Revenue":r.revenue||0,"Source":r.source||"","Active Since":r.activeSince||"","Months Active":r.activeMonths||1}))
-      :records.map(r=({"Name":`${r.firstName} ${r.lastName}`.trim(),"Company":r.company||"","Email":r.email||"","Revenue":r.revenue||0,"Month Lost":r.lostMonth||"","Reason":r.lostReason||""}));
+      ?records.map(r=>({"Name":`${r.firstName} ${r.lastName}`.trim(),"Company":r.company||"","Email":r.email||"","Revenue":r.revenue||0,"Source":r.source||"","Active Since":r.activeSince||"","Months Active":r.activeMonths||1}))
+      :records.map(r=>({"Name":`${r.firstName} ${r.lastName}`.trim(),"Company":r.company||"","Email":r.email||"","Revenue":r.revenue||0,"Month Lost":r.lostMonth||"","Reason":r.lostReason||""}));
     const headers=Object.keys(rows[0]);
     const csv=[headers.join(","),...rows.map(row=>headers.map(h=>`"${(row[h]||"").toString().replace(/"/g,'""')}"`).join(","))].join("\n");
-    const a=Object.assign(document.createElement("a"),{href:URL.createObjectURL(new Blob([csv],{type:"text/csv"})),download:`${type}-projects-${year}.csv`});
-    a.click();URL.revokeObjectURL(a.href);
+    const url=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+    const a=document.createElement("a");
+    a.href=url; a.download=`${type}-projects-${year}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   }
 
   return(

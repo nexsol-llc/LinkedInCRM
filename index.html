@@ -1089,17 +1089,25 @@ function ProjectsModal({type,records,onClose}){
   const cols=isActive?["Name","Company","Email","Revenue","Source","Active Since"]:["Name","Company","Email","Revenue","Month Lost","Reason"];
   const grid=isActive?"2fr 1.5fr 2fr 1fr 1fr 1fr":"2fr 1.5fr 2fr 1fr 1fr 2fr";
 
-  function downloadCSV(){
+  function downloadCSV(e){
+    e.stopPropagation();
     if(!records.length)return;
-    const rows=isActive
-      ?records.map(r=>({"Name":`${r.firstName} ${r.lastName}`.trim(),"Company":r.company||"","Email":r.email||"","Revenue":r.revenue||0,"Source":r.source||"","Active Since":r.activeSince||"","Months Active":r.activeMonths||1}))
-      :records.map(r=>({"Name":`${r.firstName} ${r.lastName}`.trim(),"Company":r.company||"","Email":r.email||"","Revenue":r.revenue||0,"Month Lost":r.lostMonth||"","Reason":r.lostReason||""}));
-    const headers=Object.keys(rows[0]);
-    const csv=[headers.join(","),...rows.map(row=>headers.map(h=>`"${(row[h]||"").toString().replace(/"/g,'""')}"`).join(","))].join("\n");
-    const url=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+    const esc=v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"';
+    const headers=isActive
+      ?["Name","Company","Email","Revenue","Source","Active Since","Months Active"]
+      :["Name","Company","Email","Revenue","Month Lost","Reason"];
+    const dataRows=isActive
+      ?records.map(r=>[(r.firstName||"")+" "+(r.lastName||""),r.company||"",r.email||"",r.revenue||0,r.source||"",r.activeSince||"",r.activeMonths||1])
+      :records.map(r=>[(r.firstName||"")+" "+(r.lastName||""),r.company||"",r.email||"",r.revenue||0,r.lostMonth||"",r.lostReason||""]);
+    const csv=[headers,...dataRows].map(row=>row.map(esc).join(",")).join("\n");
+    const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+    const url=URL.createObjectURL(blob);
     const a=document.createElement("a");
-    a.href=url; a.download=`${type}-projects-${year}.csv`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    a.setAttribute("href",url);
+    a.setAttribute("download",type+"-projects-"+year+".csv");
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},200);
   }
 
   return(
@@ -1113,7 +1121,7 @@ function ProjectsModal({type,records,onClose}){
             <div style={{fontSize:11,color:"#64748b",marginTop:3}}>Jan {year} – Present (Year to Date)</div>
           </div>
           <div style={{display:"flex",gap:10,alignItems:"center"}}>
-            <button onClick={downloadCSV} style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:8,padding:"6px 16px",cursor:"pointer",fontSize:12,fontWeight:700}}>⬇ Export CSV</button>
+            <button onClick={e=>downloadCSV(e)} style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:8,padding:"6px 16px",cursor:"pointer",fontSize:12,fontWeight:700}}>⬇ Export CSV</button>
             <button onClick={onClose} style={{background:"#2d2d3f",color:"#94a3b8",border:"none",borderRadius:8,padding:"6px 14px",cursor:"pointer",fontSize:13,fontWeight:700}}>✕</button>
           </div>
         </div>

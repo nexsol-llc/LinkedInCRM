@@ -83,7 +83,7 @@ function hpToRow(l) {
 // ── Active Clients mappers ────────────────────────────────────────────────────
 function rowToAC(r){ return { id:r.id, firstName:r.first_name||"", lastName:r.last_name||"", company:r.company||"", email:r.email||"", phone:r.phone||"", contractTerms:r.contract_terms||"", revenue:parseFloat(r.revenue)||0, source:r.source||"manual", hotPipelineId:r.hot_pipeline_id||null, createdAt:r.created_at||null }; }
 function acToRow(c){ return { first_name:c.firstName||"", last_name:c.lastName||"", company:c.company||"", email:c.email||"", phone:c.phone||"", contract_terms:c.contractTerms||"", revenue:parseFloat(c.revenue)||0, source:c.source||"manual", hot_pipeline_id:c.hotPipelineId||null }; }
-function rowToStatus(r){ return { id:r.id, clientId:r.client_id, month:r.month, status:r.status, createdAt:r.created_at||null }; }
+function rowToStatus(r){ return { id:r.id, clientId:r.client_id, month:r.month, status:r.status, reason:r.reason||null, createdAt:r.created_at||null }; }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const LI_STAGES = ["Cold","Sales Navigator","Connection Sent","Connected","Follow Up","Won","Lost"];
@@ -757,6 +757,7 @@ function HotPipelineGate(){
   const [contacts,setContacts]=useState([]); const [loading,setLoading]=useState(true);
   const [dragId,setDragId]=useState(null); const [dragOver,setDragOver]=useState(null);
   const [addModal,setAddModal]=useState(null); const [editModal,setEditModal]=useState(null); const [showInsight,setShowInsight]=useState(false);
+  const [search,setSearch]=useState("");
   const currentMonth=useMemo(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;},[]);
   const [selectedMonth,setSelectedMonth]=useState(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;});
 
@@ -777,7 +778,12 @@ function HotPipelineGate(){
     return contacts.filter(c=>(c.createdAt?c.createdAt.slice(0,7):currentMonth)===selectedMonth);
   },[contacts,selectedMonth,currentMonth]);
 
-  const byStage=useMemo(()=>{ const m={}; HP_STAGES.forEach(s=>m[s]=filteredContacts.filter(c=>c.stage===s)); return m; },[filteredContacts]);
+  const searchedContacts=useMemo(()=>{
+    if(!search.trim())return filteredContacts;
+    const q=search.toLowerCase();
+    return filteredContacts.filter(c=>[c.firstName,c.lastName,c.email,c.accountName,c.industry,c.source].some(f=>f&&f.toLowerCase().includes(q)));
+  },[filteredContacts,search]);
+  const byStage=useMemo(()=>{ const m={}; HP_STAGES.forEach(s=>m[s]=searchedContacts.filter(c=>c.stage===s)); return m; },[searchedContacts]);
 
   const stats=useMemo(()=>{
     const result={};
@@ -845,7 +851,13 @@ function HotPipelineGate(){
     <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
       {/* Month selector + Stat boxes */}
       <div style={{background:"#13131f",borderBottom:"1px solid #2d2d3f",padding:"8px 16px",display:"flex",flexDirection:"column",gap:8}}>
-        <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+          <div style={{position:"relative",display:"flex",alignItems:"center"}}>
+            <span style={{position:"absolute",left:10,color:"#64748b",fontSize:13,pointerEvents:"none"}}>🔍</span>
+            <input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search leads…"
+              style={{background:"#0d0d17",border:"1px solid #2d2d3f",borderRadius:9,padding:"7px 30px 7px 32px",color:"#e2e8f0",fontSize:13,outline:"none",width:210}}/>
+            {search&&<span onClick={()=>setSearch("")} style={{position:"absolute",right:9,color:"#64748b",cursor:"pointer",fontSize:16,lineHeight:1,fontWeight:700}}>×</span>}
+          </div>
           <MonthPicker selectedMonth={selectedMonth} currentMonth={currentMonth} availableMonths={availableMonths} onChange={setSelectedMonth}/>
           {!isCurrentMonth&&<span style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:8,padding:"4px 12px",fontSize:11,fontWeight:700}}>📅 Past Month</span>}
           <button onClick={()=>setShowInsight(true)} style={{background:"#818cf822",color:"#818cf8",border:"1px solid #818cf844",borderRadius:8,padding:"5px 14px",cursor:"pointer",fontSize:12,fontWeight:700}}>📊 Insight</button>
@@ -929,7 +941,7 @@ function HotPipelineGate(){
 // ── ACTIVE CLIENTS ────────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 
-function ACCard({client,onClick,onAction,actionLabel,actionColor}){
+function ACCard({client,onClick,onAction,actionLabel,actionColor,revenueColor,lostReason}){
   const viaHP=!!client.hotPipelineId;
   return (
     <div onClick={onClick?()=>onClick(client):undefined}
@@ -945,8 +957,9 @@ function ACCard({client,onClick,onAction,actionLabel,actionColor}){
       </div>
       {client.email&&<div style={{fontSize:11,color:"#94a3b8",marginBottom:4}}>✉ {client.email}</div>}
       {client.phone&&<div style={{fontSize:11,color:"#64748b",marginBottom:4}}>📞 {client.phone}</div>}
-      {client.revenue>0&&<div style={{fontSize:13,color:"#22c55e",fontWeight:800,marginBottom:4}}>💰 ${client.revenue.toLocaleString(undefined,{maximumFractionDigits:0})}</div>}
+      {client.revenue>0&&<div style={{fontSize:13,color:revenueColor||"#22c55e",fontWeight:800,marginBottom:4}}>💰 ${client.revenue.toLocaleString(undefined,{maximumFractionDigits:0})}</div>}
       {client.contractTerms&&<div style={{fontSize:11,color:"#a855f7",background:"#a855f711",border:"1px solid #a855f733",borderRadius:7,padding:"5px 9px",marginBottom:6,lineHeight:1.5}}>📄 {client.contractTerms.length>90?client.contractTerms.slice(0,90)+"…":client.contractTerms}</div>}
+      {lostReason&&<div style={{fontSize:11,color:"#ef4444",background:"#ef444411",border:"1px solid #ef444433",borderRadius:7,padding:"5px 9px",marginBottom:6,lineHeight:1.5}}>🚩 {lostReason}</div>}
       {onAction&&(
         <div style={{display:"flex",justifyContent:"flex-end",marginTop:4}} onClick={e=>e.stopPropagation()}>
           <button onClick={()=>onAction(client)} style={{background:actionColor+"22",color:actionColor,border:`1px solid ${actionColor}44`,borderRadius:8,padding:"4px 11px",cursor:"pointer",fontSize:11,fontWeight:600}}>{actionLabel}</button>
@@ -980,7 +993,7 @@ function ACWinningCard({client}){
 
 function ACColumn({title,count,color,children,onAdd,note}){
   return (
-    <div style={{flex:"0 0 310px",background:color+"08",border:`1px solid ${color}33`,borderRadius:16,padding:14,display:"flex",flexDirection:"column",maxHeight:"100%"}}>
+    <div style={{flex:"0 0 310px",background:color+"08",border:`1px solid ${color}33`,borderRadius:16,padding:14,display:"flex",flexDirection:"column",height:"100%",boxSizing:"border-box"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
         <div style={{display:"flex",alignItems:"center",gap:7}}>
           <div style={{width:9,height:9,borderRadius:"50%",background:color}}/>
@@ -993,6 +1006,34 @@ function ACColumn({title,count,color,children,onAdd,note}){
       <div style={{flex:1,overflowY:"auto"}}>
         {count===0&&<div style={{textAlign:"center",color:"#2d2d3f",fontSize:12,padding:"30px 0"}}>No clients yet</div>}
         {children}
+      </div>
+    </div>
+  );
+}
+
+function MarkLostModal({client,onClose,onConfirm}){
+  const [reason,setReason]=React.useState("");
+  const [saving,setSaving]=React.useState(false);
+  async function handleSubmit(){
+    setSaving(true);
+    await onConfirm(client,reason.trim());
+  }
+  return(
+    <div style={{position:"fixed",inset:0,background:"#000a",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000}} onClick={onClose}>
+      <div style={{background:"#1a1a2e",border:"1px solid #ef444455",borderRadius:16,padding:"28px 28px 22px",width:400,maxWidth:"92vw",boxShadow:"0 8px 40px #0008"}} onClick={e=>e.stopPropagation()}>
+        <div style={{fontWeight:800,fontSize:16,color:"#ef4444",marginBottom:6}}>Mark as Lost</div>
+        <div style={{fontSize:12,color:"#94a3b8",marginBottom:16}}>
+          <span style={{fontWeight:600,color:"#e2e8f0"}}>{client.firstName} {client.lastName}</span> will be moved to Lost.
+        </div>
+        <label style={{fontSize:12,color:"#94a3b8",display:"block",marginBottom:6}}>Reason for losing <span style={{color:"#64748b"}}>(optional)</span></label>
+        <textarea value={reason} onChange={e=>setReason(e.target.value)} rows={3} placeholder="e.g. Budget cut, went with competitor…"
+          style={{width:"100%",background:"#13131f",border:"1px solid #ef444444",borderRadius:8,padding:"9px 11px",color:"#e2e8f0",fontSize:13,resize:"vertical",boxSizing:"border-box",outline:"none"}}
+          autoFocus
+        />
+        <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:18}}>
+          <button onClick={onClose} style={{background:"#2d2d3f",color:"#94a3b8",border:"none",borderRadius:8,padding:"8px 18px",cursor:"pointer",fontSize:13}}>Cancel</button>
+          <button onClick={handleSubmit} disabled={saving} style={{background:"#ef4444",color:"#fff",border:"none",borderRadius:8,padding:"8px 20px",cursor:saving?"default":"pointer",fontSize:13,fontWeight:700,opacity:saving?0.7:1}}>{saving?"Saving…":"Confirm Lost"}</button>
+        </div>
       </div>
     </div>
   );
@@ -1043,6 +1084,7 @@ function ACContactModal({client,onClose,onSave,onDelete,saving}){
 function ActiveClientsGate(){
   const [clients,setClients]=useState([]); const [statuses,setStatuses]=useState([]); const [hpContacts,setHpContacts]=useState([]); const [loading,setLoading]=useState(true);
   const [addModal,setAddModal]=useState(false); const [editModal,setEditModal]=useState(null); const [saving,setSaving]=useState(false);
+  const [search,setSearch]=useState("");
   const currentMonth=useMemo(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;},[]);
   const [selectedMonth,setSelectedMonth]=useState(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;});
 
@@ -1059,27 +1101,32 @@ function ActiveClientsGate(){
 
   // Month helpers
   const winMonth=useCallback(c=>(c.wonAt||c.createdAt||currentMonth).slice(0,7),[currentMonth]);
-  const nextMonth=useMemo(()=>{const[y,m]=selectedMonth.split('-').map(Number);const nm=m===12?1:m+1;const ny=m===12?y+1:y;return `${ny}-${String(nm).padStart(2,'0')}`;},[selectedMonth]);
-  const nextMonthLabel=useMemo(()=>{const[y,m]=nextMonth.split('-').map(Number);return new Date(y,m-1,1).toLocaleString("default",{month:"long",year:"numeric"});},[nextMonth]);
+  const prevMonth=useMemo(()=>{const[y,m]=currentMonth.split('-').map(Number);const pm=m===1?12:m-1;const py=m===1?y-1:y;return `${py}-${String(pm).padStart(2,'0')}`;},[currentMonth]);
   const isCurrentMonth=selectedMonth===currentMonth;
 
   // Winning = HP Won contacts for the selected month (live, not yet stored in active_clients)
-  const winningClients=useMemo(()=>hpContacts.filter(c=>c.stage==="Won"&&winMonth(c)===selectedMonth),[hpContacts,selectedMonth,winMonth]);
+  const winningClients=useMemo(()=>hpContacts.filter(c=>c.stage==="Won"&&winMonth(c)===selectedMonth&&(!search.trim()||(()=>{const q=search.toLowerCase();return[c.firstName,c.lastName,c.email,c.accountName].some(f=>f&&f.toLowerCase().includes(q));})())),[hpContacts,selectedMonth,winMonth,search]);
 
   // Active / Lost = stored monthly status records for the exact selected month
-  const activeClientsInMonth=useMemo(()=>clients.filter(c=>statuses.some(s=>s.clientId===c.id&&s.month===selectedMonth&&s.status==="active")),[clients,statuses,selectedMonth]);
-  const lostClients=useMemo(()=>clients.filter(c=>statuses.some(s=>s.clientId===c.id&&s.month===selectedMonth&&s.status==="lost")),[clients,statuses,selectedMonth]);
+  const acSearch=useCallback((c)=>{if(!search.trim())return true;const q=search.toLowerCase();return[c.firstName,c.lastName,c.email,c.company,c.phone].some(f=>f&&f.toLowerCase().includes(q));},[search]);
+  const activeClientsInMonth=useMemo(()=>clients.filter(c=>statuses.some(s=>s.clientId===c.id&&s.month===selectedMonth&&s.status==="active")&&acSearch(c)),[clients,statuses,selectedMonth,acSearch]);
+  const lostClients=useMemo(()=>clients.filter(c=>statuses.some(s=>s.clientId===c.id&&s.month===selectedMonth&&s.status==="lost")&&acSearch(c)),[clients,statuses,selectedMonth,acSearch]);
 
   const availableMonths=useMemo(()=>{
     const s=new Set([...statuses.map(s=>s.month),...hpContacts.filter(c=>c.stage==="Won").map(c=>winMonth(c)),currentMonth]);
     return [...s].sort().reverse();
   },[statuses,hpContacts,currentMonth,winMonth]);
 
-  const stats=useMemo(()=>({
-    active:activeClientsInMonth.length,winning:winningClients.length,lost:lostClients.length,
-    activeRevenue:activeClientsInMonth.reduce((s,c)=>s+(c.revenue||0),0),
-    wonRevenue:winningClients.reduce((s,c)=>s+(c.saleValue||0),0)
-  }),[activeClientsInMonth,winningClients,lostClients]);
+  const stats=useMemo(()=>{
+    const activeRevenue=activeClientsInMonth.reduce((s,c)=>s+(c.revenue||0),0);
+    const wonRevenue=winningClients.reduce((s,c)=>s+(c.saleValue||0),0);
+    const lostRevenue=lostClients.reduce((s,c)=>s+(c.revenue||0),0);
+    return{
+      active:activeClientsInMonth.length,winning:winningClients.length,lost:lostClients.length,
+      activeRevenue,wonRevenue,lostRevenue,
+      totalRevenue:activeRevenue+wonRevenue
+    };
+  },[activeClientsInMonth,winningClients,lostClients]);
 
   async function addClient(form){
     setSaving(true);
@@ -1108,43 +1155,48 @@ function ActiveClientsGate(){
     setStatuses(p=>p.filter(s=>s.clientId!==id));
     setEditModal(null);
   }
-  async function moveToLost(client){
-    const res=await sbUpsert("active_clients_monthly_status","client_id,month",{client_id:client.id,month:currentMonth,status:"lost"});
+  const [lostModal,setLostModal]=useState(null);
+  async function moveToLost(client,reason){
+    const res=await sbUpsert("active_clients_monthly_status","client_id,month",{client_id:client.id,month:currentMonth,status:"lost",reason:reason||null});
     if(Array.isArray(res)&&res[0])setStatuses(p=>[...p.filter(s=>!(s.clientId===client.id&&s.month===currentMonth)),rowToStatus(res[0])]);
+    setLostModal(null);
   }
   async function restoreToActive(client){
     const res=await sbUpsert("active_clients_monthly_status","client_id,month",{client_id:client.id,month:currentMonth,status:"active"});
     if(Array.isArray(res)&&res[0])setStatuses(p=>[...p.filter(s=>!(s.clientId===client.id&&s.month===currentMonth)),rowToStatus(res[0])]);
   }
 
-  // Roll current month forward: Active + Winning → next month Active, Lost excluded
-  const [rolling,setRolling]=useState(false);
-  async function rollToNextMonth(){
-    if(!confirm(`Close ${selectedMonth} and roll forward to ${nextMonthLabel}?\n\n✅ Active Clients → carried to next month\n✅ Winning Clients → promoted to Active next month\n❌ Lost Clients → excluded`))return;
-    setRolling(true);
-    const newStatuses=[];const newClients=[];
-    // Carry existing active clients forward
-    for(const c of activeClientsInMonth){
-      const res=await sbUpsert("active_clients_monthly_status","client_id,month",{client_id:c.id,month:nextMonth,status:"active"});
-      if(Array.isArray(res)&&res[0])newStatuses.push(rowToStatus(res[0]));
-    }
-    // Promote this month's winning HP contacts into active_clients, then carry forward
-    for(const hp of winningClients){
-      let ac=clients.find(c=>c.hotPipelineId===hp.id);
-      if(!ac){
-        const res=await sbInsert("active_clients",{first_name:hp.firstName,last_name:hp.lastName,company:hp.accountName||"",email:hp.email||"",phone:"",contract_terms:"",revenue:parseFloat(hp.saleValue)||0,source:hp.source||"hot_pipeline",hot_pipeline_id:hp.id});
-        if(Array.isArray(res)&&res[0]){ac=rowToAC(res[0]);newClients.push(ac);}
-      }
-      if(ac){
-        const res=await sbUpsert("active_clients_monthly_status","client_id,month",{client_id:ac.id,month:nextMonth,status:"active"});
+  // Auto-roll: on first load of a new month, carry previous month's Active + Winning into current month
+  const autoRolled=useRef(false);
+  useEffect(()=>{
+    if(loading||autoRolled.current)return;
+    // If current month already has any status records, nothing to roll
+    if(statuses.some(s=>s.month===currentMonth)){autoRolled.current=true;return;}
+    const prevActive=clients.filter(c=>statuses.some(s=>s.clientId===c.id&&s.month===prevMonth&&s.status==="active"));
+    const prevWinning=hpContacts.filter(c=>c.stage==="Won"&&winMonth(c)===prevMonth);
+    if(prevActive.length===0&&prevWinning.length===0){autoRolled.current=true;return;}
+    autoRolled.current=true;
+    (async()=>{
+      const newStatuses=[];const newClients=[];
+      for(const c of prevActive){
+        const res=await sbUpsert("active_clients_monthly_status","client_id,month",{client_id:c.id,month:currentMonth,status:"active"});
         if(Array.isArray(res)&&res[0])newStatuses.push(rowToStatus(res[0]));
       }
-    }
-    if(newClients.length)setClients(p=>[...p,...newClients]);
-    if(newStatuses.length)setStatuses(p=>[...p,...newStatuses]);
-    setRolling(false);
-    setSelectedMonth(nextMonth);
-  }
+      for(const hp of prevWinning){
+        let ac=clients.find(c=>c.hotPipelineId===hp.id);
+        if(!ac){
+          const res=await sbInsert("active_clients",{first_name:hp.firstName,last_name:hp.lastName,company:hp.accountName||"",email:hp.email||"",phone:"",contract_terms:"",revenue:parseFloat(hp.saleValue)||0,source:hp.source||"hot_pipeline",hot_pipeline_id:hp.id});
+          if(Array.isArray(res)&&res[0]){ac=rowToAC(res[0]);newClients.push(ac);}
+        }
+        if(ac){
+          const res=await sbUpsert("active_clients_monthly_status","client_id,month",{client_id:ac.id,month:currentMonth,status:"active"});
+          if(Array.isArray(res)&&res[0])newStatuses.push(rowToStatus(res[0]));
+        }
+      }
+      if(newClients.length)setClients(p=>[...p,...newClients]);
+      if(newStatuses.length)setStatuses(p=>[...p,...newStatuses]);
+    })();
+  },[loading,statuses,clients,hpContacts,currentMonth,prevMonth,winMonth]);
 
   if(loading)return <Spinner text="Loading Active Clients…"/>;
 
@@ -1152,28 +1204,37 @@ function ActiveClientsGate(){
     <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
       <div style={{background:"#13131f",borderBottom:"1px solid #2d2d3f",padding:"10px 16px",display:"flex",flexDirection:"column",gap:10}}>
         <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+          <div style={{position:"relative",display:"flex",alignItems:"center"}}>
+            <span style={{position:"absolute",left:10,color:"#64748b",fontSize:13,pointerEvents:"none"}}>🔍</span>
+            <input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search clients…"
+              style={{background:"#0d0d17",border:"1px solid #2d2d3f",borderRadius:9,padding:"7px 30px 7px 32px",color:"#e2e8f0",fontSize:13,outline:"none",width:210}}/>
+            {search&&<span onClick={()=>setSearch("")} style={{position:"absolute",right:9,color:"#64748b",cursor:"pointer",fontSize:16,lineHeight:1,fontWeight:700}}>×</span>}
+          </div>
           <MonthPicker selectedMonth={selectedMonth} currentMonth={currentMonth} availableMonths={availableMonths} onChange={setSelectedMonth}/>
           {!isCurrentMonth&&<span style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:8,padding:"4px 12px",fontSize:11,fontWeight:700}}>📅 View Only</span>}
           {!isCurrentMonth&&<button onClick={()=>setSelectedMonth(currentMonth)} style={{background:"#22c55e22",color:"#22c55e",border:"1px solid #22c55e44",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontSize:11,fontWeight:700}}>↩ Back to Present</button>}
-          {isCurrentMonth&&<button onClick={rollToNextMonth} disabled={rolling} style={{background:rolling?"#2d2d3f":"#6366f1",color:"#fff",border:"none",borderRadius:9,padding:"7px 14px",cursor:rolling?"default":"pointer",fontSize:12,fontWeight:700,opacity:rolling?0.6:1}}>{rolling?"Rolling…":`→ Roll to ${nextMonthLabel}`}</button>}
           {isCurrentMonth&&<button onClick={()=>setAddModal(true)} style={{marginLeft:"auto",background:"#22c55e",color:"#fff",border:"none",borderRadius:9,padding:"7px 16px",cursor:"pointer",fontSize:12,fontWeight:700}}>+ Add Client</button>}
         </div>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          {[{label:"Active Clients",val:stats.active,c:"#22c55e"},{label:"Winning This Month",val:stats.winning,c:"#f59e0b"},{label:"Lost Clients",val:stats.lost,c:"#ef4444"},{label:"Active Revenue",val:"$"+stats.activeRevenue.toLocaleString(undefined,{maximumFractionDigits:0}),c:"#22c55e",bold:true},{label:"Won Revenue",val:"$"+stats.wonRevenue.toLocaleString(undefined,{maximumFractionDigits:0}),c:"#f59e0b",bold:true}].map(s=>(
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+          {[{label:"Active Clients",val:stats.active,c:"#22c55e"},{label:"Winning This Month",val:stats.winning,c:"#f59e0b"},{label:"Lost Clients",val:stats.lost,c:"#ef4444"},{label:"Active Revenue",val:"$"+stats.activeRevenue.toLocaleString(undefined,{maximumFractionDigits:0}),c:"#22c55e",bold:true},{label:"Won Revenue",val:"$"+stats.wonRevenue.toLocaleString(undefined,{maximumFractionDigits:0}),c:"#f59e0b",bold:true},{label:"Lost Revenue",val:"$"+stats.lostRevenue.toLocaleString(undefined,{maximumFractionDigits:0}),c:"#ef4444",bold:true}].map(s=>(
             <div key={s.label} style={{background:s.c+"12",border:`1px solid ${s.c}33`,borderRadius:9,padding:"5px 13px",display:"flex",alignItems:"center",gap:5}}>
               <span style={{fontWeight:800,fontSize:s.bold?17:14,color:s.c}}>{s.val}</span>
               <span style={{fontSize:11,color:"#64748b"}}>{s.label}</span>
             </div>
           ))}
+          <div style={{background:"linear-gradient(135deg,#a78bfa22,#7c3aed33)",border:"2px solid #a78bfa88",borderRadius:12,padding:"10px 20px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,boxShadow:"0 0 16px #a78bfa33",marginLeft:4}}>
+            <span style={{fontWeight:900,fontSize:26,color:"#a78bfa",letterSpacing:"-0.5px",lineHeight:1}}>${stats.totalRevenue.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+            <span style={{fontSize:10,color:"#a78bfa99",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em"}}>Total Revenue</span>
+          </div>
         </div>
       </div>
-      <div style={{flex:1,overflow:"auto",padding:12}}>
-        <div style={{display:"flex",gap:12,alignItems:"flex-start",minHeight:"100%"}}>
+      <div style={{flex:1,overflow:"hidden",padding:12,display:"flex"}}>
+        <div style={{display:"flex",gap:12,alignItems:"stretch",flex:1,overflowX:"auto"}}>
           <ACColumn title="Active Clients" count={activeClientsInMonth.length} color="#22c55e" onAdd={isCurrentMonth?()=>setAddModal(true):undefined}>
             {activeClientsInMonth.map(c=>(
               <ACCard key={c.id} client={c}
                 onClick={isCurrentMonth?()=>setEditModal(c):undefined}
-                onAction={isCurrentMonth?moveToLost:undefined}
+                onAction={isCurrentMonth?c=>setLostModal(c):undefined}
                 actionLabel="Mark Lost" actionColor="#ef4444"
               />
             ))}
@@ -1182,18 +1243,24 @@ function ActiveClientsGate(){
             {winningClients.map(c=><ACWinningCard key={c.id} client={c}/>)}
           </ACColumn>
           <ACColumn title="Lost Client" count={lostClients.length} color="#ef4444">
-            {lostClients.map(c=>(
+            {lostClients.map(c=>{
+              const st=statuses.find(s=>s.clientId===c.id&&s.month===selectedMonth&&s.status==="lost");
+              return(
               <ACCard key={c.id} client={c}
                 onClick={isCurrentMonth?()=>setEditModal(c):undefined}
                 onAction={isCurrentMonth?restoreToActive:undefined}
                 actionLabel="Restore Active" actionColor="#22c55e"
+                revenueColor="#ef4444"
+                lostReason={st?.reason||null}
               />
-            ))}
+            );})}
+
           </ACColumn>
         </div>
       </div>
       {addModal&&<ACContactModal onClose={()=>setAddModal(false)} onSave={addClient} saving={saving}/>}
       {editModal&&<ACContactModal client={editModal} onClose={()=>setEditModal(null)} onSave={saveClient} onDelete={deleteClient} saving={saving}/>}
+      {lostModal&&<MarkLostModal client={lostModal} onClose={()=>setLostModal(null)} onConfirm={moveToLost}/>}
     </div>
   );
 }

@@ -1011,6 +1011,64 @@ function ACColumn({title,count,color,children,onAdd,note}){
   );
 }
 
+function ProjectsModal({type,records,onClose}){
+  const isActive=type==="active";
+  const color=isActive?"#22c55e":"#ef4444";
+  const year=new Date().getFullYear();
+  const cols=isActive?["Name","Company","Email","Revenue","Source","Active Since"]:["Name","Company","Email","Revenue","Month Lost","Reason"];
+  const grid=isActive?"2fr 1.5fr 2fr 1fr 1fr 1fr":"2fr 1.5fr 2fr 1fr 1fr 2fr";
+
+  function downloadCSV(){
+    if(!records.length)return;
+    const rows=isActive
+      ?records.map(r=({"Name":`${r.firstName} ${r.lastName}`.trim(),"Company":r.company||"","Email":r.email||"","Revenue":r.revenue||0,"Source":r.source||"","Active Since":r.activeSince||"","Months Active":r.activeMonths||1}))
+      :records.map(r=({"Name":`${r.firstName} ${r.lastName}`.trim(),"Company":r.company||"","Email":r.email||"","Revenue":r.revenue||0,"Month Lost":r.lostMonth||"","Reason":r.lostReason||""}));
+    const headers=Object.keys(rows[0]);
+    const csv=[headers.join(","),...rows.map(row=>headers.map(h=>`"${(row[h]||"").toString().replace(/"/g,'""')}"`).join(","))].join("\n");
+    const a=Object.assign(document.createElement("a"),{href:URL.createObjectURL(new Blob([csv],{type:"text/csv"})),download:`${type}-projects-${year}.csv`});
+    a.click();URL.revokeObjectURL(a.href);
+  }
+
+  return(
+    <div style={{position:"fixed",inset:0,background:"#000b",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000}} onClick={onClose}>
+      <div style={{background:"#1a1a2e",border:`1px solid ${color}44`,borderRadius:18,width:780,maxWidth:"96vw",maxHeight:"85vh",display:"flex",flexDirection:"column",boxShadow:"0 8px 48px #0009"}} onClick={e=>e.stopPropagation()}>
+        {/* Header */}
+        <div style={{padding:"18px 24px",borderBottom:`1px solid ${color}22`,display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+          <div>
+            <span style={{fontWeight:800,fontSize:17,color}}>{isActive?"Active Projects":"Lost Projects"}</span>
+            <span style={{marginLeft:10,background:color+"22",color,borderRadius:20,padding:"2px 10px",fontSize:12,fontWeight:700}}>{records.length} clients</span>
+            <div style={{fontSize:11,color:"#64748b",marginTop:3}}>Jan {year} – Present (Year to Date)</div>
+          </div>
+          <div style={{display:"flex",gap:10,alignItems:"center"}}>
+            <button onClick={downloadCSV} style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:8,padding:"6px 16px",cursor:"pointer",fontSize:12,fontWeight:700}}>⬇ Export CSV</button>
+            <button onClick={onClose} style={{background:"#2d2d3f",color:"#94a3b8",border:"none",borderRadius:8,padding:"6px 14px",cursor:"pointer",fontSize:13,fontWeight:700}}>✕</button>
+          </div>
+        </div>
+        {/* Column headings */}
+        <div style={{padding:"10px 24px",borderBottom:"1px solid #2d2d3f",display:"grid",gridTemplateColumns:grid,gap:12,flexShrink:0}}>
+          {cols.map(h=><span key={h} style={{fontSize:10,color:"#64748b",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em"}}>{h}</span>)}
+        </div>
+        {/* Rows */}
+        <div style={{overflowY:"auto",flex:1,padding:"4px 24px 20px"}}>
+          {records.length===0&&<div style={{textAlign:"center",color:"#64748b",padding:"48px 0",fontSize:13}}>No records for {year}</div>}
+          {records.map((r,i)=>(
+            <div key={r.id||i} style={{display:"grid",gridTemplateColumns:grid,gap:12,padding:"11px 0",borderBottom:"1px solid #ffffff08",alignItems:"center"}}>
+              <span style={{fontWeight:600,color:"#e2e8f0",fontSize:13}}>{r.firstName} {r.lastName}</span>
+              <span style={{color:"#94a3b8",fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.company||"—"}</span>
+              <span style={{color:"#64748b",fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.email||"—"}</span>
+              <span style={{color:color,fontWeight:700,fontSize:13}}>${(r.revenue||0).toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+              {isActive
+                ?<><span style={{color:"#94a3b8",fontSize:12}}>{r.source||"—"}</span><span style={{color:"#818cf8",fontSize:12}}>{r.activeSince||"—"}</span></>
+                :<><span style={{color:"#f59e0b",fontSize:12}}>{r.lostMonth||"—"}</span><span style={{color:"#ef4444",fontSize:11,background:"#ef444411",borderRadius:6,padding:"3px 8px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.lostReason||"—"}</span></>
+              }
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MarkLostModal({client,onClose,onConfirm}){
   const [reason,setReason]=React.useState("");
   const [saving,setSaving]=React.useState(false);
@@ -1156,6 +1214,34 @@ function ActiveClientsGate(){
     setEditModal(null);
   }
   const [lostModal,setLostModal]=useState(null);
+  const [projectsModal,setProjectsModal]=useState(null); // null | 'active' | 'lost'
+  const yoyStart=useMemo(()=>`${new Date().getFullYear()}-01`,[]);
+
+  const activeProjects=useMemo(()=>{
+    const yoySt=statuses.filter(s=>s.status==="active"&&s.month>=yoyStart&&s.month<=currentMonth);
+    const ids=new Set(yoySt.map(s=>s.clientId));
+    const fromDB=clients.filter(c=>ids.has(c.id)).map(c=>{
+      const months=yoySt.filter(s=>s.clientId===c.id).map(s=>s.month).sort();
+      return{...c,activeSince:months[0],activeMonths:months.length};
+    });
+    // Only skip HP contacts already covered by fromDB — don't exclude by clients alone
+    // (an HP contact may exist in clients but lack an active status record for this year)
+    const coveredHpIds=new Set(fromDB.map(c=>c.hotPipelineId).filter(Boolean).map(String));
+    const fromHP=hpContacts
+      .filter(c=>c.stage==="Won"&&winMonth(c)>=yoyStart&&winMonth(c)<=currentMonth&&!coveredHpIds.has(String(c.id)))
+      .map(hp=>({id:hp.id,firstName:hp.firstName,lastName:hp.lastName,company:hp.accountName||"",email:hp.email||"",revenue:hp.saleValue||0,source:hp.source||"",activeSince:winMonth(hp),activeMonths:1}));
+    return[...fromDB,...fromHP].sort((a,b)=>(a.activeSince||"").localeCompare(b.activeSince||""));
+  },[clients,statuses,hpContacts,currentMonth,yoyStart,winMonth]);
+
+  const lostProjects=useMemo(()=>{
+    const yoySt=statuses.filter(s=>s.status==="lost"&&s.month>=yoyStart&&s.month<=currentMonth);
+    const ids=new Set(yoySt.map(s=>s.clientId));
+    return clients.filter(c=>ids.has(c.id)).map(c=>{
+      const st=yoySt.filter(s=>s.clientId===c.id).sort((a,b)=>b.month.localeCompare(a.month))[0];
+      return{...c,lostMonth:st?.month,lostReason:st?.reason};
+    }).sort((a,b)=>(b.lostMonth||"").localeCompare(a.lostMonth||""));
+  },[clients,statuses,currentMonth,yoyStart]);
+
   async function moveToLost(client,reason){
     const res=await sbUpsert("active_clients_monthly_status","client_id,month",{client_id:client.id,month:currentMonth,status:"lost",reason:reason||null});
     if(Array.isArray(res)&&res[0])setStatuses(p=>[...p.filter(s=>!(s.clientId===client.id&&s.month===currentMonth)),rowToStatus(res[0])]);
@@ -1211,6 +1297,12 @@ function ActiveClientsGate(){
             {search&&<span onClick={()=>setSearch("")} style={{position:"absolute",right:9,color:"#64748b",cursor:"pointer",fontSize:16,lineHeight:1,fontWeight:700}}>×</span>}
           </div>
           <MonthPicker selectedMonth={selectedMonth} currentMonth={currentMonth} availableMonths={availableMonths} onChange={setSelectedMonth}/>
+          <button onClick={()=>setProjectsModal('active')} style={{background:"#22c55e22",color:"#22c55e",border:"1px solid #22c55e44",borderRadius:9,padding:"6px 13px",cursor:"pointer",fontSize:12,fontWeight:700,display:"flex",alignItems:"center",gap:6}}>
+            Active Projects<span style={{background:"#22c55e",color:"#fff",borderRadius:20,padding:"1px 7px",fontSize:11,fontWeight:800}}>{activeProjects.length}</span>
+          </button>
+          <button onClick={()=>setProjectsModal('lost')} style={{background:"#ef444422",color:"#ef4444",border:"1px solid #ef444444",borderRadius:9,padding:"6px 13px",cursor:"pointer",fontSize:12,fontWeight:700,display:"flex",alignItems:"center",gap:6}}>
+            Lost Projects<span style={{background:"#ef4444",color:"#fff",borderRadius:20,padding:"1px 7px",fontSize:11,fontWeight:800}}>{lostProjects.length}</span>
+          </button>
           {!isCurrentMonth&&<span style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:8,padding:"4px 12px",fontSize:11,fontWeight:700}}>📅 View Only</span>}
           {!isCurrentMonth&&<button onClick={()=>setSelectedMonth(currentMonth)} style={{background:"#22c55e22",color:"#22c55e",border:"1px solid #22c55e44",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontSize:11,fontWeight:700}}>↩ Back to Present</button>}
           {isCurrentMonth&&<button onClick={()=>setAddModal(true)} style={{marginLeft:"auto",background:"#22c55e",color:"#fff",border:"none",borderRadius:9,padding:"7px 16px",cursor:"pointer",fontSize:12,fontWeight:700}}>+ Add Client</button>}
@@ -1261,6 +1353,7 @@ function ActiveClientsGate(){
       {addModal&&<ACContactModal onClose={()=>setAddModal(false)} onSave={addClient} saving={saving}/>}
       {editModal&&<ACContactModal client={editModal} onClose={()=>setEditModal(null)} onSave={saveClient} onDelete={deleteClient} saving={saving}/>}
       {lostModal&&<MarkLostModal client={lostModal} onClose={()=>setLostModal(null)} onConfirm={moveToLost}/>}
+      {projectsModal&&<ProjectsModal type={projectsModal} records={projectsModal==='active'?activeProjects:lostProjects} onClose={()=>setProjectsModal(null)}/>}
     </div>
   );
 }

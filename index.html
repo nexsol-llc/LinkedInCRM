@@ -59,6 +59,10 @@ async function sbUpdate(table, id, data) {
 async function sbDelete(table, id) {
   await fetch(`${SB_URL}/rest/v1/${table}?id=eq.${id}`, { method:"DELETE", headers:HEADERS });
 }
+async function sbUpsert(table, onConflict, data) {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}?on_conflict=${onConflict}`, { method:"POST", headers:{...HEADERS,"Prefer":"return=representation,resolution=merge-duplicates"}, body:JSON.stringify(data) });
+  return r.json();
+}
 
 // ── LinkedIn CRM mappers ──────────────────────────────────────────────────────
 function rowToLead(r) {
@@ -70,11 +74,16 @@ function leadToRow(l) {
 
 // ── Hot Pipeline mappers ──────────────────────────────────────────────────────
 function rowToHP(r) {
-  return { id:r.id, firstName:r.first_name||"", lastName:r.last_name||"", linkedinUrl:r.linkedin_url||"", website:r.website||"", industry:r.industry||"", email:r.email||"", accountName:r.account_name||"", source:r.source||"", stage:r.stage||"Fiverr", saleValue:parseFloat(r.sale_value)||0, tags:r.tags||[], followUp:r.follow_up||null, deal:r.deal||null, followUpHistory:r.follow_up_history||[], createdAt:r.created_at||null };
+  return { id:r.id, firstName:r.first_name||"", lastName:r.last_name||"", linkedinUrl:r.linkedin_url||"", website:r.website||"", industry:r.industry||"", email:r.email||"", accountName:r.account_name||"", source:r.source||"", stage:r.stage||"Fiverr", saleValue:parseFloat(r.sale_value)||0, tags:r.tags||[], followUp:r.follow_up||null, deal:r.deal||null, followUpHistory:r.follow_up_history||[], createdAt:r.created_at||null, wonAt:r.won_at||null };
 }
 function hpToRow(l) {
   return { first_name:l.firstName||"", last_name:l.lastName||"", linkedin_url:l.linkedinUrl||"", website:l.website||"", industry:l.industry||"", email:l.email||"", account_name:l.accountName||"", source:l.source||"", stage:l.stage||"Fiverr", sale_value:l.saleValue||0, tags:l.tags||[], follow_up:l.followUp||null, deal:l.deal||null, follow_up_history:l.followUpHistory||[] };
 }
+
+// ── Active Clients mappers ────────────────────────────────────────────────────
+function rowToAC(r){ return { id:r.id, firstName:r.first_name||"", lastName:r.last_name||"", company:r.company||"", email:r.email||"", phone:r.phone||"", contractTerms:r.contract_terms||"", revenue:parseFloat(r.revenue)||0, source:r.source||"manual", hotPipelineId:r.hot_pipeline_id||null, createdAt:r.created_at||null }; }
+function acToRow(c){ return { first_name:c.firstName||"", last_name:c.lastName||"", company:c.company||"", email:c.email||"", phone:c.phone||"", contract_terms:c.contractTerms||"", revenue:parseFloat(c.revenue)||0, source:c.source||"manual", hot_pipeline_id:c.hotPipelineId||null }; }
+function rowToStatus(r){ return { id:r.id, clientId:r.client_id, month:r.month, status:r.status, createdAt:r.created_at||null }; }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const LI_STAGES = ["Cold","Sales Navigator","Connection Sent","Connected","Follow Up","Won","Lost"];
@@ -786,7 +795,7 @@ function HotPipelineGate(){
   const onDragOver=useCallback(stage=>setDragOver(stage),[]);
   const onDragLeave=useCallback(()=>setDragOver(null),[]);
 
-  const updateContact=useCallback(async(id,patch)=>{ const c=contacts.find(x=>x.id===id); if(!c)return; const res=await sbUpdate("hot_pipeline",id,hpToRow({...c,...patch})); if(Array.isArray(res)&&res[0])setContacts(p=>p.map(x=>x.id===id?rowToHP(res[0]):x)); },[contacts]);
+  const updateContact=useCallback(async(id,patch)=>{ const c=contacts.find(x=>x.id===id); if(!c)return; const row=hpToRow({...c,...patch}); if(patch.stage==="Won"&&!c.wonAt)row.won_at=new Date().toISOString(); const res=await sbUpdate("hot_pipeline",id,row); if(Array.isArray(res)&&res[0])setContacts(p=>p.map(x=>x.id===id?rowToHP(res[0]):x)); },[contacts]);
 
   const onDrop=useCallback((e,stage)=>{ e.preventDefault();setDragOver(null); if(dragId==null)return; const c=contacts.find(x=>x.id===dragId); if(!c||c.stage===stage){setDragId(null);return;} updateContact(dragId,{stage}); setDragId(null); },[dragId,contacts,updateContact]);
 
@@ -917,6 +926,279 @@ function HotPipelineGate(){
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// ── ACTIVE CLIENTS ────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+function ACCard({client,onClick,onAction,actionLabel,actionColor}){
+  const viaHP=!!client.hotPipelineId;
+  return (
+    <div onClick={onClick?()=>onClick(client):undefined}
+      onMouseEnter={onClick?e=>e.currentTarget.style.borderColor="#22c55e88":undefined}
+      onMouseLeave={onClick?e=>e.currentTarget.style.borderColor="#22c55e22":undefined}
+      style={{background:"#13131f",border:"1px solid #22c55e22",borderRadius:12,padding:"12px 14px",marginBottom:8,cursor:onClick?"pointer":"default",transition:"border .15s"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
+        <div>
+          <div style={{fontWeight:700,color:"#e2e8f0",fontSize:13}}>{client.firstName} {client.lastName}</div>
+          {client.company&&<div style={{fontSize:11,color:"#64748b",marginTop:1}}>{client.company}</div>}
+        </div>
+        {viaHP&&<span style={{background:"#f59e0b22",color:"#f59e0b",border:"1px solid #f59e0b44",borderRadius:20,padding:"2px 7px",fontSize:10,fontWeight:700,flexShrink:0}}>via HP</span>}
+      </div>
+      {client.email&&<div style={{fontSize:11,color:"#94a3b8",marginBottom:4}}>✉ {client.email}</div>}
+      {client.phone&&<div style={{fontSize:11,color:"#64748b",marginBottom:4}}>📞 {client.phone}</div>}
+      {client.revenue>0&&<div style={{fontSize:13,color:"#22c55e",fontWeight:800,marginBottom:4}}>💰 ${client.revenue.toLocaleString(undefined,{maximumFractionDigits:0})}</div>}
+      {client.contractTerms&&<div style={{fontSize:11,color:"#a855f7",background:"#a855f711",border:"1px solid #a855f733",borderRadius:7,padding:"5px 9px",marginBottom:6,lineHeight:1.5}}>📄 {client.contractTerms.length>90?client.contractTerms.slice(0,90)+"…":client.contractTerms}</div>}
+      {onAction&&(
+        <div style={{display:"flex",justifyContent:"flex-end",marginTop:4}} onClick={e=>e.stopPropagation()}>
+          <button onClick={()=>onAction(client)} style={{background:actionColor+"22",color:actionColor,border:`1px solid ${actionColor}44`,borderRadius:8,padding:"4px 11px",cursor:"pointer",fontSize:11,fontWeight:600}}>{actionLabel}</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ACWinningCard({client}){
+  return (
+    <div style={{background:"#13131f",border:"1px solid #f59e0b33",borderRadius:12,padding:"12px 14px",marginBottom:8}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
+        <div>
+          <div style={{fontWeight:700,color:"#e2e8f0",fontSize:13}}>{client.firstName} {client.lastName}</div>
+          {client.accountName&&<div style={{fontSize:11,color:"#64748b",marginTop:1}}>{client.accountName}</div>}
+        </div>
+        <div style={{display:"flex",gap:4,flexDirection:"column",alignItems:"flex-end"}}>
+          <span style={{background:"#22c55e22",color:"#22c55e",border:"1px solid #22c55e44",borderRadius:20,padding:"2px 8px",fontSize:10,fontWeight:700}}>Won</span>
+          {client.source&&<span style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:20,padding:"2px 7px",fontSize:10,fontWeight:600}}>{client.source}</span>}
+        </div>
+      </div>
+      {client.email&&<div style={{fontSize:11,color:"#94a3b8",marginBottom:4}}>✉ {client.email}</div>}
+      {client.industry&&<div style={{fontSize:11,color:"#64748b",marginBottom:4}}>🏢 {client.industry}</div>}
+      {client.saleValue>0&&<div style={{fontSize:13,color:"#22c55e",fontWeight:800,marginBottom:4}}>💰 ${client.saleValue.toLocaleString()}</div>}
+      {(client.tags||[]).length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:3,marginBottom:4}}>{(client.tags||[]).slice(0,3).map(t=><span key={t} style={{background:"#22c55e11",color:"#22c55e",border:"1px solid #22c55e33",borderRadius:20,padding:"1px 7px",fontSize:10}}>{t}</span>)}</div>}
+      {client.linkedinUrl&&<a href={client.linkedinUrl} target="_blank" rel="noreferrer" style={{background:"#0a66c222",color:"#60a5fa",border:"1px solid #0a66c244",borderRadius:6,padding:"3px 9px",fontSize:10,fontWeight:700,textDecoration:"none",display:"inline-block"}}>View LinkedIn ↗</a>}
+    </div>
+  );
+}
+
+function ACColumn({title,count,color,children,onAdd,note}){
+  return (
+    <div style={{flex:"0 0 310px",background:color+"08",border:`1px solid ${color}33`,borderRadius:16,padding:14,display:"flex",flexDirection:"column",maxHeight:"100%"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+        <div style={{display:"flex",alignItems:"center",gap:7}}>
+          <div style={{width:9,height:9,borderRadius:"50%",background:color}}/>
+          <span style={{fontWeight:800,fontSize:13,color:"#e2e8f0"}}>{title}</span>
+          <span style={{background:color+"22",color:color,borderRadius:20,padding:"1px 8px",fontSize:11,fontWeight:700}}>{count}</span>
+        </div>
+        {onAdd&&<button onClick={onAdd} style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:8,padding:"4px 11px",cursor:"pointer",fontSize:12,fontWeight:700}}>+ Add</button>}
+      </div>
+      {note&&<div style={{background:color+"11",border:`1px solid ${color}33`,borderRadius:8,padding:"6px 10px",marginBottom:10,fontSize:11,color:color}}>{note}</div>}
+      <div style={{flex:1,overflowY:"auto"}}>
+        {count===0&&<div style={{textAlign:"center",color:"#2d2d3f",fontSize:12,padding:"30px 0"}}>No clients yet</div>}
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ACContactModal({client,onClose,onSave,onDelete,saving}){
+  const blank={firstName:"",lastName:"",company:"",email:"",phone:"",revenue:"",contractTerms:""};
+  const [form,setForm]=useState(client?{...client,revenue:client.revenue||""}:blank);
+  const [err,setErr]=useState("");
+  function upd(k,v){setForm(p=>({...p,[k]:v}));}
+  function submit(){
+    if(!form.firstName.trim()){setErr("First name is required.");return;}
+    if(!form.contractTerms.trim()){setErr("Contract terms are required — describe payment, deliverables, timeline.");return;}
+    if(form.revenue!==""&&isNaN(parseFloat(form.revenue))){setErr("Revenue must be a valid number.");return;}
+    setErr("");onSave({...form,revenue:parseFloat(form.revenue)||0});
+  }
+  return (
+    <Modal title={client?.id?`✏️ Edit — ${client.firstName} ${client.lastName}`:"➕ Add Active Client"} onClose={onClose}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 12px"}}>
+        <Inp label="First Name *" value={form.firstName} onChange={e=>upd("firstName",e.target.value)} placeholder="John"/>
+        <Inp label="Last Name" value={form.lastName} onChange={e=>upd("lastName",e.target.value)} placeholder="Doe"/>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 12px"}}>
+        <Inp label="Company" value={form.company} onChange={e=>upd("company",e.target.value)} placeholder="Acme Inc."/>
+        <Inp label="Phone" value={form.phone} onChange={e=>upd("phone",e.target.value)} placeholder="+1 555 000 0000"/>
+      </div>
+      <Inp label="Email" value={form.email} onChange={e=>upd("email",e.target.value)} type="email" placeholder="john@example.com"/>
+      <div style={{marginBottom:12}}>
+        <label style={{display:"block",fontSize:12,color:"#22c55e",marginBottom:4,fontWeight:700}}>💰 Revenue ($) <span style={{color:"#64748b",fontWeight:400,fontSize:11}}>(contract value)</span></label>
+        <div style={{position:"relative"}}><span style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",color:"#64748b",fontWeight:700}}>$</span><input type="number" min="0" step="0.01" value={form.revenue} onChange={e=>upd("revenue",e.target.value)} placeholder="0.00" style={{...IS,paddingLeft:26}}/></div>
+      </div>
+      <div style={{marginBottom:12}}>
+        <label style={{display:"block",fontSize:12,color:"#a855f7",marginBottom:4,fontWeight:700}}>📄 Contract Terms <span style={{color:"#ef4444"}}>*</span> <span style={{color:"#64748b",fontWeight:400,fontSize:11}}>(required)</span></label>
+        <textarea value={form.contractTerms} onChange={e=>upd("contractTerms",e.target.value)} placeholder="e.g. Monthly retainer $2,000 — deliverables: 4 campaigns/month, 30-day payment terms, 3-month minimum commitment…" style={{...IS,resize:"vertical",minHeight:100}}/>
+      </div>
+      {err&&<div style={{color:"#ef4444",fontSize:12,marginBottom:10,background:"#ef444415",border:"1px solid #ef444433",borderRadius:8,padding:"7px 10px"}}>⚠ {err}</div>}
+      <div style={{display:"flex",justifyContent:"space-between",marginTop:10,borderTop:"1px solid #2d2d3f",paddingTop:14}}>
+        {client?.id?<Btn variant="danger" onClick={()=>onDelete(client.id)}>Delete</Btn>:<div/>}
+        <div style={{display:"flex",gap:8}}>
+          <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
+          <Btn onClick={submit} style={{opacity:saving?0.6:1}}>{saving?"Saving…":"Save"}</Btn>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function ActiveClientsGate(){
+  const [clients,setClients]=useState([]); const [statuses,setStatuses]=useState([]); const [hpContacts,setHpContacts]=useState([]); const [loading,setLoading]=useState(true);
+  const [addModal,setAddModal]=useState(false); const [editModal,setEditModal]=useState(null); const [saving,setSaving]=useState(false);
+  const currentMonth=useMemo(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;},[]);
+  const [selectedMonth,setSelectedMonth]=useState(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;});
+
+  useEffect(()=>{
+    setLoading(true);
+    Promise.all([sbGetAll("active_clients"),sbGetAll("active_clients_monthly_status"),sbGetAll("hot_pipeline")])
+      .then(([ac,st,hp])=>{
+        if(Array.isArray(ac))setClients(ac.map(rowToAC));
+        if(Array.isArray(st))setStatuses(st.map(rowToStatus));
+        if(Array.isArray(hp))setHpContacts(hp.map(rowToHP));
+        setLoading(false);
+      }).catch(()=>setLoading(false));
+  },[]);
+
+  // Month helpers
+  const winMonth=useCallback(c=>(c.wonAt||c.createdAt||currentMonth).slice(0,7),[currentMonth]);
+  const nextMonth=useMemo(()=>{const[y,m]=selectedMonth.split('-').map(Number);const nm=m===12?1:m+1;const ny=m===12?y+1:y;return `${ny}-${String(nm).padStart(2,'0')}`;},[selectedMonth]);
+  const nextMonthLabel=useMemo(()=>{const[y,m]=nextMonth.split('-').map(Number);return new Date(y,m-1,1).toLocaleString("default",{month:"long",year:"numeric"});},[nextMonth]);
+  const isCurrentMonth=selectedMonth===currentMonth;
+
+  // Winning = HP Won contacts for the selected month (live, not yet stored in active_clients)
+  const winningClients=useMemo(()=>hpContacts.filter(c=>c.stage==="Won"&&winMonth(c)===selectedMonth),[hpContacts,selectedMonth,winMonth]);
+
+  // Active / Lost = stored monthly status records for the exact selected month
+  const activeClientsInMonth=useMemo(()=>clients.filter(c=>statuses.some(s=>s.clientId===c.id&&s.month===selectedMonth&&s.status==="active")),[clients,statuses,selectedMonth]);
+  const lostClients=useMemo(()=>clients.filter(c=>statuses.some(s=>s.clientId===c.id&&s.month===selectedMonth&&s.status==="lost")),[clients,statuses,selectedMonth]);
+
+  const availableMonths=useMemo(()=>{
+    const s=new Set([...statuses.map(s=>s.month),...hpContacts.filter(c=>c.stage==="Won").map(c=>winMonth(c)),currentMonth]);
+    return [...s].sort().reverse();
+  },[statuses,hpContacts,currentMonth,winMonth]);
+
+  const stats=useMemo(()=>({
+    active:activeClientsInMonth.length,winning:winningClients.length,lost:lostClients.length,
+    activeRevenue:activeClientsInMonth.reduce((s,c)=>s+(c.revenue||0),0),
+    wonRevenue:winningClients.reduce((s,c)=>s+(c.saleValue||0),0)
+  }),[activeClientsInMonth,winningClients,lostClients]);
+
+  async function addClient(form){
+    setSaving(true);
+    const res=await sbInsert("active_clients",acToRow(form));
+    if(Array.isArray(res)&&res[0]){
+      const newClient=rowToAC(res[0]);
+      setClients(p=>[...p,newClient]);
+      const stRes=await sbInsert("active_clients_monthly_status",{client_id:newClient.id,month:currentMonth,status:"active"});
+      if(Array.isArray(stRes)&&stRes[0])setStatuses(p=>[...p,rowToStatus(stRes[0])]);
+      setAddModal(false);
+    } else {
+      alert("Save failed:\n"+(res?.message||res?.error||JSON.stringify(res)));
+    }
+    setSaving(false);
+  }
+  async function saveClient(form){
+    setSaving(true);
+    const res=await sbUpdate("active_clients",form.id,acToRow(form));
+    if(Array.isArray(res)&&res[0]){setClients(p=>p.map(c=>c.id===form.id?rowToAC(res[0]):c));setEditModal(null);}
+    else{alert("Save failed:\n"+(res?.message||res?.error||JSON.stringify(res)));}
+    setSaving(false);
+  }
+  async function deleteClient(id){
+    await sbDelete("active_clients",id);
+    setClients(p=>p.filter(c=>c.id!==id));
+    setStatuses(p=>p.filter(s=>s.clientId!==id));
+    setEditModal(null);
+  }
+  async function moveToLost(client){
+    const res=await sbUpsert("active_clients_monthly_status","client_id,month",{client_id:client.id,month:currentMonth,status:"lost"});
+    if(Array.isArray(res)&&res[0])setStatuses(p=>[...p.filter(s=>!(s.clientId===client.id&&s.month===currentMonth)),rowToStatus(res[0])]);
+  }
+  async function restoreToActive(client){
+    const res=await sbUpsert("active_clients_monthly_status","client_id,month",{client_id:client.id,month:currentMonth,status:"active"});
+    if(Array.isArray(res)&&res[0])setStatuses(p=>[...p.filter(s=>!(s.clientId===client.id&&s.month===currentMonth)),rowToStatus(res[0])]);
+  }
+
+  // Roll current month forward: Active + Winning → next month Active, Lost excluded
+  const [rolling,setRolling]=useState(false);
+  async function rollToNextMonth(){
+    if(!confirm(`Close ${selectedMonth} and roll forward to ${nextMonthLabel}?\n\n✅ Active Clients → carried to next month\n✅ Winning Clients → promoted to Active next month\n❌ Lost Clients → excluded`))return;
+    setRolling(true);
+    const newStatuses=[];const newClients=[];
+    // Carry existing active clients forward
+    for(const c of activeClientsInMonth){
+      const res=await sbUpsert("active_clients_monthly_status","client_id,month",{client_id:c.id,month:nextMonth,status:"active"});
+      if(Array.isArray(res)&&res[0])newStatuses.push(rowToStatus(res[0]));
+    }
+    // Promote this month's winning HP contacts into active_clients, then carry forward
+    for(const hp of winningClients){
+      let ac=clients.find(c=>c.hotPipelineId===hp.id);
+      if(!ac){
+        const res=await sbInsert("active_clients",{first_name:hp.firstName,last_name:hp.lastName,company:hp.accountName||"",email:hp.email||"",phone:"",contract_terms:"",revenue:parseFloat(hp.saleValue)||0,source:hp.source||"hot_pipeline",hot_pipeline_id:hp.id});
+        if(Array.isArray(res)&&res[0]){ac=rowToAC(res[0]);newClients.push(ac);}
+      }
+      if(ac){
+        const res=await sbUpsert("active_clients_monthly_status","client_id,month",{client_id:ac.id,month:nextMonth,status:"active"});
+        if(Array.isArray(res)&&res[0])newStatuses.push(rowToStatus(res[0]));
+      }
+    }
+    if(newClients.length)setClients(p=>[...p,...newClients]);
+    if(newStatuses.length)setStatuses(p=>[...p,...newStatuses]);
+    setRolling(false);
+    setSelectedMonth(nextMonth);
+  }
+
+  if(loading)return <Spinner text="Loading Active Clients…"/>;
+
+  return (
+    <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+      <div style={{background:"#13131f",borderBottom:"1px solid #2d2d3f",padding:"10px 16px",display:"flex",flexDirection:"column",gap:10}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+          <MonthPicker selectedMonth={selectedMonth} currentMonth={currentMonth} availableMonths={availableMonths} onChange={setSelectedMonth}/>
+          {!isCurrentMonth&&<span style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:8,padding:"4px 12px",fontSize:11,fontWeight:700}}>📅 View Only</span>}
+          {!isCurrentMonth&&<button onClick={()=>setSelectedMonth(currentMonth)} style={{background:"#22c55e22",color:"#22c55e",border:"1px solid #22c55e44",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontSize:11,fontWeight:700}}>↩ Back to Present</button>}
+          {isCurrentMonth&&<button onClick={rollToNextMonth} disabled={rolling} style={{background:rolling?"#2d2d3f":"#6366f1",color:"#fff",border:"none",borderRadius:9,padding:"7px 14px",cursor:rolling?"default":"pointer",fontSize:12,fontWeight:700,opacity:rolling?0.6:1}}>{rolling?"Rolling…":`→ Roll to ${nextMonthLabel}`}</button>}
+          {isCurrentMonth&&<button onClick={()=>setAddModal(true)} style={{marginLeft:"auto",background:"#22c55e",color:"#fff",border:"none",borderRadius:9,padding:"7px 16px",cursor:"pointer",fontSize:12,fontWeight:700}}>+ Add Client</button>}
+        </div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          {[{label:"Active Clients",val:stats.active,c:"#22c55e"},{label:"Winning This Month",val:stats.winning,c:"#f59e0b"},{label:"Lost Clients",val:stats.lost,c:"#ef4444"},{label:"Active Revenue",val:"$"+stats.activeRevenue.toLocaleString(undefined,{maximumFractionDigits:0}),c:"#22c55e",bold:true},{label:"Won Revenue",val:"$"+stats.wonRevenue.toLocaleString(undefined,{maximumFractionDigits:0}),c:"#f59e0b",bold:true}].map(s=>(
+            <div key={s.label} style={{background:s.c+"12",border:`1px solid ${s.c}33`,borderRadius:9,padding:"5px 13px",display:"flex",alignItems:"center",gap:5}}>
+              <span style={{fontWeight:800,fontSize:s.bold?17:14,color:s.c}}>{s.val}</span>
+              <span style={{fontSize:11,color:"#64748b"}}>{s.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{flex:1,overflow:"auto",padding:12}}>
+        <div style={{display:"flex",gap:12,alignItems:"flex-start",minHeight:"100%"}}>
+          <ACColumn title="Active Clients" count={activeClientsInMonth.length} color="#22c55e" onAdd={isCurrentMonth?()=>setAddModal(true):undefined}>
+            {activeClientsInMonth.map(c=>(
+              <ACCard key={c.id} client={c}
+                onClick={isCurrentMonth?()=>setEditModal(c):undefined}
+                onAction={isCurrentMonth?moveToLost:undefined}
+                actionLabel="Mark Lost" actionColor="#ef4444"
+              />
+            ))}
+          </ACColumn>
+          <ACColumn title="Winning Clients" count={winningClients.length} color="#f59e0b" note={isCurrentMonth?"🔥 Auto-synced from Hot Pipeline — roll forward to promote to Active":"📅 Historical record for this month"}>
+            {winningClients.map(c=><ACWinningCard key={c.id} client={c}/>)}
+          </ACColumn>
+          <ACColumn title="Lost Client" count={lostClients.length} color="#ef4444">
+            {lostClients.map(c=>(
+              <ACCard key={c.id} client={c}
+                onClick={isCurrentMonth?()=>setEditModal(c):undefined}
+                onAction={isCurrentMonth?restoreToActive:undefined}
+                actionLabel="Restore Active" actionColor="#22c55e"
+              />
+            ))}
+          </ACColumn>
+        </div>
+      </div>
+      {addModal&&<ACContactModal onClose={()=>setAddModal(false)} onSave={addClient} saving={saving}/>}
+      {editModal&&<ACContactModal client={editModal} onClose={()=>setEditModal(null)} onSave={saveClient} onDelete={deleteClient} saving={saving}/>}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // ── ROOT APP ──────────────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 function App(){
@@ -944,17 +1226,22 @@ function App(){
           <div style={{fontSize:22,marginBottom:6}}>🔥</div>
           Hot Pipeline
         </button>
+        <button onClick={()=>setGate("activeclients")}
+          style={{width:"100%",background:gate==="activeclients"?"#22c55e":"#1e1e2e",color:gate==="activeclients"?"#fff":"#64748b",border:`1px solid ${gate==="activeclients"?"#22c55e":"#2d2d3f"}`,borderRadius:12,padding:"14px 8px",cursor:"pointer",fontWeight:700,fontSize:12,transition:"all .2s",textAlign:"center"}}>
+          <div style={{fontSize:22,marginBottom:6}}>👥</div>
+          Active Clients
+        </button>
         <div style={{marginTop:"auto",fontSize:10,color:"#2d2d3f",textAlign:"center"}}>● Supabase Connected</div>
       </div>
       {/* Right Content */}
       <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
         {/* Top bar */}
         <div style={{background:"#13131f",borderBottom:"1px solid #2d2d3f",padding:"10px 16px",display:"flex",alignItems:"center",gap:10}}>
-          <div style={{fontWeight:700,fontSize:15,color:"#e2e8f0"}}>{gate==="linkedin"?"💼 LinkedIn CRM":"🔥 Hot Pipeline"}</div>
+          <div style={{fontWeight:700,fontSize:15,color:"#e2e8f0"}}>{gate==="linkedin"?"💼 LinkedIn CRM":gate==="hotpipeline"?"🔥 Hot Pipeline":"👥 Active Clients"}</div>
           <div style={{fontSize:12,color:"#22c55e",marginLeft:4}}>● Live</div>
         </div>
         {/* Gate Content */}
-        {gate==="linkedin" ? <LinkedInGate/> : <HotPipelineGate/>}
+        {gate==="linkedin"?<LinkedInGate/>:gate==="hotpipeline"?<HotPipelineGate/>:<ActiveClientsGate/>}
       </div>
     </div>
   );

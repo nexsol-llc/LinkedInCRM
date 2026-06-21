@@ -1,6 +1,6 @@
 # 🚀 AffiLinks.io — Full CRM
 
-> A powerful, production-ready affiliate outreach CRM with LinkedIn pipeline management, Hot Pipeline tracking, and Active Client lifecycle management. Built with React, powered by Supabase, and deployed on Vercel.
+> A powerful, production-ready sales CRM with multi-pipeline management, cold calling, email outreach, freelance tracking, and team activity logging. Built with React, powered by Supabase, and deployed on Vercel.
 
 **Live URL:** [https://linked-crm.vercel.app](https://linked-crm.vercel.app)
 
@@ -13,12 +13,17 @@
 - [Tech Stack](#tech-stack)
 - [Database Setup](#database-setup)
 - [Getting Started](#getting-started)
-- [Gates](#gates)
-  - [LinkedIn CRM](#linkedin-crm)
+- [Pipelines](#pipelines)
+  - [LinkedIn Pipeline](#linkedin-pipeline)
   - [Hot Pipeline](#hot-pipeline)
+  - [Freelance Pipeline](#freelance-pipeline)
+  - [Cold Calling](#cold-calling)
+  - [Email Campaign](#email-campaign)
   - [Active Clients](#active-clients)
+  - [All Contacts](#all-contacts)
+- [Activity Log](#activity-log)
 - [CSV Import & Export](#csv-import--export)
-- [Stages](#stages)
+- [Stages Reference](#stages-reference)
 - [Tags](#tags)
 - [Notifications & Reminders](#notifications--reminders)
 - [Deployment](#deployment)
@@ -28,11 +33,16 @@
 
 ## 🌟 Overview
 
-AffiLinks.io is a custom-built CRM designed specifically for **affiliate marketers and outreach professionals**. It features three separate workspaces (Gates) accessible from a single password-protected dashboard:
+AffiLinks.io is a custom-built CRM designed for **sales and outreach teams**. It features six separate pipelines accessible from a single password-protected dashboard, all sharing a common sidebar navigation:
 
-- **💼 LinkedIn CRM** — Full-featured pipeline for managing LinkedIn outreach contacts
-- **🔥 Hot Pipeline** — Multi-channel sales tracker for Fiverr, Upwork, LinkedIn, Email, WhatsApp, and Calling leads
-- **👥 Active Clients** — Monthly client lifecycle manager with revenue tracking, historical records, and comparison analytics
+| Pipeline | Purpose |
+|---|---|
+| 🔥 Hot Pipeline | Multi-channel sales tracker (Fiverr, Upwork, LinkedIn, Email, WhatsApp, Calling) |
+| 💼 LinkedIn Pipeline | LinkedIn outreach management with full follow-up tracking |
+| 🧩 Freelance Pipeline | Freelance platform lead tracker (Fiverr, Upwork, Freelancer) |
+| 👥 Active Clients | Monthly client lifecycle manager with revenue analytics |
+| 📞 Cold Calling | Phone outreach tracker with call status and appointment booking |
+| ✉️ Email Campaign | Email outreach pipeline with connected/appointment stages |
 
 All data is stored in **Supabase (PostgreSQL)** and syncs across any device in real time.
 
@@ -47,44 +57,54 @@ All data is stored in **Supabase (PostgreSQL)** and syncs across any device in r
 - ⬇️ CSV Export of all contacts
 - 🔔 Bell notification with follow-up reminders
 - 🏷️ Tags & labels system
-- 📊 Analytics & revenue charts
+- 📊 Analytics tab on every pipeline
+- 📋 **Activity Log** tab on every pipeline — log daily team activity with calendar and export
 
-### LinkedIn CRM
+### LinkedIn Pipeline
 - 🗂️ Kanban board with drag & drop
-- 👥 Contacts table with search, filter, sort
-- 📅 Calendar with follow-up scheduling
-- ✉️ Message templates with variables
-- 📈 Monthly revenue column chart
+- 👥 Contacts table with search & filter
+- 📅 Calendar with follow-up reminders
+- ✉️ Message templates
 - 💰 Deal closing with amount, date & contract
 - 🔁 Follow-up history & attempt tracking
 - 🔔 Overdue reminders with Review popup
-- 🔍 Dedicated Sales Navigator CSV import
-- 🔗 **Auto-clone to Hot Pipeline** — dragging a contact to Won automatically creates a copy in Hot Pipeline under the LinkedIn column
+- 🔍 Sales Navigator CSV import
+- 🔗 Auto-clone to Hot Pipeline on Won
 
 ### Hot Pipeline
-- 🔥 9-stage Kanban board (Fiverr, Upwork, LinkedIn, Email, WhatsApp, Calling, Follow Up, Won, Loss)
-- 💰 Per-channel sales stat boxes (Fiverr, Upwork, LinkedIn, Email, WhatsApp, Calling)
-- 📊 Pending Revenue and Revenue (Won) prominently displayed
-- 📅 Month picker — view any historical month's pipeline snapshot
-- 📈 Monthly Sales comparison widget (last month vs this month, clickable)
-- 📊 Insight chart with multi-month analytics
-- 🔍 Search box — filter all kanban cards live by name, email, account, industry
-- 📌 Permanent source tag (sticks when dragged across stages)
-- 🏢 Account Name, Industry, Sale Value per contact
+- 🔥 10-stage Kanban (Fiverr → Won → Loss)
+- 💰 Per-channel sales stat boxes
+- 📅 Month picker for historical snapshots
+- 📈 Monthly Sales comparison widget
+- 📊 Multi-month insight chart
+- 🔍 Live search across all cards
+
+### Freelance Pipeline
+- 🧩 7-stage Kanban (Fiverr, Upwork, Freelancer → WON)
+- 📌 Source filtering by platform
+- 📅 Follow-up scheduling & history
+- ✉️ Message templates
+- 📊 Platform analytics (leads by source + win rate)
+
+### Cold Calling
+- 📞 10-stage Kanban with call status tracking
+- 📅 Appointment booking flow
+- 🚫 DND (Do Not Disturb) stage
+- 🔔 Overdue reminders for follow-ups and appointments
+- 📊 Call status breakdown analytics
+
+### Email Campaign
+- ✉️ 10-stage Kanban (Awin Leads → Won)
+- 📅 Appointment tracking
+- 🚫 DND stage
+- 📊 Stage and campaign analytics
 
 ### Active Clients
-- 👥 Three-column kanban: **Active Clients**, **Winning Clients**, **Lost Client**
-- 📅 Month picker with full historical navigation
-- 🔍 Search box — filter across all three columns live
-- 🔄 **Auto-roll on new month** — on first load of a new month, Active + Winning clients from previous month are automatically carried forward as Active; Lost clients are excluded
-- 🏆 **Winning Clients** auto-synced from Hot Pipeline Won leads for the selected month
-- 🚩 **Mark Lost with reason** — modal appears asking for loss reason, stored permanently with the record
-- 🔁 **Restore to Active** — move a lost client back to active in one click
-- 💰 Revenue tracking per client (Active Revenue, Won Revenue, Lost Revenue, Total Revenue)
-- 📊 **Comparison Graph** — bar chart comparing current vs previous month across all 4 revenue metrics, with a colour-coded improvement summary
-- 📋 **Active Projects** — YTD (Jan–present) list of all active + winning clients, exportable to CSV
-- 📋 **Lost Projects** — YTD list of all lost clients with reason and month, exportable to CSV
-- 📅 Past months are read-only historical snapshots — no accidental edits
+- 👥 Three-column Kanban: Active, Winning, Lost
+- 🔄 Auto-roll on new month
+- 🏆 Winning Clients auto-synced from Hot Pipeline Won
+- 💰 Revenue tracking with comparison graph (current vs previous month)
+- 📋 YTD Active Projects & Lost Projects with CSV export
 
 ---
 
@@ -108,10 +128,10 @@ All data is stored in **Supabase (PostgreSQL)** and syncs across any device in r
 
 ### Tables
 
-#### `leads` — LinkedIn CRM contacts
+#### `leads` — LinkedIn Pipeline contacts
 ```sql
-create table leads (
-  id bigint primary key generated always as identity,
+CREATE TABLE leads (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   first_name text,
   last_name text,
   linkedin_url text,
@@ -119,29 +139,30 @@ create table leads (
   industry text,
   affiliate_network text,
   email text,
-  stage text default 'Cold',
-  tags text[] default '{}',
+  phone text,
+  stage text DEFAULT 'Cold',
+  tags text[] DEFAULT '{}',
   follow_up jsonb,
   deal jsonb,
-  follow_up_history jsonb[] default '{}',
-  created_at timestamptz default now()
+  follow_up_history jsonb[] DEFAULT '{}',
+  created_at timestamptz DEFAULT now()
 );
 ```
 
-#### `templates` — Message templates
+#### `templates` — Message templates (shared across pipelines)
 ```sql
-create table templates (
-  id bigint primary key generated always as identity,
+CREATE TABLE templates (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   name text,
   body text,
-  created_at timestamptz default now()
+  created_at timestamptz DEFAULT now()
 );
 ```
 
 #### `hot_pipeline` — Hot Pipeline contacts
 ```sql
-create table hot_pipeline (
-  id bigint primary key generated always as identity,
+CREATE TABLE hot_pipeline (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   first_name text,
   last_name text,
   linkedin_url text,
@@ -150,58 +171,148 @@ create table hot_pipeline (
   email text,
   account_name text,
   source text,
-  stage text default 'Fiverr',
-  sale_value numeric default 0,
-  tags text[] default '{}',
+  stage text DEFAULT 'Fiverr',
+  sale_value numeric DEFAULT 0,
+  tags text[] DEFAULT '{}',
   follow_up jsonb,
   deal jsonb,
-  follow_up_history jsonb[] default '{}',
+  follow_up_history jsonb[] DEFAULT '{}',
   won_at timestamptz,
-  created_at timestamptz default now()
+  created_at timestamptz DEFAULT now()
+);
+```
+
+#### `freelance_pipeline` — Freelance Pipeline contacts
+```sql
+CREATE TABLE freelance_pipeline (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  first_name text,
+  last_name text,
+  email text,
+  phone text,
+  linkedin_url text,
+  website text,
+  company_name text,
+  project_type text,
+  source text DEFAULT 'Fiverr',
+  stage text DEFAULT 'Fiverr',
+  sale_value numeric DEFAULT 0,
+  tags text[] DEFAULT '{}',
+  follow_up jsonb,
+  deal jsonb,
+  follow_up_history jsonb[] DEFAULT '{}',
+  won_at timestamptz,
+  created_at timestamptz DEFAULT now()
+);
+```
+
+#### `cold_calling` — Cold Calling leads
+```sql
+CREATE TABLE cold_calling (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  first_name text,
+  last_name text,
+  email text,
+  phone text,
+  linkedin_url text,
+  website text,
+  company text,
+  industry text,
+  source text,
+  stage text DEFAULT 'Awin Leads',
+  call_status text,
+  sale_value numeric DEFAULT 0,
+  tags text[] DEFAULT '{}',
+  follow_up jsonb,
+  appointment jsonb,
+  deal jsonb,
+  follow_up_history jsonb[] DEFAULT '{}',
+  created_at timestamptz DEFAULT now()
+);
+```
+
+#### `email_campaign` — Email Campaign leads
+```sql
+CREATE TABLE email_campaign (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  first_name text,
+  last_name text,
+  email text,
+  phone text,
+  linkedin_url text,
+  website text,
+  company text,
+  industry text,
+  source text,
+  stage text DEFAULT 'Awin Leads',
+  sale_value numeric DEFAULT 0,
+  tags text[] DEFAULT '{}',
+  follow_up jsonb,
+  appointment jsonb,
+  deal jsonb,
+  follow_up_history jsonb[] DEFAULT '{}',
+  created_at timestamptz DEFAULT now()
 );
 ```
 
 #### `active_clients` — Active Client records
 ```sql
-create table active_clients (
-  id bigint primary key generated always as identity,
+CREATE TABLE active_clients (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   first_name text,
   last_name text,
   company text,
   email text,
   phone text,
   contract_terms text,
-  revenue numeric default 0,
-  source text default 'manual',
-  hot_pipeline_id bigint references hot_pipeline(id),
-  created_at timestamptz default now()
+  revenue numeric DEFAULT 0,
+  source text DEFAULT 'manual',
+  hot_pipeline_id bigint REFERENCES hot_pipeline(id),
+  created_at timestamptz DEFAULT now()
 );
 ```
 
 #### `active_clients_monthly_status` — Per-month status tracking
 ```sql
-create table active_clients_monthly_status (
-  id bigint primary key generated always as identity,
-  client_id bigint references active_clients(id),
+CREATE TABLE active_clients_monthly_status (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  client_id bigint REFERENCES active_clients(id),
   month text,        -- format: 'YYYY-MM'
   status text,       -- 'active' | 'lost'
   reason text,       -- loss reason (optional)
-  created_at timestamptz default now(),
-  unique(client_id, month)
+  created_at timestamptz DEFAULT now(),
+  UNIQUE(client_id, month)
+);
+```
+
+#### `activity_log` — Team daily activity log
+```sql
+CREATE TABLE activity_log (
+  id bigserial PRIMARY KEY,
+  pipeline text NOT NULL,
+  date date NOT NULL,
+  name text NOT NULL,
+  activity text NOT NULL,
+  achievement text DEFAULT '',
+  created_at timestamptz DEFAULT now()
 );
 ```
 
 ### Disable RLS
 Run this for all tables to allow API access:
 ```sql
-alter table leads disable row level security;
-alter table templates disable row level security;
-alter table hot_pipeline disable row level security;
-alter table active_clients disable row level security;
-alter table active_clients_monthly_status disable row level security;
+ALTER TABLE leads DISABLE ROW LEVEL SECURITY;
+ALTER TABLE templates DISABLE ROW LEVEL SECURITY;
+ALTER TABLE hot_pipeline DISABLE ROW LEVEL SECURITY;
+ALTER TABLE freelance_pipeline DISABLE ROW LEVEL SECURITY;
+ALTER TABLE cold_calling DISABLE ROW LEVEL SECURITY;
+ALTER TABLE email_campaign DISABLE ROW LEVEL SECURITY;
+ALTER TABLE active_clients DISABLE ROW LEVEL SECURITY;
+ALTER TABLE active_clients_monthly_status DISABLE ROW LEVEL SECURITY;
+ALTER TABLE activity_log DISABLE ROW LEVEL SECURITY;
 ```
 
-### Remove Duplicate Leads
+### Remove Duplicate Leads (LinkedIn Pipeline)
 ```sql
 DELETE FROM leads
 WHERE id NOT IN (
@@ -221,15 +332,15 @@ WHERE id NOT IN (
 1. Clone or download the repository
 2. Open `index.html` in your browser — or deploy to Vercel
 3. Enter password: `LinkedIn@7865`
-4. Select a gate from the left sidebar: **LinkedIn CRM**, **Hot Pipeline**, or **Active Clients**
+4. Select a pipeline from the left sidebar
 
 ---
 
-## 🚪 Gates
+## 🚪 Pipelines
 
-### 💼 LinkedIn CRM
+### 💼 LinkedIn Pipeline
 
-A full-featured CRM for managing LinkedIn affiliate outreach.
+Full-featured CRM for LinkedIn affiliate outreach.
 
 #### Tabs
 | Tab | Description |
@@ -239,106 +350,186 @@ A full-featured CRM for managing LinkedIn affiliate outreach.
 | 📅 Calendar | Monthly view with follow-up events |
 | ✉️ Templates | Message templates with variable insertion |
 | 📊 Analytics | Pipeline charts & revenue graphs |
+| 📋 Activity | Team daily activity log with calendar & export |
 
 #### How to use
-1. **Add contacts** via `+ Add` button or CSV import
-2. **Drag contacts** across stages as your outreach progresses
-3. **Drop to Follow Up** → set date & notes → appears on Calendar
-4. **Drop to Won** → enter closing date, deal amount & contract → contact is **automatically cloned into Hot Pipeline** under the LinkedIn column
-5. **Drop to Lost** → select reason tag (optional)
+1. **Add contacts** via `+ Add` or CSV import
+2. **Drag contacts** across stages as outreach progresses
+3. **Drop to Follow Up** → set date & notes → appears in Calendar
+4. **Drop to Won** → enter deal details → contact is **automatically cloned into Hot Pipeline**
+5. **Drop to Lost** → select reason tag
 6. **Check bell 🔔** daily for overdue follow-ups
 
 ---
 
 ### 🔥 Hot Pipeline
 
-A multi-channel sales tracker for managing leads from different platforms.
+Multi-channel sales tracker for Fiverr, Upwork, LinkedIn, Email, WhatsApp, and Calling leads.
 
-#### Stages (Columns)
-`Fiverr` → `Upwork` → `LinkedIn` → `Email` → `WhatsApp` → `Calling` → `Follow Up` → `Won` → `Loss`
+#### Stages
+`Fiverr` → `Upwork` → `LinkedIn` → `Email` → `WhatsApp` → `Calling` → `Freelancer` → `Follow Up` → `Won` → `Loss`
 
 #### Stat Boxes
 | Box | What it shows |
 |---|---|
-| Fiverr Sales | Total value of all Fiverr-sourced Won contacts |
-| Upwork Sales | Total value of all Upwork-sourced Won contacts |
-| LinkedIn Sales | Total value of all LinkedIn-sourced Won contacts |
-| Email Sales | Total value of all Email-sourced Won contacts |
-| WhatsApp | Total value of all WhatsApp-sourced Won contacts |
-| Calling Sales | Total value of all Calling-sourced Won contacts |
-| Total Sales | Sum of all sale values across all contacts |
-| Pending Revenue | Total Sales minus Revenue Won |
-| Monthly Sales | Last month vs this month comparison (click last month to navigate) |
-| Revenue (Won) | Total value of contacts in the Won stage — prominently displayed |
-
-#### Search
-Use the 🔍 search box (before the month picker) to filter all kanban cards live by name, email, account name, or industry.
+| Fiverr / Upwork / LinkedIn / Email / WhatsApp / Calling / Freelancer Sales | Won revenue per source channel |
+| Total Sales | Sum of all sale values |
+| Pending Revenue | Total Sales minus Won Revenue |
+| Monthly Sales | Last month vs this month comparison |
 
 #### How to use
 1. Click **+ Add Contact** at the bottom of any column
-2. Fill in name, account name, email, industry, source & sale value
-3. **Source tag is permanent** — it never changes even when dragged
-4. Drag contacts across stages as deals progress
-5. Stats update live at the top
-6. Use the **Month Picker** to view any past month's snapshot
-7. Click **📊 Insight** for multi-month analytics charts
+2. Fill in name, account name, source & sale value
+3. Source tag is permanent — never changes on drag
+4. Use **Month Picker** to view historical snapshots
+5. Click **📊 Insight** for multi-month analytics
+
+---
+
+### 🧩 Freelance Pipeline
+
+Freelance platform lead tracker with project and platform analytics.
+
+#### Stages
+`Fiverr` → `Upwork` → `Freelancer` → `Connected` → `Follow Up` → `Lost` → `WON`
+
+#### Tabs
+| Tab | Description |
+|---|---|
+| 🗂️ Kanban | Drag & drop with source filtering |
+| 👥 Contacts | Table view with search |
+| 📅 Calendar | Follow-up reminders |
+| ✉️ Templates | Message templates |
+| 📊 Analytics | Stage breakdown + leads by platform |
+| 📋 Activity | Team daily activity log with calendar & export |
+
+---
+
+### 📞 Cold Calling
+
+Phone outreach pipeline with call status tracking and appointment booking.
+
+#### Stages
+`Awin Leads` → `SN Leads` → `Apollo Leads` → `Other Leads` → `Call Status` → `Follow Up` → `DND` → `Lost` → `Appointment Booked` → `Won`
+
+#### Tabs
+| Tab | Description |
+|---|---|
+| 🗂️ Kanban | Drag & drop with source filtering |
+| 👥 Contacts | Table view with search |
+| 📅 Calendar | Follow-up and appointment reminders |
+| 📊 Analytics | Stage breakdown + call status chart |
+| 📋 Activity | Team daily activity log with calendar & export |
+
+#### How to use
+1. Import leads via Apollo/SN CSV or add manually
+2. Log **Call Status** when you connect — a modal captures the outcome
+3. **Appointment Booked** → set date/time → appears on Calendar
+4. Overdue appointments trigger a Review popup: Won / Reschedule / No Show
+
+---
+
+### ✉️ Email Campaign
+
+Email outreach pipeline for tracking campaigns from lead to close.
+
+#### Stages
+`Awin Leads` → `SN Leads` → `Apollo Leads` → `Other Leads` → `Connected` → `Follow Up` → `DND` → `Lost` → `Appointment Booked` → `Won`
+
+#### Tabs
+| Tab | Description |
+|---|---|
+| 🗂️ Kanban | Drag & drop with source filtering |
+| 👥 Contacts | Table view with search |
+| 📅 Calendar | Follow-up and appointment reminders |
+| ✉️ Templates | Email templates |
+| 📊 Analytics | Stage breakdown analytics |
+| 📋 Activity | Team daily activity log with calendar & export |
 
 ---
 
 ### 👥 Active Clients
 
-A monthly client lifecycle manager that tracks your active, winning, and lost clients with full history.
+Monthly client lifecycle manager.
 
 #### Columns
 | Column | Description |
 |---|---|
-| Active Clients | Clients currently active this month |
-| Winning Clients | Hot Pipeline Won leads for the selected month (auto-synced) |
-| Lost Client | Clients marked as lost this month, with reason |
-| Comparison Graph | Current vs previous month revenue chart |
+| Active Clients | Clients active this month |
+| Winning Clients | Hot Pipeline Won leads for the month (auto-synced) |
+| Lost Clients | Clients marked lost this month with reason |
+| Comparison Graph | Current vs previous month revenue bar chart |
 
 #### Stats Bar
 | Stat | Description |
 |---|---|
-| Active Clients | Count of active clients this month |
-| Winning This Month | Count of HP Won leads this month |
-| Lost Clients | Count of lost clients this month |
+| Active / Winning / Lost counts | Client counts per column |
 | Active Revenue | Sum of revenue from Active clients |
 | Won Revenue | Sum of sale value from Winning clients |
-| Lost Revenue | Sum of revenue from Lost clients (red) |
-| Total Revenue | Active Revenue + Won Revenue (prominent purple box) |
+| Lost Revenue | Sum of revenue from Lost clients |
+| Total Revenue | Active Revenue + Won Revenue |
 
-#### Month Navigation
-- Use the **Month Picker** to jump to any historical month — past months are **read-only** snapshots
-- **Auto-roll**: on the first load of a new calendar month, the app automatically carries Active + Winning clients from the previous month into the new month as Active. Lost clients are never carried forward.
+#### Key behaviours
+- **Auto-roll** — on first load of a new month, Active + Winning clients carry forward automatically
+- **Mark Lost** — modal asks for reason; stored with the record permanently
+- **Restore Active** — move a lost client back to Active in one click
+- **Active Projects / Lost Projects** — YTD lists, both exportable as CSV
+- Past months are read-only historical snapshots
 
-#### Active Projects & Lost Projects
-- Click **Active Projects** (green button, next to month picker) to see all clients active or winning at any point this year (Jan–present)
-- Click **Lost Projects** (red button) to see all clients lost this year with their reason and month
-- Both modals support **⬇ Export CSV** to download the full list
+---
 
-#### Comparison Graph
-- Positioned as a 4th panel next to the Lost Client column
-- Shows a grouped bar chart comparing **current selected month vs previous month** across Active Revenue, Won Revenue, Lost Revenue, and Total Revenue
-- Colour-coded improvement summary below the chart:
-  - For Lost Revenue: losing less is shown as an improvement (green)
-  - All other metrics: higher is better (green)
+### 🗂️ All Contacts
 
-#### How to use
-1. **Add a client** manually with `+ Add Client` — name, company, email, phone, revenue, and contract terms (required)
-2. Winning Clients auto-appear from Hot Pipeline — no manual entry needed
-3. **Mark Lost** → a modal appears asking for the reason → client moves to Lost column with the reason displayed on the card
-4. **Restore Active** → move a lost client back to Active
-5. Navigate to past months to review historical data
-6. Use the 🔍 search box to find any client across all columns
+Unified search view across LinkedIn Pipeline, Hot Pipeline, and Freelance Pipeline.
+
+- Filter by pipeline, industry, and stage
+- Export filtered results as CSV
+- Read-only — edits must be made inside each pipeline
+
+---
+
+## 📋 Activity Log
+
+Every pipeline (LinkedIn, Freelance, Cold Calling, Email Campaign) has an **Activity** tab for logging daily team activity.
+
+### Features
+| Feature | Description |
+|---|---|
+| Log view | Table of all entries: Date, Name, Activity, Achievement |
+| Date range filter | Filter entries by From → To date |
+| ⬇ Export | Download filtered entries as CSV |
+| + Add Entry | Log a new activity with date, name, activity description, and achievement |
+| Calendar view | Monthly calendar grid; days with entries are highlighted |
+| Day detail | Click any calendar day to see that day's entries or add a new one |
+
+### Supabase table required
+```sql
+CREATE TABLE activity_log (
+  id bigserial PRIMARY KEY,
+  pipeline text NOT NULL,
+  date date NOT NULL,
+  name text NOT NULL,
+  activity text NOT NULL,
+  achievement text DEFAULT '',
+  created_at timestamptz DEFAULT now()
+);
+```
+
+### Columns
+| Column | Description |
+|---|---|
+| Date | The date of the activity (YYYY-MM-DD) |
+| Name | Team member who performed the activity |
+| Activity | What was done (calls made, emails sent, etc.) |
+| Achievement | Notable win or result (optional) |
 
 ---
 
 ## 📥 CSV Import & Export
 
-### Import (LinkedIn CRM)
+### Import (LinkedIn Pipeline)
 - **📥 Import** — imports contacts to `Cold` stage
-- **🔍 SN Import** — imports contacts directly to `Sales Navigator` stage with `sales-navigator` tag
+- **🔍 SN Import** — imports contacts to `Sales Navigator` stage
 
 #### CSV Format
 ```
@@ -347,47 +538,67 @@ John,Doe,https://linkedin.com/in/johndoe,johndoe.com,SaaS,Impact,john@doe.com
 ```
 
 ### Duplicate Detection
-On import, the app checks:
-- Same **email address**, OR
-- Same **first name + last name**
-
-Duplicates are automatically skipped. A summary is shown after import:
-```
-✅ 150 contacts imported
-⚠️ 23 duplicates skipped
-```
+On import the app checks same email address OR same first + last name. Duplicates are skipped and a summary is shown after import.
 
 ### Export
-- **LinkedIn CRM** — Click **⬇️ Export** to download all contacts as `.csv`
-- **Active Clients** — Click **Active Projects** or **Lost Projects** → click **⬇ Export CSV** inside the modal
+- **LinkedIn Pipeline** → Contacts tab → **⬇ Export**
+- **All Contacts** → **⬇ Export** (filtered results)
+- **Active Clients** → Active Projects / Lost Projects modal → **⬇ Export CSV**
+- **Activity Log** → Activity tab → set date range → **⬇ Export**
 
 ---
 
-## 🗂️ Stages
+## 🗂️ Stages Reference
 
-### LinkedIn CRM Stages
+### LinkedIn Pipeline
 | Stage | Description |
 |---|---|
 | Cold | New uncontacted leads |
-| Sales Navigator | Leads sourced via Sales Navigator |
+| Sales Navigator | Sourced via Sales Navigator |
 | Connection Sent | LinkedIn connection request sent |
 | Connected | Connection accepted |
-| Follow Up | Scheduled follow-up |
+| Follow Up | Scheduled follow-up pending |
 | Won | Deal closed — auto-cloned to Hot Pipeline |
 | Lost | Lead lost or not interested |
 
-### Hot Pipeline Stages
+### Hot Pipeline
 | Stage | Description |
 |---|---|
-| Fiverr | Fiverr platform leads |
-| Upwork | Upwork platform leads |
-| LinkedIn | LinkedIn platform leads (includes clones from LinkedIn CRM Won) |
-| Email | Email outreach leads |
-| WhatsApp | WhatsApp leads |
-| Calling | Phone call leads |
+| Fiverr / Upwork / LinkedIn / Email / WhatsApp / Calling / Freelancer | Platform-sourced leads |
 | Follow Up | Scheduled follow-ups |
-| Won | Deals won — appear in Active Clients Winning column |
+| Won | Deals won — appear in Active Clients |
 | Loss | Deals lost |
+
+### Freelance Pipeline
+| Stage | Description |
+|---|---|
+| Fiverr / Upwork / Freelancer | Platform-sourced leads |
+| Connected | Initial contact made |
+| Follow Up | Awaiting response |
+| Lost | Lead not converted |
+| WON | Deal closed |
+
+### Cold Calling
+| Stage | Description |
+|---|---|
+| Awin Leads / SN Leads / Apollo Leads / Other Leads | Lead source buckets |
+| Call Status | Call attempted — outcome logged |
+| Follow Up | Scheduled callback |
+| DND | Do Not Disturb — opted out |
+| Lost | Not converted |
+| Appointment Booked | Meeting scheduled |
+| Won | Deal closed |
+
+### Email Campaign
+| Stage | Description |
+|---|---|
+| Awin Leads / SN Leads / Apollo Leads / Other Leads | Lead source buckets |
+| Connected | Email opened / replied |
+| Follow Up | Follow-up email scheduled |
+| DND | Do Not Disturb — opted out |
+| Lost | Not converted |
+| Appointment Booked | Meeting scheduled |
+| Won | Deal closed |
 
 ---
 
@@ -409,37 +620,31 @@ Duplicates are automatically skipped. A summary is shown after import:
 | not-interested | Not interested leads |
 | sales-navigator | Sales Navigator sourced |
 
-### Custom Tags
-Type any tag name in the tag input and press **Enter** to create custom tags.
+Custom tags can be created by typing a name and pressing **Enter** in the tag input.
 
 ---
 
 ## 🔔 Notifications & Reminders
 
-The bell icon 🔔 in the header shows a red badge with the count of overdue + today's follow-ups.
+The bell icon 🔔 in the header shows overdue + today's follow-up count.
 
-### Reminder Categories
 | Category | Description |
 |---|---|
 | 🔴 OVERDUE | Follow-up date has passed |
 | 🟡 TODAY | Follow-up due today |
 | 🔵 UPCOMING | Follow-ups in the next 7 days |
 
-### Review Popup
-Click any overdue/today reminder to open the Review popup:
-- ✅ **They Replied** → moves contact to Connected
-- 🔁 **Follow Up Again** → reschedule with quick +3/+7/+14 day buttons
-- ❌ **Not Interested** → moves contact to Lost
-
-### Follow-Up History
-Every follow-up attempt is logged with date and notes. The attempt number shows on the card (e.g. `#3`).
+**Review Popup** (click any reminder):
+- ✅ **Replied / Called** → advances contact to Connected/Call Status
+- 🔁 **Follow Up Again** → reschedule
+- ❌ **Lost / DND** → closes the lead
 
 ---
 
 ## 🌐 Deployment
 
 ### Vercel (Current)
-1. Push `index.html` to GitHub repo (`LinkedCRM`)
+1. Push `index.html` to GitHub repo
 2. Vercel auto-deploys on every commit
 3. Live at: [https://linked-crm.vercel.app](https://linked-crm.vercel.app)
 
@@ -454,10 +659,10 @@ Every follow-up attempt is logged with date and notes. The attempt number shows 
 
 | Feature | Details |
 |---|---|
-| Password | `LinkedIn@7865` — shown once at login |
+| Password | `LinkedIn@7865` — required on every session |
 | Session | Stays unlocked until browser tab is closed |
 | Database | Supabase with anon key (RLS disabled for simplicity) |
-| Recommendation | Set GitHub repo to **Private** to hide credentials |
+| Recommendation | Keep GitHub repo **Private** to protect credentials |
 
 ### Make GitHub Repo Private
 1. Go to your GitHub repo → **Settings**
@@ -473,4 +678,4 @@ This CRM was custom built and is maintained privately. For changes or new featur
 
 ---
 
-*Built with ❤️ for affiliate outreach professionals*
+*Built with ❤️ for sales and outreach professionals*

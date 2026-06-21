@@ -9,13 +9,16 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:#0d0d17;color:#e2e8f0;font-family:'Inter',system-ui,sans-serif;min-height:100vh}
-  ::-webkit-scrollbar{width:6px;height:6px}
-  ::-webkit-scrollbar-track{background:#13131f}
-  ::-webkit-scrollbar-thumb{background:#2d2d3f;border-radius:3px}
+  body{background:#f1f5f9;color:#0f172a;font-family:'Inter',system-ui,sans-serif;min-height:100vh}
+  ::-webkit-scrollbar{width:5px;height:5px}
+  ::-webkit-scrollbar-track{background:#f1f5f9}
+  ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
   input,select,textarea,button{font-family:inherit}
   a{text-decoration:none}
   @keyframes spin{to{transform:rotate(360deg)}}
+  .nav-btn:hover{background:#f8fafc!important}
+  body.dark-mode{filter:invert(0.92) hue-rotate(180deg)}
+  body.dark-mode img{filter:invert(1) hue-rotate(180deg)}
 </style>
 </head>
 <body>
@@ -117,44 +120,44 @@ function exportCSV(leads) {
 }
 
 // ── Base styles ───────────────────────────────────────────────────────────────
-const IS = { width:"100%", background:"#13131f", border:"1px solid #2d2d3f", borderRadius:8, padding:"8px 11px", color:"#e2e8f0", fontSize:13, outline:"none", boxSizing:"border-box" };
+const IS = { width:"100%", background:"#f8fafc", border:"1px solid #e2e8f0", borderRadius:8, padding:"8px 11px", color:"#0f172a", fontSize:13, outline:"none", boxSizing:"border-box" };
 
 // ── UI Primitives ─────────────────────────────────────────────────────────────
-function Btn({children,variant="primary",style:s,...r}){ const bg=variant==="primary"?"#6366f1":variant==="danger"?"#ef4444":variant==="success"?"#22c55e":"#2d2d3f"; return <button {...r} style={{background:bg,color:"#fff",border:"none",borderRadius:8,padding:"8px 16px",cursor:"pointer",fontSize:13,fontWeight:600,...s}}>{children}</button>; }
-function Inp({label,...p}){ return <div style={{marginBottom:12}}>{label&&<label style={{display:"block",fontSize:12,color:"#94a3b8",marginBottom:4,fontWeight:600}}>{label}</label>}<input {...p} style={{...IS,...p.style}}/></div>; }
-function Tex({label,...p}){ return <div style={{marginBottom:12}}>{label&&<label style={{display:"block",fontSize:12,color:"#94a3b8",marginBottom:4,fontWeight:600}}>{label}</label>}<textarea {...p} style={{...IS,resize:"vertical",minHeight:72,...p.style}}/></div>; }
-function Sel({label,children,...p}){ return <div style={{marginBottom:12}}>{label&&<label style={{display:"block",fontSize:12,color:"#94a3b8",marginBottom:4,fontWeight:600}}>{label}</label>}<select {...p} style={{...IS,...p.style}}>{children}</select></div>; }
+function Btn({children,variant="primary",style:s,...r}){ const bg=variant==="primary"?"#6366f1":variant==="danger"?"#ef4444":variant==="success"?"#22c55e":"#f1f5f9"; const col=variant==="ghost"?"#64748b":"#fff"; return <button {...r} style={{background:bg,color:col,border:variant==="ghost"?"1px solid #e2e8f0":"none",borderRadius:8,padding:"8px 16px",cursor:"pointer",fontSize:13,fontWeight:600,...s}}>{children}</button>; }
+function Inp({label,...p}){ return <div style={{marginBottom:12}}>{label&&<label style={{display:"block",fontSize:12,color:"#64748b",marginBottom:4,fontWeight:600}}>{label}</label>}<input {...p} style={{...IS,...p.style}}/></div>; }
+function Tex({label,...p}){ return <div style={{marginBottom:12}}>{label&&<label style={{display:"block",fontSize:12,color:"#64748b",marginBottom:4,fontWeight:600}}>{label}</label>}<textarea {...p} style={{...IS,resize:"vertical",minHeight:72,...p.style}}/></div>; }
+function Sel({label,children,...p}){ return <div style={{marginBottom:12}}>{label&&<label style={{display:"block",fontSize:12,color:"#64748b",marginBottom:4,fontWeight:600}}>{label}</label>}<select {...p} style={{...IS,...p.style}}>{children}</select></div>; }
 function Modal({title,onClose,children,wide}){
   return (
-    <div style={{position:"fixed",inset:0,background:"#000c",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
-      <div style={{background:"#1a1a2e",border:"1px solid #2d2d3f",borderRadius:16,padding:26,width:wide?680:460,maxWidth:"95vw",maxHeight:"92vh",overflowY:"auto"}}>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:26,width:wide?680:460,maxWidth:"95vw",maxHeight:"92vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.15)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
-          <span style={{fontWeight:800,fontSize:17,color:"#e2e8f0"}}>{title}</span>
-          <button onClick={onClose} style={{background:"none",border:"none",color:"#64748b",fontSize:20,cursor:"pointer"}}>✕</button>
+          <span style={{fontWeight:700,fontSize:16,color:"#0f172a"}}>{title}</span>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"#94a3b8",fontSize:20,cursor:"pointer",lineHeight:1}}>✕</button>
         </div>
         {children}
       </div>
     </div>
   );
 }
-function Spinner({text="Loading..."}){ return <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:60,gap:16}}><div style={{width:40,height:40,border:"3px solid #2d2d3f",borderTop:"3px solid #6366f1",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/><div style={{color:"#64748b",fontSize:14}}>{text}</div></div>; }
+function Spinner({text="Loading..."}){ return <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:60,gap:16}}><div style={{width:40,height:40,border:"3px solid #e2e8f0",borderTop:"3px solid #6366f1",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/><div style={{color:"#94a3b8",fontSize:14}}>{text}</div></div>; }
 
 // ── Password Screen ───────────────────────────────────────────────────────────
 function PasswordScreen({onUnlock}){
   const [input,setInput]=useState(""); const [err,setErr]=useState(""); const [show,setShow]=useState(false);
   function submit(){ if(input.trim()===CRM_PASSWORD){onUnlock();}else{setErr("Incorrect password.");setInput("");} }
   return (
-    <div style={{minHeight:"100vh",background:"#0d0d17",display:"flex",alignItems:"center",justifyContent:"center"}}>
-      <div style={{background:"#13131f",border:"1px solid #2d2d3f",borderRadius:20,padding:"40px 36px",width:380,maxWidth:"90vw",textAlign:"center"}}>
-        <div style={{background:"#6366f1",borderRadius:16,width:56,height:56,display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,margin:"0 auto 20px"}}>🚀</div>
-        <div style={{fontWeight:800,fontSize:22,color:"#e2e8f0",marginBottom:6}}>AffiLinks.io</div>
-        <div style={{fontSize:13,color:"#64748b",marginBottom:28}}>Enter your password to access the CRM</div>
-        <div style={{position:"relative",marginBottom:16}}>
+    <div style={{minHeight:"100vh",background:"#f1f5f9",display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:20,padding:"40px 36px",width:380,maxWidth:"90vw",textAlign:"center",boxShadow:"0 20px 60px rgba(0,0,0,0.08)"}}>
+        <div style={{background:"#6366f1",borderRadius:16,width:52,height:52,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,margin:"0 auto 18px"}}>🚀</div>
+        <div style={{fontWeight:800,fontSize:22,color:"#0f172a",marginBottom:5}}>AffiLinks.io</div>
+        <div style={{fontSize:13,color:"#64748b",marginBottom:26}}>Enter your password to access the CRM</div>
+        <div style={{position:"relative",marginBottom:14}}>
           <input type={show?"text":"password"} value={input} onChange={e=>{setInput(e.target.value);setErr("");}} onKeyDown={e=>{if(e.key==="Enter")submit();}} placeholder="Enter password..." style={{...IS,paddingRight:44,fontSize:15}} autoFocus/>
-          <button onClick={()=>setShow(v=>!v)} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#64748b",cursor:"pointer",fontSize:16}}>{show?"🙈":"👁"}</button>
+          <button onClick={()=>setShow(v=>!v)} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#94a3b8",cursor:"pointer",fontSize:16}}>{show?"🙈":"👁"}</button>
         </div>
         {err&&<div style={{color:"#ef4444",fontSize:12,marginBottom:12}}>⚠ {err}</div>}
-        <button onClick={submit} style={{width:"100%",padding:"11px",fontSize:15,background:"#6366f1",color:"#fff",border:"none",borderRadius:8,cursor:"pointer",fontWeight:600}}>🔓 Unlock CRM</button>
+        <button onClick={submit} style={{width:"100%",padding:"11px",fontSize:14,background:"#6366f1",color:"#fff",border:"none",borderRadius:8,cursor:"pointer",fontWeight:600}}>Unlock CRM</button>
       </div>
     </div>
   );
@@ -186,21 +189,21 @@ function LILeadCard({lead,onDragStart,onClick,allTags,today}){
   const c=LI_COLORS[lead.stage]||"#6366f1"; const isOverdue=lead.stage==="Follow Up"&&lead.followUp?.date&&lead.followUp.date<today;
   return (
     <div draggable onDragStart={e=>onDragStart(e,lead.id)} onClick={()=>onClick(lead)}
-      style={{background:"#13131f",border:`1px solid ${isOverdue?"#ef444466":"#2d2d3f"}`,borderRadius:10,padding:"11px 13px",cursor:"grab",marginBottom:8,userSelect:"none",transition:"border-color .15s",boxShadow:isOverdue?"0 0 10px #ef444422":"none"}}
+      style={{background:"#fff",border:`1px solid ${isOverdue?"#fca5a5":"#e2e8f0"}`,borderRadius:10,padding:"11px 13px",cursor:"grab",marginBottom:8,userSelect:"none",transition:"border-color .15s",boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}}
       onMouseEnter={e=>e.currentTarget.style.borderColor=isOverdue?"#ef4444":c+"88"}
-      onMouseLeave={e=>e.currentTarget.style.borderColor=isOverdue?"#ef444466":"#2d2d3f"}>
+      onMouseLeave={e=>e.currentTarget.style.borderColor=isOverdue?"#fca5a5":"#e2e8f0"}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-        <div style={{fontWeight:700,color:"#e2e8f0",fontSize:13,marginBottom:3}}>{lead.firstName} {lead.lastName}</div>
+        <div style={{fontWeight:600,color:"#0f172a",fontSize:13,marginBottom:3}}>{lead.firstName} {lead.lastName}</div>
         {isOverdue&&<span style={{background:"#ef444422",color:"#ef4444",border:"1px solid #ef444444",borderRadius:20,padding:"1px 7px",fontSize:9,fontWeight:700}}>OVERDUE</span>}
       </div>
       {lead.industry&&<div style={{fontSize:11,color:"#64748b",marginBottom:2}}>🏢 {lead.industry}</div>}
       {lead.affiliateNetwork&&<div style={{fontSize:11,color:"#64748b",marginBottom:2}}>🔗 {lead.affiliateNetwork}</div>}
-      {lead.followUp?.date&&<div style={{fontSize:11,color:isOverdue?"#ef4444":"#a855f7",marginTop:3}}>📅 {lead.followUp.date}{(lead.followUpHistory||[]).length>0&&<span style={{marginLeft:6,background:"#a855f122",color:"#a855f7",borderRadius:20,padding:"0 6px",fontSize:10}}>#{(lead.followUpHistory||[]).length+1}</span>}</div>}
-      {lead.deal?.dealAmount&&<div style={{fontSize:11,color:"#22c55e",marginTop:3}}>💰 ${Number(lead.deal.dealAmount).toLocaleString()}</div>}
+      {lead.followUp?.date&&<div style={{fontSize:11,color:isOverdue?"#ef4444":"#a855f7",marginTop:3}}>📅 {lead.followUp.date}{(lead.followUpHistory||[]).length>0&&<span style={{marginLeft:6,background:"#f3e8ff",color:"#a855f7",borderRadius:20,padding:"0 6px",fontSize:10}}>#{(lead.followUpHistory||[]).length+1}</span>}</div>}
+      {lead.deal?.dealAmount&&<div style={{fontSize:11,color:"#16a34a",marginTop:3,fontWeight:600}}>💰 ${Number(lead.deal.dealAmount).toLocaleString()}</div>}
       {(lead.tags||[]).length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:6}}>{(lead.tags||[]).map(t=><TagPill key={t} tag={t} allTags={allTags} small/>)}</div>}
       <div style={{display:"flex",gap:5,marginTop:7}}>
-        {lead.linkedinUrl&&<a href={lead.linkedinUrl} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{background:"#1d4ed822",color:"#60a5fa",border:"1px solid #1d4ed844",borderRadius:5,padding:"2px 7px",fontSize:10,fontWeight:600}}>LinkedIn ↗</a>}
-        {lead.website&&<a href={lead.website.startsWith("http")?lead.website:"https://"+lead.website} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{background:"#2d2d3f",color:"#94a3b8",border:"1px solid #3d3d4f",borderRadius:5,padding:"2px 7px",fontSize:10,fontWeight:600}}>Web ↗</a>}
+        {lead.linkedinUrl&&<a href={lead.linkedinUrl} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{background:"#eff6ff",color:"#3b82f6",borderRadius:5,padding:"2px 7px",fontSize:10,fontWeight:600}}>LinkedIn ↗</a>}
+        {lead.website&&<a href={lead.website.startsWith("http")?lead.website:"https://"+lead.website} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{background:"#f8fafc",color:"#64748b",border:"1px solid #e2e8f0",borderRadius:5,padding:"2px 7px",fontSize:10,fontWeight:600}}>Web ↗</a>}
       </div>
     </div>
   );
@@ -210,14 +213,14 @@ function LIKanbanCol({stage,leads,onDragStart,onDrop,onDragOver,onDragLeave,onCl
   const c=LI_COLORS[stage]||"#6366f1";
   return (
     <div onDrop={e=>onDrop(e,stage)} onDragOver={e=>{e.preventDefault();onDragOver(stage);}} onDragLeave={onDragLeave}
-      style={{minWidth:200,flex:"0 0 200px",background:isDragOver?"#1e1e3a":"#10101a",border:`1px solid ${isDragOver?c:c+"33"}`,borderRadius:14,display:"flex",flexDirection:"column",transition:"all .15s",height:"calc(100vh - 260px)"}}>
-      <div style={{padding:"11px 13px 9px",borderBottom:`2px solid ${c}66`,display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
-        <span style={{fontWeight:800,fontSize:12,color:c}}>{stage}</span>
-        <span style={{background:c+"22",color:c,borderRadius:20,padding:"2px 8px",fontSize:11,fontWeight:700}}>{leads.length}</span>
+      style={{minWidth:200,flex:"0 0 200px",background:isDragOver?"#eef2ff":"#f8fafc",border:`1px solid ${isDragOver?c:"#e2e8f0"}`,borderRadius:14,display:"flex",flexDirection:"column",transition:"all .15s",height:"calc(100vh - 260px)"}}>
+      <div style={{padding:"11px 13px 9px",borderBottom:`2px solid ${c}`,display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
+        <span style={{fontWeight:700,fontSize:12,color:c}}>{stage}</span>
+        <span style={{background:c+"18",color:c,borderRadius:20,padding:"2px 8px",fontSize:11,fontWeight:700}}>{leads.length}</span>
       </div>
       <div style={{padding:"9px 9px 0",flex:1,overflowY:"auto",minHeight:0}}>
         {leads.map(l=><LILeadCard key={l.id} lead={l} onDragStart={onDragStart} onClick={onClick} allTags={allTags} today={today}/>)}
-        {!leads.length&&<div style={{color:"#2d2d3f",fontSize:11,textAlign:"center",paddingTop:18}}>Drop here</div>}
+        {!leads.length&&<div style={{color:"#cbd5e1",fontSize:11,textAlign:"center",paddingTop:18}}>Drop here</div>}
       </div>
     </div>
   );
@@ -228,9 +231,9 @@ function LIFollowUpModal({lead,onClose,onSave}){
   if(!lead)return null; const attempt=(lead.followUpHistory||[]).length+1;
   return (
     <Modal title={`📅 Follow-Up #${attempt} — ${lead.firstName} ${lead.lastName}`} onClose={onClose}>
-      <div style={{background:"#a855f715",border:"1px solid #a855f733",borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:13,color:"#c084fc"}}>Follow-Up <strong>#{attempt}</strong> · Previous: <strong>{attempt-1}</strong></div>
+      <div style={{background:"#f5f3ff",border:"1px solid #ddd6fe",borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:13,color:"#7c3aed"}}>Follow-Up <strong>#{attempt}</strong> · Previous: <strong>{attempt-1}</strong></div>
       <div style={{marginBottom:10}}><label style={{display:"block",fontSize:12,color:"#94a3b8",marginBottom:6,fontWeight:600}}>Quick Schedule</label><div style={{display:"flex",gap:6}}>{[3,7,14].map(d=><button key={d} onClick={()=>setDate(addDays(d))} style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontSize:12,fontWeight:600}}>+{d} days</button>)}</div></div>
-      <Inp label="Date *" type="date" value={date} onChange={e=>setDate(e.target.value)} style={{colorScheme:"dark"}}/>
+      <Inp label="Date *" type="date" value={date} onChange={e=>setDate(e.target.value)} style={{colorScheme:"light"}}/>
       <Tex label="Notes" value={notes} onChange={e=>setNotes(e.target.value)} placeholder="What to discuss..."/>
       <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}><Btn variant="ghost" onClick={onClose}>Cancel</Btn><Btn onClick={()=>{if(date){onSave(date,notes);onClose();}}}>Schedule #{attempt}</Btn></div>
     </Modal>
@@ -243,8 +246,8 @@ function LIWonModal({lead,onClose,onSave}){
   function submit(){ if(!date){setErr("Enter closing date.");return;} if(!amount||isNaN(parseFloat(amount))){setErr("Enter valid amount.");return;} onSave({closingDate:date,dealAmount:parseFloat(amount),clientContract:contract}); }
   return (
     <Modal title={`🏆 Deal Closed — ${lead.firstName} ${lead.lastName}`} onClose={onClose}>
-      <div style={{background:"#22c55e15",border:"1px solid #22c55e33",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:"#4ade80"}}>🎉 Fill in the closing details.</div>
-      <Inp label="Closing Date *" type="date" value={date} onChange={e=>setDate(e.target.value)} style={{colorScheme:"dark"}}/>
+      <div style={{background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:"#16a34a"}}>🎉 Fill in the closing details.</div>
+      <Inp label="Closing Date *" type="date" value={date} onChange={e=>setDate(e.target.value)} style={{colorScheme:"light"}}/>
       <div style={{marginBottom:12}}><label style={{display:"block",fontSize:12,color:"#94a3b8",marginBottom:4,fontWeight:600}}>Deal Amount * (USD)</label><div style={{position:"relative"}}><span style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",color:"#64748b",fontWeight:700}}>$</span><input type="number" min="0" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="0.00" style={{...IS,paddingLeft:26}}/></div></div>
       <Tex label="Contract / Notes" value={contract} onChange={e=>setContract(e.target.value)} style={{minHeight:80}}/>
       {err&&<div style={{color:"#ef4444",fontSize:12,marginBottom:10}}>⚠ {err}</div>}
@@ -260,8 +263,8 @@ function LILostModal({lead,onClose,onSave}){
   const toggle=name=>setSelected(p=>p.includes(name)?p.filter(x=>x!==name):[...p,name]);
   return (
     <Modal title={`❌ Moving to Lost — ${lead.firstName} ${lead.lastName}`} onClose={onClose}>
-      <div style={{background:"#ef444415",border:"1px solid #ef444433",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:"#fca5a5"}}>Why is this lead lost? (optional)</div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>{OPTS.map(t=><button key={t.name} onClick={()=>toggle(t.name)} style={{background:selected.includes(t.name)?t.color+"33":"#13131f",border:`2px solid ${selected.includes(t.name)?t.color:"#2d2d3f"}`,borderRadius:10,padding:"10px 12px",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:18}}>{t.emoji}</span><span style={{fontSize:12,color:selected.includes(t.name)?t.color:"#94a3b8",fontWeight:600,textTransform:"capitalize"}}>{t.name.replace(/-/g," ")}</span></button>)}</div>
+      <div style={{background:"#fef2f2",border:"1px solid #fecaca",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:"#dc2626"}}>Why is this lead lost? (optional)</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>{OPTS.map(t=><button key={t.name} onClick={()=>toggle(t.name)} style={{background:selected.includes(t.name)?t.color+"18":"#f8fafc",border:`2px solid ${selected.includes(t.name)?t.color:"#e2e8f0"}`,borderRadius:10,padding:"10px 12px",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:18}}>{t.emoji}</span><span style={{fontSize:12,color:selected.includes(t.name)?t.color:"#64748b",fontWeight:600,textTransform:"capitalize"}}>{t.name.replace(/-/g," ")}</span></button>)}</div>
       <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}><Btn variant="ghost" onClick={onClose}>Cancel</Btn><Btn variant="danger" onClick={()=>onSave(selected)}>Move to Lost</Btn></div>
     </Modal>
   );
@@ -282,15 +285,15 @@ function LILeadModal({lead,onClose,onSave,onDelete,allTags,templates,saving}){
           <Inp label="Email" type="email" value={form.email||""} onChange={e=>f("email",e.target.value)}/>
           <Sel label="Stage" value={form.stage||"Cold"} onChange={e=>f("stage",e.target.value)}>{LI_STAGES.map(s=><option key={s}>{s}</option>)}</Sel>
           <TagSelector selected={form.tags||[]} allTags={allTags} onChange={v=>f("tags",v)}/>
-          {form.stage==="Follow Up"&&<><Inp label="Follow-Up Date" type="date" value={form.followUp?.date||""} style={{colorScheme:"dark"}} onChange={e=>f("followUp",{...form.followUp,date:e.target.value})}/><Tex label="Notes" value={form.followUp?.notes||""} onChange={e=>f("followUp",{...form.followUp,notes:e.target.value})}/></>}
-          {form.stage==="Won"&&<><Inp label="Closing Date" type="date" value={form.deal?.closingDate||""} style={{colorScheme:"dark"}} onChange={e=>f("deal",{...form.deal,closingDate:e.target.value})}/><Inp label="Deal Amount ($)" type="number" value={form.deal?.dealAmount||""} onChange={e=>f("deal",{...form.deal,dealAmount:parseFloat(e.target.value)||0})}/><Tex label="Contract" value={form.deal?.clientContract||""} onChange={e=>f("deal",{...form.deal,clientContract:e.target.value})}/></>}
+          {form.stage==="Follow Up"&&<><Inp label="Follow-Up Date" type="date" value={form.followUp?.date||""} style={{colorScheme:"light"}} onChange={e=>f("followUp",{...form.followUp,date:e.target.value})}/><Tex label="Notes" value={form.followUp?.notes||""} onChange={e=>f("followUp",{...form.followUp,notes:e.target.value})}/></>}
+          {form.stage==="Won"&&<><Inp label="Closing Date" type="date" value={form.deal?.closingDate||""} style={{colorScheme:"light"}} onChange={e=>f("deal",{...form.deal,closingDate:e.target.value})}/><Inp label="Deal Amount ($)" type="number" value={form.deal?.dealAmount||""} onChange={e=>f("deal",{...form.deal,dealAmount:parseFloat(e.target.value)||0})}/><Tex label="Contract" value={form.deal?.clientContract||""} onChange={e=>f("deal",{...form.deal,clientContract:e.target.value})}/></>}
         </div>
         <div>
           <div style={{fontSize:12,color:"#94a3b8",fontWeight:600,marginBottom:8}}>📋 Templates</div>
-          {(templates||[]).map(tpl=>{ const msg=interp(tpl.body,form); return <div key={tpl.id} style={{background:"#13131f",border:"1px solid #2d2d3f",borderRadius:10,padding:12,marginBottom:10}}><div style={{fontWeight:700,color:"#e2e8f0",fontSize:12,marginBottom:6}}>✉️ {tpl.name}</div><div style={{fontSize:12,color:"#94a3b8",lineHeight:1.6,marginBottom:8,background:"#0d0d17",borderRadius:7,padding:"8px 10px"}}>{msg}</div><button onClick={()=>copyText(msg,()=>{setCopied(tpl.id);setTimeout(()=>setCopied(null),1500);})} style={{background:copied===tpl.id?"#22c55e22":"#6366f122",color:copied===tpl.id?"#22c55e":"#818cf8",border:`1px solid ${copied===tpl.id?"#22c55e44":"#6366f144"}`,borderRadius:6,padding:"4px 12px",cursor:"pointer",fontSize:11,fontWeight:600,width:"100%"}}>{copied===tpl.id?"✓ Copied!":"📋 Copy"}</button></div>; })}
+          {(templates||[]).map(tpl=>{ const msg=interp(tpl.body,form); return <div key={tpl.id} style={{background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:10,padding:12,marginBottom:10}}><div style={{fontWeight:600,color:"#0f172a",fontSize:12,marginBottom:6}}>✉️ {tpl.name}</div><div style={{fontSize:12,color:"#64748b",lineHeight:1.6,marginBottom:8,background:"#fff",borderRadius:7,padding:"8px 10px",border:"1px solid #f1f5f9"}}>{msg}</div><button onClick={()=>copyText(msg,()=>{setCopied(tpl.id);setTimeout(()=>setCopied(null),1500);})} style={{background:copied===tpl.id?"#f0fdf4":"#eef2ff",color:copied===tpl.id?"#16a34a":"#6366f1",border:"none",borderRadius:6,padding:"4px 12px",cursor:"pointer",fontSize:11,fontWeight:600,width:"100%"}}>{copied===tpl.id?"✓ Copied!":"📋 Copy"}</button></div>; })}
         </div>
       </div>
-      <div style={{display:"flex",gap:8,justifyContent:"space-between",marginTop:10,borderTop:"1px solid #2d2d3f",paddingTop:14}}>
+      <div style={{display:"flex",gap:8,justifyContent:"space-between",marginTop:10,borderTop:"1px solid #f1f5f9",paddingTop:14}}>
         {lead.id?<Btn variant="danger" onClick={()=>onDelete(lead.id)}>Delete</Btn>:<div/>}
         <div style={{display:"flex",gap:8}}><Btn variant="ghost" onClick={onClose}>Cancel</Btn><Btn onClick={()=>onSave(form)} style={{opacity:saving?0.6:1}}>{saving?"Saving...":"Save"}</Btn></div>
       </div>
@@ -304,29 +307,30 @@ function LIUploadModal({onClose,onImport,stage="Cold",title="📥 Import Contact
   async function doImport(){ if(!preview)return; setImporting(true); await onImport(preview); setImporting(false); }
   return (
     <Modal title={title} onClose={onClose} wide>
-      {stage==="Sales Navigator"&&<div style={{background:"#14b8a615",border:"1px solid #14b8a633",borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:13,color:"#2dd4bf"}}>Contacts → <strong>Sales Navigator</strong> with <strong>sales-navigator</strong> tag.</div>}
-      <div style={{background:"#0d0d17",border:"1px solid #2d2d3f",borderRadius:10,padding:12,marginBottom:14}}><div style={{fontSize:12,color:"#64748b",marginBottom:6,fontWeight:600}}>CSV Headers:</div><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{["firstname","lastname","linkedinurl","website","industry","affiliatenetwork","email"].map(h=><span key={h} style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:6,padding:"2px 8px",fontSize:11}}>{h}</span>)}</div></div>
+      {stage==="Sales Navigator"&&<div style={{background:"#f0fdfa",border:"1px solid #99f6e4",borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:13,color:"#0d9488"}}>Contacts → <strong>Sales Navigator</strong> with <strong>sales-navigator</strong> tag.</div>}
+      <div style={{background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:10,padding:12,marginBottom:14}}><div style={{fontSize:12,color:"#64748b",marginBottom:6,fontWeight:600}}>CSV Headers:</div><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{["firstname","lastname","linkedinurl","website","industry","affiliatenetwork","email"].map(h=><span key={h} style={{background:"#eef2ff",color:"#6366f1",borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:500}}>{h}</span>)}</div></div>
       <input ref={fileRef} type="file" accept=".csv" onChange={e=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=ev=>handle(ev.target.result);r.readAsText(f);}}} style={{display:"none"}}/>
-      <div onClick={()=>fileRef.current.click()} style={{border:`2px dashed ${color}44`,borderRadius:10,padding:20,textAlign:"center",cursor:"pointer",color:"#64748b",fontSize:13,marginBottom:12}}>📂 Click to choose CSV file</div>
+      <div onClick={()=>fileRef.current.click()} style={{border:`2px dashed ${color}66`,borderRadius:10,padding:20,textAlign:"center",cursor:"pointer",color:"#64748b",fontSize:13,marginBottom:12,background:"#f8fafc"}}>📂 Click to choose CSV file</div>
       <Tex label="Or paste CSV text" onChange={e=>handle(e.target.value)} style={{fontFamily:"monospace",fontSize:12}}/>
       {err&&<div style={{color:"#ef4444",fontSize:12,marginBottom:8}}>⚠ {err}</div>}
-      {preview&&<div style={{background:"#0d0d17",border:`1px solid ${color}33`,borderRadius:8,padding:10,marginBottom:10}}><div style={{fontSize:12,color:color,marginBottom:4,fontWeight:600}}>✓ {preview.length} contacts ready</div>{preview.slice(0,5).map((r,i)=><div key={i} style={{fontSize:11,color:"#94a3b8",padding:"2px 0"}}>{r.firstName} {r.lastName} · {r.industry}</div>)}{preview.length>5&&<div style={{fontSize:11,color:"#64748b"}}>...and {preview.length-5} more</div>}</div>}
+      {preview&&<div style={{background:"#f8fafc",border:`1px solid ${color}33`,borderRadius:8,padding:10,marginBottom:10}}><div style={{fontSize:12,color:color,marginBottom:4,fontWeight:600}}>✓ {preview.length} contacts ready</div>{preview.slice(0,5).map((r,i)=><div key={i} style={{fontSize:11,color:"#64748b",padding:"2px 0"}}>{r.firstName} {r.lastName} · {r.industry}</div>)}{preview.length>5&&<div style={{fontSize:11,color:"#94a3b8"}}>...and {preview.length-5} more</div>}</div>}
       <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}><Btn variant="ghost" onClick={onClose}>Cancel</Btn><button onClick={doImport} style={{background:color,color:"#fff",border:"none",borderRadius:8,padding:"8px 16px",cursor:"pointer",fontSize:13,fontWeight:600,opacity:preview&&!importing?1:0.4}}>{importing?"Importing...":`Import ${preview?.length||0} Contacts`}</button></div>
     </Modal>
   );
 }
 
-function LinkedInGate(){
+function LinkedInGate({search="",setSearch=()=>{}}){
   const [leads,setLeads]=useState([]); const [templates,setTemplates]=useState([]); const [allTags,setAllTags]=useState(DEFAULT_TAGS); const [loading,setLoading]=useState(true);
   const [tab,setTab]=useState("Kanban"); const [modal,setModal]=useState(null); const [dragId,setDragId]=useState(null); const [dragOver,setDragOver]=useState(null);
   const [fuPending,setFuPending]=useState(null); const [wonPending,setWonPending]=useState(null); const [lostPending,setLostPending]=useState(null); const [reviewPending,setReviewPending]=useState(null);
-  const [saving,setSaving]=useState(false); const [showUpload,setShowUpload]=useState(false); const [showSNUpload,setShowSNUpload]=useState(false); const [search,setSearch]=useState("");
+  const [saving,setSaving]=useState(false); const [showUpload,setShowUpload]=useState(false); const [showSNUpload,setShowSNUpload]=useState(false); const [stageTab,setStageTab]=useState("All");
   const today=todayStr();
 
   useEffect(()=>{ setLoading(true); Promise.all([sbGetAll("leads"),sbGetAll("templates")]).then(([l,t])=>{ if(Array.isArray(l))setLeads(l.map(rowToLead)); if(Array.isArray(t))setTemplates(t); setLoading(false); }).catch(()=>setLoading(false)); },[]);
   useEffect(()=>{ if(!leads.length)return; const used=[...new Set(leads.flatMap(l=>l.tags||[]))]; setAllTags(prev=>{ const next=[...prev]; let ch=false; used.forEach(n=>{ if(!next.find(t=>t.name===n)){next.push({name:n,color:TAG_COLORS[next.length%TAG_COLORS.length]});ch=true;} }); return ch?next:prev; }); },[leads]);
 
-  const filtered=useMemo(()=>{ const q=search.toLowerCase(); return leads.filter(l=>!q||[l.firstName,l.lastName,l.industry,l.affiliateNetwork].join(" ").toLowerCase().includes(q)); },[leads,search]);
+  const stageCounts=useMemo(()=>{ const m={All:leads.length}; LI_STAGES.forEach(s=>m[s]=leads.filter(l=>l.stage===s).length); return m; },[leads]);
+  const filtered=useMemo(()=>{ const q=search.toLowerCase(); return leads.filter(l=>(stageTab==="All"||l.stage===stageTab)&&(!q||[l.firstName,l.lastName,l.industry,l.affiliateNetwork].join(" ").toLowerCase().includes(q))); },[leads,search,stageTab]);
   const byStage=useMemo(()=>{ const m={}; LI_STAGES.forEach(s=>m[s]=filtered.filter(l=>l.stage===s)); return m; },[filtered]);
   const stats=useMemo(()=>{ const won=leads.filter(l=>l.stage==="Won"); return{total:leads.length,won:won.length,lost:leads.filter(l=>l.stage==="Lost").length,active:leads.filter(l=>!["Won","Lost"].includes(l.stage)).length,revenue:won.reduce((s,l)=>s+(parseFloat(l.deal?.dealAmount)||0),0)}; },[leads]);
   const overdueLeads=useMemo(()=>leads.filter(l=>l.stage==="Follow Up"&&l.followUp?.date&&l.followUp.date<today),[leads,today]);
@@ -352,38 +356,66 @@ function LinkedInGate(){
 
   return (
     <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-      {/* Sub header */}
-      <div style={{background:"#13131f",borderBottom:"1px solid #2d2d3f",padding:"10px 16px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-        {tab==="Kanban"&&<div style={{position:"relative",flex:"1 1 160px",maxWidth:220}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#64748b"}}>🔍</span><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..." style={{...IS,paddingLeft:30,fontSize:12}}/></div>}
-        {[{label:"Total",val:stats.total,c:"#6366f1"},{label:"Won",val:stats.won,c:"#22c55e"},{label:"Revenue",val:"$"+stats.revenue.toLocaleString(undefined,{maximumFractionDigits:0}),c:"#f59e0b"}].map(s=><div key={s.label} style={{background:s.c+"15",border:`1px solid ${s.c}33`,borderRadius:9,padding:"4px 10px",display:"flex",gap:5,alignItems:"center"}}><span style={{fontWeight:800,fontSize:14,color:s.c}}>{s.val}</span><span style={{fontSize:11,color:"#64748b"}}>{s.label}</span></div>)}
-        <div style={{marginLeft:"auto",display:"flex",gap:6,alignItems:"center"}}>
+      {/* Stage filter tabs + toolbar */}
+      <div style={{background:"#fff",borderBottom:"1px solid #e2e8f0",padding:"0 20px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{display:"flex",gap:0,overflowX:"auto"}}>
+          {["All",...LI_STAGES].map(s=>(
+            <button key={s} onClick={()=>setStageTab(s)}
+              style={{background:"none",color:stageTab===s?"#6366f1":"#64748b",border:"none",borderBottom:stageTab===s?"2px solid #6366f1":"2px solid transparent",padding:"12px 13px",cursor:"pointer",fontWeight:stageTab===s?600:500,fontSize:13,transition:"all .15s",marginBottom:-1,display:"flex",alignItems:"center",gap:5,whiteSpace:"nowrap"}}>
+              {s}
+              <span style={{background:stageTab===s?"#eef2ff":"#f1f5f9",color:stageTab===s?"#6366f1":"#94a3b8",borderRadius:20,padding:"1px 7px",fontSize:11,fontWeight:600}}>{stageCounts[s]||0}</span>
+            </button>
+          ))}
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0,paddingLeft:10}}>
           <div style={{position:"relative"}}>
-            <button onClick={()=>setShowUpload(v=>!v)} style={{background:"#2d2d3f",border:"none",borderRadius:8,width:32,height:32,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,position:"relative"}}>🔔{reminderCount>0&&<span style={{position:"absolute",top:-3,right:-3,background:"#ef4444",color:"#fff",borderRadius:"50%",width:15,height:15,fontSize:8,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}}>{reminderCount}</span>}</button>
+            <button onClick={()=>setShowUpload(v=>!v)} style={{background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:8,width:32,height:32,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,position:"relative"}}>🔔{reminderCount>0&&<span style={{position:"absolute",top:-3,right:-3,background:"#ef4444",color:"#fff",borderRadius:"50%",width:15,height:15,fontSize:8,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}}>{reminderCount}</span>}</button>
           </div>
-          <button onClick={()=>setShowUpload(true)} style={{background:"#2d2d3f",color:"#fff",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:11,fontWeight:600}}>📥 Import</button>
-          <button onClick={()=>setShowSNUpload(true)} style={{background:"#14b8a622",color:"#14b8a6",border:"1px solid #14b8a644",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:11,fontWeight:600}}>🔍 SN Import</button>
-          <button onClick={()=>setModal({stage:"Cold",tags:[],followUpHistory:[]})} style={{background:"#6366f1",color:"#fff",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:11,fontWeight:600}}>+ Add</button>
-          <button onClick={()=>exportCSV(leads)} style={{background:"#22c55e22",color:"#22c55e",border:"1px solid #22c55e44",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:11,fontWeight:600}}>⬇ Export</button>
+          <button onClick={()=>setShowUpload(true)} style={{background:"#f8fafc",color:"#64748b",border:"1px solid #e2e8f0",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:11,fontWeight:600}}>📥 Import</button>
+          <button onClick={()=>setShowSNUpload(true)} style={{background:"#f0fdfa",color:"#0d9488",border:"1px solid #99f6e4",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:11,fontWeight:600}}>🔍 SN Import</button>
+          <button onClick={()=>setModal({stage:"Cold",tags:[],followUpHistory:[]})} style={{background:"#6366f1",color:"#fff",border:"none",borderRadius:8,padding:"6px 14px",cursor:"pointer",fontSize:11,fontWeight:600}}>+ Add</button>
+          <button onClick={()=>exportCSV(leads)} style={{background:"#f0fdf4",color:"#16a34a",border:"1px solid #bbf7d0",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:11,fontWeight:600}}>⬇ Export</button>
         </div>
       </div>
-      {/* Tabs */}
-      <div style={{background:"#13131f",borderBottom:"1px solid #2d2d3f",padding:"6px 16px",display:"flex",gap:3}}>
-        {["Kanban","Contacts","Calendar","Templates","Analytics"].map(t=><button key={t} onClick={()=>setTab(t)} style={{background:tab===t?"#6366f1":"none",color:tab===t?"#fff":"#64748b",border:"none",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontWeight:700,fontSize:12}}>{t==="Kanban"?"🗂":t==="Contacts"?"👥":t==="Calendar"?"📅":t==="Templates"?"✉️":"📊"} {t}</button>)}
+      {/* Stat boxes */}
+      <div style={{background:"#fff",borderBottom:"1px solid #e2e8f0",padding:"10px 20px",display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+        {[
+          {label:"Total Leads",val:stats.total,c:"#6366f1"},
+          {label:"Active",val:stats.active,c:"#3b82f6"},
+          {label:"Follow Up",val:stageCounts["Follow Up"]||0,c:"#a855f7"},
+          {label:"Won",val:stats.won,c:"#22c55e"},
+        ].map(s=>(
+          <div key={s.label} style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:10,padding:"8px 14px",display:"flex",flexDirection:"column",gap:2,minWidth:100,boxShadow:"0 1px 3px rgba(0,0,0,0.05)"}}>
+            <div style={{fontWeight:700,fontSize:15,color:s.c}}>{s.val}</div>
+            <div style={{fontSize:10,color:"#94a3b8",fontWeight:500}}>{s.label}</div>
+          </div>
+        ))}
+        <div style={{background:"linear-gradient(135deg,#22c55e15,#22c55e05)",border:"2px solid #22c55e44",borderRadius:12,padding:"10px 18px",display:"flex",flexDirection:"column",gap:3,minWidth:150,boxShadow:"0 2px 8px #22c55e20"}}>
+          <div style={{fontWeight:800,fontSize:22,color:"#22c55e",lineHeight:1}}>${stats.revenue.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+          <div style={{fontSize:11,color:"#64748b",fontWeight:600}}>Revenue (Won)</div>
+        </div>
+        {reminderCount>0&&<div style={{background:"#fef3c7",border:"1px solid #fde68a",borderRadius:10,padding:"8px 14px",display:"flex",flexDirection:"column",gap:2,minWidth:100,boxShadow:"0 1px 3px rgba(0,0,0,0.05)"}}>
+          <div style={{fontWeight:700,fontSize:15,color:"#d97706"}}>{reminderCount}</div>
+          <div style={{fontSize:10,color:"#94a3b8",fontWeight:500}}>Overdue / Today</div>
+        </div>}
+      </div>
+      {/* View tabs */}
+      <div style={{background:"#fff",borderBottom:"1px solid #e2e8f0",padding:"0 20px",display:"flex",gap:0}}>
+        {["Kanban","Contacts","Calendar","Templates","Analytics"].map(t=><button key={t} onClick={()=>setTab(t)} style={{background:"none",color:tab===t?"#6366f1":"#64748b",border:"none",borderBottom:tab===t?"2px solid #6366f1":"2px solid transparent",padding:"10px 14px",cursor:"pointer",fontWeight:tab===t?600:500,fontSize:13,transition:"all .15s",marginBottom:-1}}>{t}</button>)}
       </div>
       {/* Content */}
-      <div style={{flex:1,overflow:"auto",padding:tab==="Kanban"?"12px":"16px 18px"}}>
+      <div style={{flex:1,overflow:"auto",padding:tab==="Kanban"?"12px 16px":"16px 20px",background:"#f1f5f9"}}>
         {tab==="Kanban"&&<div style={{display:"flex",gap:10,alignItems:"flex-start",height:"100%"}}>{LI_STAGES.map(stage=><LIKanbanCol key={stage} stage={stage} leads={byStage[stage]||[]} onDragStart={onDragStart} onDrop={onDrop} onDragOver={onDragOver} onDragLeave={onDragLeave} onClick={lead=>setModal(lead)} isDragOver={dragOver===stage} allTags={allTags} today={today}/>)}</div>}
         {tab==="Contacts"&&(
           <div>
             <div style={{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
-              <div style={{position:"relative",flex:"1 1 180px"}}><span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"#64748b"}}>🔍</span><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..." style={{...IS,paddingLeft:32}}/></div>
               <button onClick={()=>exportCSV(leads)} style={{background:"#22c55e22",color:"#22c55e",border:"1px solid #22c55e44",borderRadius:8,padding:"8px 14px",cursor:"pointer",fontSize:13,fontWeight:600}}>⬇ Export</button>
               <span style={{color:"#64748b",fontSize:12}}>{leads.length} contacts</span>
             </div>
-            <div style={{overflowX:"auto",borderRadius:12,border:"1px solid #2d2d3f"}}>
+            <div style={{overflowX:"auto",borderRadius:12,border:"1px solid #e2e8f0",background:"#fff"}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
-                <thead style={{background:"#13131f"}}><tr>{["First","Last","Email","Industry","Network","Stage","Follow-Up","Deal","Actions"].map(h=><th key={h} style={{padding:"9px 12px",textAlign:"left",color:"#64748b",fontWeight:700,fontSize:12,borderBottom:"1px solid #2d2d3f",whiteSpace:"nowrap"}}>{h}</th>)}</tr></thead>
-                <tbody>{leads.map(l=><tr key={l.id} style={{borderBottom:"1px solid #1e1e2e"}} onMouseEnter={e=>e.currentTarget.style.background="#13131f"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}><td style={{padding:"9px 12px",color:"#e2e8f0",fontWeight:600}}>{l.firstName}</td><td style={{padding:"9px 12px",color:"#e2e8f0"}}>{l.lastName}</td><td style={{padding:"9px 12px",color:"#94a3b8",fontSize:12}}>{l.email||"—"}</td><td style={{padding:"9px 12px",color:"#94a3b8"}}>{l.industry||"—"}</td><td style={{padding:"9px 12px",color:"#94a3b8"}}>{l.affiliateNetwork||"—"}</td><td style={{padding:"9px 12px"}}><span style={{background:(LI_COLORS[l.stage]||"#6366f1")+"22",color:LI_COLORS[l.stage]||"#6366f1",border:`1px solid ${(LI_COLORS[l.stage]||"#6366f1")}44`,borderRadius:20,padding:"2px 8px",fontSize:11,fontWeight:700}}>{l.stage}</span></td><td style={{padding:"9px 12px",color:"#a855f7",fontSize:12}}>{l.followUp?.date||"—"}</td><td style={{padding:"9px 12px",color:"#22c55e",fontSize:12}}>{l.deal?.dealAmount?"$"+Number(l.deal.dealAmount).toLocaleString():"—"}</td><td style={{padding:"9px 12px"}}><div style={{display:"flex",gap:5}}>{l.linkedinUrl&&<a href={l.linkedinUrl} target="_blank" rel="noreferrer" style={{background:"#1d4ed822",color:"#60a5fa",border:"1px solid #1d4ed844",borderRadius:5,padding:"3px 7px",fontSize:11,fontWeight:600}}>in↗</a>}<button onClick={()=>setModal(l)} style={{background:"#2d2d3f",color:"#94a3b8",border:"none",borderRadius:5,padding:"3px 8px",cursor:"pointer",fontSize:11}}>✏</button><button onClick={()=>deleteLead(l.id)} style={{background:"#ef444422",color:"#ef4444",border:"none",borderRadius:5,padding:"3px 8px",cursor:"pointer",fontSize:11}}>🗑</button></div></td></tr>)}</tbody>
+                <thead style={{background:"#f8fafc"}}><tr>{["First","Last","Email","Industry","Network","Stage","Follow-Up","Deal","Actions"].map(h=><th key={h} style={{padding:"9px 12px",textAlign:"left",color:"#94a3b8",fontWeight:600,fontSize:11,borderBottom:"1px solid #e2e8f0",whiteSpace:"nowrap",textTransform:"uppercase",letterSpacing:"0.05em"}}>{h}</th>)}</tr></thead>
+                <tbody>{leads.map(l=><tr key={l.id} style={{borderBottom:"1px solid #f1f5f9"}} onMouseEnter={e=>e.currentTarget.style.background="#f8fafc"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}><td style={{padding:"9px 12px",color:"#0f172a",fontWeight:600}}>{l.firstName}</td><td style={{padding:"9px 12px",color:"#0f172a"}}>{l.lastName}</td><td style={{padding:"9px 12px",color:"#64748b",fontSize:12}}>{l.email||"—"}</td><td style={{padding:"9px 12px",color:"#64748b"}}>{l.industry||"—"}</td><td style={{padding:"9px 12px",color:"#64748b"}}>{l.affiliateNetwork||"—"}</td><td style={{padding:"9px 12px"}}><span style={{background:(LI_COLORS[l.stage]||"#6366f1")+"18",color:LI_COLORS[l.stage]||"#6366f1",borderRadius:20,padding:"2px 9px",fontSize:11,fontWeight:600}}>{l.stage}</span></td><td style={{padding:"9px 12px",color:"#a855f7",fontSize:12}}>{l.followUp?.date||"—"}</td><td style={{padding:"9px 12px",color:"#16a34a",fontSize:12,fontWeight:600}}>{l.deal?.dealAmount?"$"+Number(l.deal.dealAmount).toLocaleString():"—"}</td><td style={{padding:"9px 12px"}}><div style={{display:"flex",gap:5}}>{l.linkedinUrl&&<a href={l.linkedinUrl} target="_blank" rel="noreferrer" style={{background:"#eff6ff",color:"#3b82f6",borderRadius:5,padding:"3px 7px",fontSize:11,fontWeight:600}}>in↗</a>}<button onClick={()=>setModal(l)} style={{background:"#f8fafc",color:"#64748b",border:"1px solid #e2e8f0",borderRadius:5,padding:"3px 8px",cursor:"pointer",fontSize:11}}>✏</button><button onClick={()=>deleteLead(l.id)} style={{background:"#fef2f2",color:"#ef4444",border:"none",borderRadius:5,padding:"3px 8px",cursor:"pointer",fontSize:11}}>🗑</button></div></td></tr>)}</tbody>
               </table>
             </div>
           </div>
@@ -391,28 +423,28 @@ function LinkedInGate(){
         {tab==="Calendar"&&(
           <div>
             <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:18,justifyContent:"center"}}>
-              <button onClick={()=>{}} style={{background:"#2d2d3f",color:"#e2e8f0",border:"none",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:16}}>‹</button>
-              <span style={{fontWeight:800,fontSize:18,color:"#e2e8f0"}}>{new Date().toLocaleString("default",{month:"long",year:"numeric"})}</span>
-              <button onClick={()=>{}} style={{background:"#2d2d3f",color:"#e2e8f0",border:"none",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:16}}>›</button>
+              <button onClick={()=>{}} style={{background:"#f1f5f9",color:"#0f172a",border:"1px solid #e2e8f0",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:16}}>‹</button>
+              <span style={{fontWeight:700,fontSize:18,color:"#0f172a"}}>{new Date().toLocaleString("default",{month:"long",year:"numeric"})}</span>
+              <button onClick={()=>{}} style={{background:"#f1f5f9",color:"#0f172a",border:"1px solid #e2e8f0",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:16}}>›</button>
             </div>
-            {overdueLeads.length>0&&<div style={{background:"#f59e0b15",border:"1px solid #f59e0b44",borderRadius:12,padding:"12px 16px",marginBottom:18}}><div style={{fontWeight:700,color:"#f59e0b",marginBottom:8}}>🔔 Follow-Up Reminders ({overdueLeads.length+todayLeads.length})</div>{[...overdueLeads,...todayLeads].map(l=><div key={l.id} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderTop:"1px solid #f59e0b22"}}><span style={{color:"#e2e8f0",fontWeight:600}}>{l.firstName} {l.lastName} <span style={{color:"#94a3b8",fontSize:12}}>· {l.followUp.date}</span></span><div style={{display:"flex",gap:6}}>{l.followUp.date<today?<span style={{background:"#ef444422",color:"#ef4444",border:"1px solid #ef444444",borderRadius:20,padding:"1px 8px",fontSize:10,fontWeight:700}}>OVERDUE</span>:<span style={{background:"#f59e0b22",color:"#f59e0b",border:"1px solid #f59e0b44",borderRadius:20,padding:"1px 8px",fontSize:10,fontWeight:700}}>TODAY</span>}<button onClick={()=>setReviewPending(l)} style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:8,padding:"3px 10px",cursor:"pointer",fontSize:11,fontWeight:700}}>Review →</button></div></div>)}</div>}
-            <div style={{color:"#64748b",fontSize:13,textAlign:"center",padding:20}}>Calendar view — follow-up reminders shown above.</div>
+            {overdueLeads.length>0&&<div style={{background:"#fffbeb",border:"1px solid #fde68a",borderRadius:12,padding:"12px 16px",marginBottom:18}}><div style={{fontWeight:700,color:"#d97706",marginBottom:8}}>🔔 Follow-Up Reminders ({overdueLeads.length+todayLeads.length})</div>{[...overdueLeads,...todayLeads].map(l=><div key={l.id} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderTop:"1px solid #fde68a"}}><span style={{color:"#0f172a",fontWeight:600}}>{l.firstName} {l.lastName} <span style={{color:"#64748b",fontSize:12}}>· {l.followUp.date}</span></span><div style={{display:"flex",gap:6}}>{l.followUp.date<today?<span style={{background:"#fef2f2",color:"#dc2626",borderRadius:20,padding:"1px 8px",fontSize:10,fontWeight:700}}>OVERDUE</span>:<span style={{background:"#fffbeb",color:"#d97706",borderRadius:20,padding:"1px 8px",fontSize:10,fontWeight:700}}>TODAY</span>}<button onClick={()=>setReviewPending(l)} style={{background:"#eef2ff",color:"#6366f1",border:"none",borderRadius:8,padding:"3px 10px",cursor:"pointer",fontSize:11,fontWeight:600}}>Review →</button></div></div>)}</div>}
+            <div style={{color:"#94a3b8",fontSize:13,textAlign:"center",padding:20}}>Calendar view — follow-up reminders shown above.</div>
           </div>
         )}
         {tab==="Templates"&&(
           <div>
             <div style={{display:"flex",justifyContent:"flex-end",marginBottom:16}}><Btn onClick={()=>{}}>+ New Template</Btn></div>
-            <div style={{display:"grid",gap:14}}>{templates.map(t=><div key={t.id} style={{background:"#13131f",border:"1px solid #2d2d3f",borderRadius:12,padding:18}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><span style={{fontWeight:700,color:"#e2e8f0"}}>✉️ {t.name}</span><div style={{display:"flex",gap:8}}><button onClick={()=>copyText(t.body,()=>{})} style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:6,padding:"5px 12px",cursor:"pointer",fontSize:12,fontWeight:600}}>📋 Copy</button><button onClick={()=>deleteTemplate(t.id)} style={{background:"#ef444422",color:"#ef4444",border:"none",borderRadius:6,padding:"5px 10px",cursor:"pointer",fontSize:12}}>🗑</button></div></div><p style={{color:"#94a3b8",fontSize:13,lineHeight:1.7,margin:0}}>{t.body}</p></div>)}</div>
+            <div style={{display:"grid",gap:14}}>{templates.map(t=><div key={t.id} style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:12,padding:18,boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><span style={{fontWeight:600,color:"#0f172a"}}>✉️ {t.name}</span><div style={{display:"flex",gap:8}}><button onClick={()=>copyText(t.body,()=>{})} style={{background:"#eef2ff",color:"#6366f1",border:"none",borderRadius:6,padding:"5px 12px",cursor:"pointer",fontSize:12,fontWeight:600}}>📋 Copy</button><button onClick={()=>deleteTemplate(t.id)} style={{background:"#fef2f2",color:"#ef4444",border:"none",borderRadius:6,padding:"5px 10px",cursor:"pointer",fontSize:12}}>🗑</button></div></div><p style={{color:"#64748b",fontSize:13,lineHeight:1.7,margin:0}}>{t.body}</p></div>)}</div>
           </div>
         )}
         {tab==="Analytics"&&(
           <div style={{display:"grid",gap:16}}>
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:12}}>
-              {[{label:"Total",val:stats.total,c:"#6366f1"},{label:"Won",val:stats.won,c:"#22c55e"},{label:"Lost",val:stats.lost,c:"#ef4444"},{label:"Active",val:stats.active,c:"#3b82f6"},{label:"Win Rate",val:stats.total?Math.round(stats.won/stats.total*100)+"%":"0%",c:"#a855f7"},{label:"Revenue",val:"$"+stats.revenue.toLocaleString(undefined,{maximumFractionDigits:0}),c:"#f59e0b"}].map(k=><div key={k.label} style={{background:k.c+"12",border:`1px solid ${k.c}33`,borderRadius:12,padding:"14px 16px"}}><div style={{fontWeight:800,fontSize:22,color:k.c}}>{k.val}</div><div style={{fontSize:12,color:"#64748b",marginTop:2}}>{k.label}</div></div>)}
+              {[{label:"Total",val:stats.total,c:"#6366f1"},{label:"Won",val:stats.won,c:"#22c55e"},{label:"Lost",val:stats.lost,c:"#ef4444"},{label:"Active",val:stats.active,c:"#3b82f6"},{label:"Win Rate",val:stats.total?Math.round(stats.won/stats.total*100)+"%":"0%",c:"#a855f7"},{label:"Revenue",val:"$"+stats.revenue.toLocaleString(undefined,{maximumFractionDigits:0}),c:"#f59e0b"}].map(k=><div key={k.label} style={{background:"#fff",border:`1px solid #e2e8f0`,borderRadius:12,padding:"14px 16px",boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}}><div style={{fontWeight:700,fontSize:22,color:k.c}}>{k.val}</div><div style={{fontSize:12,color:"#64748b",marginTop:2}}>{k.label}</div></div>)}
             </div>
-            <div style={{background:"#13131f",border:"1px solid #2d2d3f",borderRadius:14,padding:20}}>
-              <div style={{fontWeight:700,color:"#e2e8f0",marginBottom:16}}>📊 Pipeline by Stage</div>
-              {LI_STAGES.map(s=>{ const count=leads.filter(l=>l.stage===s).length; const max=Math.max(...LI_STAGES.map(st=>leads.filter(l=>l.stage===st).length),1); return <div key={s} style={{marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4}}><span style={{color:LI_COLORS[s],fontWeight:600}}>{s}</span><span style={{color:"#94a3b8"}}>{count}</span></div><div style={{background:"#2d2d3f",borderRadius:6,height:10,overflow:"hidden"}}><div style={{width:`${(count/max)*100}%`,background:LI_COLORS[s],height:"100%",borderRadius:6}}/></div></div>; })}
+            <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:20,boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}}>
+              <div style={{fontWeight:700,color:"#0f172a",marginBottom:16,fontSize:14}}>Pipeline by Stage</div>
+              {LI_STAGES.map(s=>{ const count=leads.filter(l=>l.stage===s).length; const max=Math.max(...LI_STAGES.map(st=>leads.filter(l=>l.stage===st).length),1); return <div key={s} style={{marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4}}><span style={{color:LI_COLORS[s],fontWeight:600}}>{s}</span><span style={{color:"#94a3b8"}}>{count}</span></div><div style={{background:"#f1f5f9",borderRadius:6,height:8,overflow:"hidden"}}><div style={{width:`${(count/max)*100}%`,background:LI_COLORS[s],height:"100%",borderRadius:6}}/></div></div>; })}
             </div>
           </div>
         )}
@@ -427,7 +459,7 @@ function LinkedInGate(){
       {reviewPending&&(
         <Modal title={`🔔 No Response — ${reviewPending.firstName} ${reviewPending.lastName}`} onClose={()=>setReviewPending(null)}>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:16}}>
-            {[{emoji:"✅",label:"Replied",action:()=>{updateLead(reviewPending.id,{stage:"Connected"});setReviewPending(null);}},{emoji:"🔁",label:"Follow Up Again",action:()=>{const nh=[...(reviewPending.followUpHistory||[]),{date:reviewPending.followUp?.date,notes:"",attempt:(reviewPending.followUpHistory||[]).length+1}];updateLead(reviewPending.id,{followUp:{date:addDays(7),notes:""},followUpHistory:nh});setReviewPending(null);}},{emoji:"❌",label:"Lost",action:()=>{updateLead(reviewPending.id,{stage:"Lost"});setReviewPending(null);}}].map(o=><button key={o.label} onClick={o.action} style={{background:"#13131f",border:"2px solid #2d2d3f",borderRadius:10,padding:"12px 8px",cursor:"pointer",textAlign:"center"}}><div style={{fontSize:20,marginBottom:4}}>{o.emoji}</div><div style={{fontSize:12,color:"#94a3b8",fontWeight:700}}>{o.label}</div></button>)}
+            {[{emoji:"✅",label:"Replied",action:()=>{updateLead(reviewPending.id,{stage:"Connected"});setReviewPending(null);}},{emoji:"🔁",label:"Follow Up Again",action:()=>{const nh=[...(reviewPending.followUpHistory||[]),{date:reviewPending.followUp?.date,notes:"",attempt:(reviewPending.followUpHistory||[]).length+1}];updateLead(reviewPending.id,{followUp:{date:addDays(7),notes:""},followUpHistory:nh});setReviewPending(null);}},{emoji:"❌",label:"Lost",action:()=>{updateLead(reviewPending.id,{stage:"Lost"});setReviewPending(null);}}].map(o=><button key={o.label} onClick={o.action} style={{background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:10,padding:"12px 8px",cursor:"pointer",textAlign:"center"}}><div style={{fontSize:20,marginBottom:4}}>{o.emoji}</div><div style={{fontSize:12,color:"#64748b",fontWeight:600}}>{o.label}</div></button>)}
           </div>
           <div style={{display:"flex",justifyContent:"flex-end"}}><Btn variant="ghost" onClick={()=>setReviewPending(null)}>Later</Btn></div>
         </Modal>
@@ -485,14 +517,14 @@ function HPCard({contact,onDragStart,onClick,color,selectedMonth}){
   const carryLabel=isCarryOver?new Date(createdMonth+'-15').toLocaleString('default',{month:'short',year:'2-digit'}):null;
   return (
     <div draggable onDragStart={e=>onDragStart(e,contact.id)} onClick={()=>onClick(contact)}
-      style={{background:"#13131f",border:`1px solid ${color}33`,borderRadius:10,padding:"11px 13px",cursor:"grab",marginBottom:8,userSelect:"none",transition:"border-color .15s"}}
+      style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:10,padding:"11px 13px",cursor:"grab",marginBottom:8,userSelect:"none",transition:"border-color .15s",boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}}
       onMouseEnter={e=>e.currentTarget.style.borderColor=color+"88"}
-      onMouseLeave={e=>e.currentTarget.style.borderColor=color+"33"}>
+      onMouseLeave={e=>e.currentTarget.style.borderColor="#e2e8f0"}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:3}}>
-        <div style={{fontWeight:700,color:"#e2e8f0",fontSize:13}}>{contact.firstName} {contact.lastName}</div>
-        {isCarryOver&&<span style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:20,padding:"1px 7px",fontSize:9,fontWeight:700,whiteSpace:"nowrap",flexShrink:0,marginLeft:6}}>↩ {carryLabel}</span>}
+        <div style={{fontWeight:600,color:"#0f172a",fontSize:13}}>{contact.firstName} {contact.lastName}</div>
+        {isCarryOver&&<span style={{background:"#eef2ff",color:"#6366f1",borderRadius:20,padding:"1px 7px",fontSize:9,fontWeight:600,whiteSpace:"nowrap",flexShrink:0,marginLeft:6}}>↩ {carryLabel}</span>}
       </div>
-      {contact.accountName&&<div style={{fontSize:11,color:"#e2e8f0",opacity:.7,marginBottom:2}}>🏢 {contact.accountName}</div>}
+      {contact.accountName&&<div style={{fontSize:11,color:"#475569",marginBottom:2}}>🏢 {contact.accountName}</div>}
       {contact.industry&&<div style={{fontSize:11,color:"#64748b",marginBottom:2}}>📂 {contact.industry}</div>}
       {contact.email&&<div style={{fontSize:11,color:"#64748b",marginBottom:2}}>✉️ {contact.email}</div>}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:6}}>
@@ -508,20 +540,20 @@ function HPKanbanCol({stage,contacts,onDragStart,onDrop,onDragOver,onDragLeave,o
   const total=contacts.reduce((s,c)=>s+(c.saleValue||0),0);
   return (
     <div onDrop={e=>onDrop(e,stage)} onDragOver={e=>{e.preventDefault();onDragOver(stage);}} onDragLeave={onDragLeave}
-      style={{minWidth:190,flex:"0 0 190px",background:isDragOver?"#1e1e3a":"#10101a",border:`1px solid ${isDragOver?c:c+"33"}`,borderRadius:14,display:"flex",flexDirection:"column",transition:"all .15s",height:"calc(100vh - 300px)"}}>
-      <div style={{padding:"10px 12px 8px",borderBottom:`2px solid ${c}66`,flexShrink:0}}>
+      style={{minWidth:190,flex:"0 0 190px",background:isDragOver?"#eef2ff":"#f8fafc",border:`1px solid ${isDragOver?c:"#e2e8f0"}`,borderRadius:14,display:"flex",flexDirection:"column",transition:"all .15s",height:"calc(100vh - 300px)"}}>
+      <div style={{padding:"10px 12px 8px",borderBottom:`2px solid ${c}`,flexShrink:0}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-          <span style={{fontWeight:800,fontSize:12,color:c}}>{stage}</span>
-          <span style={{background:c+"22",color:c,borderRadius:20,padding:"1px 7px",fontSize:11,fontWeight:700}}>{contacts.length}</span>
+          <span style={{fontWeight:700,fontSize:12,color:c}}>{stage}</span>
+          <span style={{background:c+"18",color:c,borderRadius:20,padding:"1px 7px",fontSize:11,fontWeight:700}}>{contacts.length}</span>
         </div>
-        {total>0&&<div style={{fontSize:11,color:"#22c55e",fontWeight:600}}>💰 ${total.toLocaleString()}</div>}
+        {total>0&&<div style={{fontSize:11,color:"#16a34a",fontWeight:600}}>💰 ${total.toLocaleString()}</div>}
       </div>
       <div style={{padding:"9px 9px 0",flex:1,overflowY:"auto",minHeight:0}}>
         {contacts.map(c=><HPCard key={c.id} contact={c} onDragStart={onDragStart} onClick={onClick} color={HP_COLORS[stage]||"#6366f1"} selectedMonth={selectedMonth}/>)}
-        {!contacts.length&&<div style={{color:"#2d2d3f",fontSize:11,textAlign:"center",paddingTop:18}}>Drop here</div>}
+        {!contacts.length&&<div style={{color:"#cbd5e1",fontSize:11,textAlign:"center",paddingTop:18}}>Drop here</div>}
       </div>
-      {onAdd&&<div style={{padding:"8px 9px",borderTop:`1px solid ${c}22`,flexShrink:0}}>
-        <button onClick={()=>onAdd(stage)} style={{width:"100%",background:c+"15",color:c,border:`1px dashed ${c}44`,borderRadius:8,padding:"6px",cursor:"pointer",fontSize:11,fontWeight:600}}>+ Add Contact</button>
+      {onAdd&&<div style={{padding:"8px 9px",borderTop:"1px solid #e2e8f0",flexShrink:0}}>
+        <button onClick={()=>onAdd(stage)} style={{width:"100%",background:"#fff",color:c,border:`1px dashed ${c}66`,borderRadius:8,padding:"6px",cursor:"pointer",fontSize:11,fontWeight:600}}>+ Add Contact</button>
       </div>}
     </div>
   );
@@ -544,23 +576,23 @@ function MonthPicker({selectedMonth,currentMonth,availableMonths,onChange}){
   return (
     <div ref={ref} style={{position:'relative',display:'inline-block'}}>
       <button onClick={()=>setOpen(v=>!v)}
-        style={{background:'#1e1e2e',color:'#f59e0b',border:'1px solid #f59e0b44',borderRadius:9,padding:'6px 14px',cursor:'pointer',fontSize:12,fontWeight:700,display:'flex',alignItems:'center',gap:7,whiteSpace:'nowrap'}}>
-        📅 {fmtLabel(selectedMonth)} <span style={{fontSize:10,opacity:.7}}>{open?'▲':'▼'}</span>
+        style={{background:'#f8fafc',color:'#f59e0b',border:'1px solid #fde68a',borderRadius:8,padding:'6px 12px',cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',gap:7,whiteSpace:'nowrap'}}>
+        📅 {fmtLabel(selectedMonth)} <span style={{fontSize:10,opacity:.6}}>{open?'▲':'▼'}</span>
       </button>
       {open&&(
-        <div style={{position:'absolute',top:'calc(100% + 6px)',left:0,background:'#1a1a2e',border:'1px solid #2d2d3f',borderRadius:14,padding:14,zIndex:400,width:236,boxShadow:'0 10px 36px #000b'}}>
+        <div style={{position:'absolute',top:'calc(100% + 6px)',left:0,background:'#fff',border:'1px solid #e2e8f0',borderRadius:14,padding:14,zIndex:400,width:236,boxShadow:'0 10px 40px rgba(0,0,0,0.12)'}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
-            <button onClick={()=>setViewYear(v=>v-1)} style={{background:'#2d2d3f',color:'#e2e8f0',border:'none',borderRadius:7,width:28,height:28,cursor:'pointer',fontSize:15,fontWeight:700}}>‹</button>
-            <span style={{fontWeight:800,color:'#e2e8f0',fontSize:15}}>{viewYear}</span>
+            <button onClick={()=>setViewYear(v=>v-1)} style={{background:'#f1f5f9',color:'#0f172a',border:'none',borderRadius:7,width:28,height:28,cursor:'pointer',fontSize:15,fontWeight:700}}>‹</button>
+            <span style={{fontWeight:700,color:'#0f172a',fontSize:15}}>{viewYear}</span>
             <button onClick={()=>setViewYear(v=>v+1)} disabled={viewYear>=curY}
-              style={{background:viewYear>=curY?'#13131f':'#2d2d3f',color:viewYear>=curY?'#3d3d4f':'#e2e8f0',border:'none',borderRadius:7,width:28,height:28,cursor:viewYear>=curY?'default':'pointer',fontSize:15,fontWeight:700}}>›</button>
+              style={{background:viewYear>=curY?'#f8fafc':'#f1f5f9',color:viewYear>=curY?'#cbd5e1':'#0f172a',border:'none',borderRadius:7,width:28,height:28,cursor:viewYear>=curY?'default':'pointer',fontSize:15,fontWeight:700}}>›</button>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:5}}>
             {MONTHS.map((name,i)=>{
               const m=i+1; const future=isFuture(m); const sel=isSel(m); const cur=isCur(m); const data=hasData(m);
               return (
                 <button key={m} onClick={()=>{if(!future){onChange(ym(m));setOpen(false);}}} disabled={future}
-                  style={{position:'relative',background:sel?'#f59e0b33':cur?'#22c55e15':data?'#6366f115':'#13131f',color:sel?'#f59e0b':cur?'#22c55e':future?'#2d2d3f':data?'#e2e8f0':'#64748b',border:`1px solid ${sel?'#f59e0b55':cur?'#22c55e44':data?'#6366f133':'#1e1e2e'}`,borderRadius:8,padding:'9px 4px',cursor:future?'default':'pointer',fontSize:12,fontWeight:700,transition:'all .1s'}}>
+                  style={{position:'relative',background:sel?'#fef3c7':cur?'#f0fdf4':data?'#eef2ff':'#f8fafc',color:sel?'#d97706':cur?'#16a34a':future?'#cbd5e1':data?'#0f172a':'#64748b',border:`1px solid ${sel?'#fde68a':cur?'#bbf7d0':data?'#c7d2fe':'#e2e8f0'}`,borderRadius:8,padding:'9px 4px',cursor:future?'default':'pointer',fontSize:12,fontWeight:600,transition:'all .1s'}}>
                   {name}
                   {cur&&<span style={{position:'absolute',top:3,right:4,width:5,height:5,background:'#22c55e',borderRadius:'50%',display:'block'}}/>}
                   {data&&!sel&&!cur&&<span style={{position:'absolute',bottom:3,left:'50%',transform:'translateX(-50%)',width:3,height:3,background:'#6366f1',borderRadius:'50%',display:'block'}}/>}
@@ -568,7 +600,7 @@ function MonthPicker({selectedMonth,currentMonth,availableMonths,onChange}){
               );
             })}
           </div>
-          <div style={{marginTop:10,paddingTop:8,borderTop:'1px solid #2d2d3f',display:'flex',gap:5,fontSize:10,color:'#64748b',alignItems:'center',flexWrap:'wrap'}}>
+          <div style={{marginTop:10,paddingTop:8,borderTop:'1px solid #f1f5f9',display:'flex',gap:5,fontSize:10,color:'#94a3b8',alignItems:'center',flexWrap:'wrap'}}>
             <span style={{width:8,height:8,background:'#22c55e',borderRadius:'50%',display:'inline-block'}}/>Current
             <span style={{width:8,height:8,background:'#6366f1',borderRadius:'50%',display:'inline-block',marginLeft:6}}/>Has data
           </div>
@@ -591,12 +623,12 @@ function HPBarChart({data}){
       {[0,0.25,0.5,0.75,1].map(p=>{
         const y=pT+cH-p*cH;
         return <g key={p}>
-          <line x1={pL} y1={y} x2={pL+cW} y2={y} stroke="#2d2d3f" strokeDasharray="3,3" strokeWidth={0.7}/>
-          <text x={pL-5} y={y+4} textAnchor="end" fill="#64748b" fontSize={9}>{fmt(Math.round(p*maxVal))}</text>
+          <line x1={pL} y1={y} x2={pL+cW} y2={y} stroke="#f1f5f9" strokeDasharray="3,3" strokeWidth={0.7}/>
+          <text x={pL-5} y={y+4} textAnchor="end" fill="#94a3b8" fontSize={9}>{fmt(Math.round(p*maxVal))}</text>
         </g>;
       })}
-      <line x1={pL} y1={pT} x2={pL} y2={pT+cH} stroke="#3d3d4f" strokeWidth={1}/>
-      <line x1={pL} y1={pT+cH} x2={pL+cW} y2={pT+cH} stroke="#3d3d4f" strokeWidth={1}/>
+      <line x1={pL} y1={pT} x2={pL} y2={pT+cH} stroke="#e2e8f0" strokeWidth={1}/>
+      <line x1={pL} y1={pT+cH} x2={pL+cW} y2={pT+cH} stroke="#e2e8f0" strokeWidth={1}/>
       {data.map((d,i)=>{
         const bH=maxVal>0?(d.value/maxVal)*cH:0;
         const x=pL+i*slot+(slot-bW)/2;
@@ -604,7 +636,7 @@ function HPBarChart({data}){
         return <g key={d.source}>
           <rect x={x} y={bH>0?y:pT+cH-2} width={bW} height={bH>0?bH:2} fill={d.color} rx={4} opacity={0.85}/>
           {bH>0&&<text x={x+bW/2} y={y-5} textAnchor="middle" fill={d.color} fontSize={9} fontWeight="bold">{fmt(d.value)}</text>}
-          <text x={x+bW/2} y={pT+cH+15} textAnchor="middle" fill="#94a3b8" fontSize={10}>{d.source}</text>
+          <text x={x+bW/2} y={pT+cH+15} textAnchor="middle" fill="#64748b" fontSize={10}>{d.source}</text>
         </g>;
       })}
     </svg>
@@ -622,7 +654,7 @@ function HPPieChart({won,pending,total}){
     const x1=cx+r*Math.cos(s),y1=cy+r*Math.sin(s);
     const x2=cx+r*Math.cos(e),y2=cy+r*Math.sin(e);
     const large=pct>0.5?1:0;
-    return <path d={`M${cx} ${cy} L${x1.toFixed(2)} ${y1.toFixed(2)} A${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`} fill={color} opacity={0.85} stroke="#1a1a2e" strokeWidth={2} key={color}/>;
+    return <path d={`M${cx} ${cy} L${x1.toFixed(2)} ${y1.toFixed(2)} A${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`} fill={color} opacity={0.85} stroke="#fff" strokeWidth={2} key={color}/>;
   }
   const wonPct=won/total,pendPct=pending/total;
   let a=0;
@@ -631,9 +663,9 @@ function HPPieChart({won,pending,total}){
   return(
     <svg width="200" height="200" viewBox="0 0 200 200">
       {paths}
-      <circle cx={cx} cy={cy} r={ir} fill="#13131f"/>
-      <text x={cx} y={cy-5} textAnchor="middle" fill="#e2e8f0" fontSize={13} fontWeight="bold">{tf}</text>
-      <text x={cx} y={cy+11} textAnchor="middle" fill="#64748b" fontSize={9}>Total Sales</text>
+      <circle cx={cx} cy={cy} r={ir} fill="#fff"/>
+      <text x={cx} y={cy-5} textAnchor="middle" fill="#0f172a" fontSize={13} fontWeight="bold">{tf}</text>
+      <text x={cx} y={cy+11} textAnchor="middle" fill="#94a3b8" fontSize={9}>Total Sales</text>
     </svg>
   );
 }
@@ -680,28 +712,28 @@ function HPInsightModal({contacts,onClose,currentMonth}){
   const DATE_BTNS=[{k:"thisMonth",l:"This Month"},{k:"lastMonth",l:"Last Month"},{k:"thisYear",l:"This Year"},{k:"custom",l:"Custom Date"}];
 
   return(
-    <div style={{position:"fixed",inset:0,background:"#000c",zIndex:400,display:"flex",alignItems:"center",justifyContent:"center"}}
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:400,display:"flex",alignItems:"center",justifyContent:"center"}}
       onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
-      <div style={{background:"#1a1a2e",border:"1px solid #2d2d3f",borderRadius:20,width:"92vw",maxWidth:1100,maxHeight:"90vh",overflowY:"auto",padding:"24px 28px"}}>
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:20,width:"92vw",maxWidth:1100,maxHeight:"90vh",overflowY:"auto",padding:"24px 28px",boxShadow:"0 20px 60px rgba(0,0,0,0.15)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-          <span style={{fontWeight:800,fontSize:18,color:"#e2e8f0"}}>📊 Pipeline Insights</span>
-          <button onClick={onClose} style={{background:"none",border:"none",color:"#64748b",fontSize:22,cursor:"pointer"}}>✕</button>
+          <span style={{fontWeight:700,fontSize:18,color:"#0f172a"}}>Pipeline Insights</span>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"#94a3b8",fontSize:22,cursor:"pointer",lineHeight:1}}>✕</button>
         </div>
         {/* Filters */}
-        <div style={{background:"#13131f",border:"1px solid #2d2d3f",borderRadius:14,padding:"14px 16px",marginBottom:20}}>
+        <div style={{background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:14,padding:"14px 16px",marginBottom:20}}>
           <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",marginBottom:14}}>
-            <span style={{fontSize:12,color:"#64748b",fontWeight:700,marginRight:2}}>Period:</span>
+            <span style={{fontSize:12,color:"#64748b",fontWeight:600,marginRight:2}}>Period:</span>
             {DATE_BTNS.map(b=>(
               <button key={b.k} onClick={()=>setDateMode(b.k)}
-                style={{background:dateMode===b.k?"#6366f1":"#2d2d3f",color:dateMode===b.k?"#fff":"#94a3b8",border:"none",borderRadius:8,padding:"6px 14px",cursor:"pointer",fontSize:12,fontWeight:600,transition:"all .15s"}}>
+                style={{background:dateMode===b.k?"#6366f1":"#fff",color:dateMode===b.k?"#fff":"#64748b",border:"1px solid #e2e8f0",borderRadius:8,padding:"6px 14px",cursor:"pointer",fontSize:12,fontWeight:600,transition:"all .15s"}}>
                 {b.l}
               </button>
             ))}
             {dateMode==="custom"&&(
               <div style={{display:"flex",gap:8,alignItems:"center",marginLeft:4}}>
-                <input type="date" value={customFrom} onChange={e=>setCustomFrom(e.target.value)} style={{...IS,width:138,fontSize:11,colorScheme:"dark"}}/>
+                <input type="date" value={customFrom} onChange={e=>setCustomFrom(e.target.value)} style={{...IS,width:138,fontSize:11,colorScheme:"light"}}/>
                 <span style={{color:"#64748b",fontSize:13}}>→</span>
-                <input type="date" value={customTo} onChange={e=>setCustomTo(e.target.value)} style={{...IS,width:138,fontSize:11,colorScheme:"dark"}}/>
+                <input type="date" value={customTo} onChange={e=>setCustomTo(e.target.value)} style={{...IS,width:138,fontSize:11,colorScheme:"light"}}/>
               </div>
             )}
           </div>
@@ -720,27 +752,27 @@ function HPInsightModal({contacts,onClose,currentMonth}){
         </div>
         {/* Charts */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 340px",gap:16}}>
-          <div style={{background:"#13131f",border:"1px solid #2d2d3f",borderRadius:14,padding:"16px 20px"}}>
-            <div style={{fontWeight:700,color:"#e2e8f0",marginBottom:12,fontSize:14}}>📊 Total Sales by Source</div>
+          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"16px 20px",boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}}>
+            <div style={{fontWeight:700,color:"#0f172a",marginBottom:12,fontSize:14}}>Total Sales by Source</div>
             <HPBarChart data={barData}/>
-            <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:10,paddingTop:10,borderTop:"1px solid #2d2d3f"}}>
+            <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:10,paddingTop:10,borderTop:"1px solid #f1f5f9"}}>
               {barData.map(d=>(
                 <div key={d.source} style={{display:"flex",alignItems:"center",gap:5}}>
                   <div style={{width:9,height:9,borderRadius:2,background:d.color}}/>
-                  <span style={{fontSize:11,color:"#94a3b8"}}>{d.source}: <strong style={{color:d.color}}>{d.pct}%</strong> <span style={{fontSize:10,color:"#64748b"}}>({d.wonLeads}/{d.totalLeads} leads)</span></span>
+                  <span style={{fontSize:11,color:"#64748b"}}>{d.source}: <strong style={{color:d.color}}>{d.pct}%</strong> <span style={{fontSize:10,color:"#94a3b8"}}>({d.wonLeads}/{d.totalLeads} leads)</span></span>
                 </div>
               ))}
             </div>
           </div>
-          <div style={{background:"#13131f",border:"1px solid #2d2d3f",borderRadius:14,padding:"16px 20px",display:"flex",flexDirection:"column",alignItems:"center"}}>
-            <div style={{fontWeight:700,color:"#e2e8f0",marginBottom:12,fontSize:14,alignSelf:"flex-start"}}>🥧 Revenue Breakdown</div>
+          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"16px 20px",display:"flex",flexDirection:"column",alignItems:"center",boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}}>
+            <div style={{fontWeight:700,color:"#0f172a",marginBottom:12,fontSize:14,alignSelf:"flex-start"}}>Revenue Breakdown</div>
             <HPPieChart won={pie.won} pending={pie.pending} total={pie.total}/>
             <div style={{width:"100%",display:"flex",flexDirection:"column",gap:8,marginTop:12}}>
-              {[{l:"Total Sales",v:pie.total,c:"#e2e8f0"},{l:"Revenue (Won)",v:pie.won,c:"#22c55e"},{l:"Pending Sales",v:pie.pending,c:"#f43f5e"}].map(item=>(
-                <div key={item.l} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#0d0d17",borderRadius:8,padding:"7px 11px"}}>
+              {[{l:"Total Sales",v:pie.total,c:"#0f172a"},{l:"Revenue (Won)",v:pie.won,c:"#22c55e"},{l:"Pending Sales",v:pie.pending,c:"#f43f5e"}].map(item=>(
+                <div key={item.l} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#f8fafc",borderRadius:8,padding:"7px 11px"}}>
                   <div style={{display:"flex",alignItems:"center",gap:7}}>
                     <div style={{width:9,height:9,borderRadius:"50%",background:item.c,flexShrink:0}}/>
-                    <span style={{fontSize:12,color:"#94a3b8"}}>{item.l}</span>
+                    <span style={{fontSize:12,color:"#64748b"}}>{item.l}</span>
                   </div>
                   <span style={{fontWeight:700,fontSize:14,color:item.c}}>${item.v.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
                 </div>
@@ -753,11 +785,10 @@ function HPInsightModal({contacts,onClose,currentMonth}){
   );
 }
 
-function HotPipelineGate(){
+function HotPipelineGate({search="",setSearch=()=>{}}){
   const [contacts,setContacts]=useState([]); const [loading,setLoading]=useState(true);
   const [dragId,setDragId]=useState(null); const [dragOver,setDragOver]=useState(null);
   const [addModal,setAddModal]=useState(null); const [editModal,setEditModal]=useState(null); const [showInsight,setShowInsight]=useState(false);
-  const [search,setSearch]=useState("");
   const currentMonth=useMemo(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;},[]);
   const [selectedMonth,setSelectedMonth]=useState(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;});
 
@@ -830,7 +861,11 @@ function HotPipelineGate(){
     setEditModal(null);
   }
 
-  if(loading)return <Spinner text="Loading Hot Pipeline..."/>;
+  const [sourceTab,setSourceTab]=useState("All");
+  const sourceCounts=useMemo(()=>{const m={All:searchedContacts.length};HP_SOURCES.forEach(s=>{m[s]=searchedContacts.filter(c=>c.source===s).length;});return m;},[searchedContacts]);
+  const visibleByStage=useMemo(()=>{const src=sourceTab==="All"?searchedContacts:searchedContacts.filter(c=>c.source===sourceTab);const m={};HP_STAGES.forEach(s=>m[s]=src.filter(c=>c.stage===s));return m;},[searchedContacts,sourceTab]);
+
+  if(loading)return <Spinner text="Loading Pipeline..."/>;
 
   const isCurrentMonth=selectedMonth===currentMonth;
 
@@ -849,54 +884,65 @@ function HotPipelineGate(){
 
   return (
     <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-      {/* Month selector + Stat boxes */}
-      <div style={{background:"#13131f",borderBottom:"1px solid #2d2d3f",padding:"8px 16px",display:"flex",flexDirection:"column",gap:8}}>
-        <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-          <div style={{position:"relative",display:"flex",alignItems:"center"}}>
-            <span style={{position:"absolute",left:10,color:"#64748b",fontSize:13,pointerEvents:"none"}}>🔍</span>
-            <input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search leads…"
-              style={{background:"#0d0d17",border:"1px solid #2d2d3f",borderRadius:9,padding:"7px 30px 7px 32px",color:"#e2e8f0",fontSize:13,outline:"none",width:210}}/>
-            {search&&<span onClick={()=>setSearch("")} style={{position:"absolute",right:9,color:"#64748b",cursor:"pointer",fontSize:16,lineHeight:1,fontWeight:700}}>×</span>}
-          </div>
-          <MonthPicker selectedMonth={selectedMonth} currentMonth={currentMonth} availableMonths={availableMonths} onChange={setSelectedMonth}/>
-          {!isCurrentMonth&&<span style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:8,padding:"4px 12px",fontSize:11,fontWeight:700}}>📅 Past Month</span>}
-          <button onClick={()=>setShowInsight(true)} style={{background:"#818cf822",color:"#818cf8",border:"1px solid #818cf844",borderRadius:8,padding:"5px 14px",cursor:"pointer",fontSize:12,fontWeight:700}}>📊 Insight</button>
-        </div>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-          {STAT_BOXES.map(s=> s.compare ? (
-            <div key={s.label} style={{background:"#13131f",border:"1px solid #2d2d3f",borderRadius:10,padding:"8px 14px",display:"flex",flexDirection:"column",gap:5,minWidth:160}}>
-              <div style={{fontSize:10,color:"#64748b",fontWeight:700,marginBottom:1}}>Monthly Sales</div>
-              <div onClick={()=>setSelectedMonth(lastMonth)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,cursor:"pointer",borderRadius:6,padding:"2px 4px",margin:"0 -4px",transition:"background .15s"}}
-                onMouseEnter={e=>e.currentTarget.style.background="#818cf815"}
-                onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-                <span style={{fontSize:11,color:"#818cf8",fontWeight:600}}>↩ Last Month</span>
-                <span style={{fontWeight:800,fontSize:14,color:"#818cf8"}}>${s.lastVal.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
-              </div>
-              <div style={{height:1,background:"#2d2d3f"}}/>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
-                <span style={{fontSize:11,color:"#34d399",fontWeight:600}}>This Month</span>
-                <span style={{fontWeight:800,fontSize:14,color:"#34d399"}}>${s.thisVal.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
-              </div>
-              {selectedMonth!==currentMonth&&<button onClick={()=>setSelectedMonth(currentMonth)} style={{width:"100%",background:"#ffffff",color:"#0f172a",border:"none",borderRadius:6,padding:"4px 0",cursor:"pointer",fontSize:10,fontWeight:500,marginTop:2}}>Go to Present →</button>}
-            </div>
-          ) : s.label==="Revenue (Won)" ? (
-            <div key={s.label} style={{background:`linear-gradient(135deg,${s.c}22,${s.c}08)`,border:`2px solid ${s.c}`,borderRadius:14,padding:"12px 22px",display:"flex",flexDirection:"column",gap:4,minWidth:160,boxShadow:`0 0 18px ${s.c}55`,position:"relative"}}>
-              <div style={{fontWeight:900,fontSize:26,color:s.c,lineHeight:1}}>${s.val.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
-              <div style={{fontSize:12,color:s.c,fontWeight:700,opacity:.85}}>{s.label}</div>
-            </div>
-          ) : (
-            <div key={s.label} style={{background:s.c+"12",border:`1px solid ${s.c}33`,borderRadius:10,padding:"8px 14px",display:"flex",flexDirection:"column",gap:2,minWidth:110}}>
-              <div style={{fontWeight:800,fontSize:16,color:s.c}}>${s.val.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
-              <div style={{fontSize:10,color:"#64748b"}}>{s.label}</div>
-            </div>
+      {/* Source tabs + toolbar */}
+      <div style={{background:"#fff",borderBottom:"1px solid #e2e8f0",padding:"0 20px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{display:"flex",gap:0}}>
+          {["All",...HP_SOURCES].map(src=>(
+            <button key={src} onClick={()=>setSourceTab(src)}
+              style={{background:"none",color:sourceTab===src?"#6366f1":"#64748b",border:"none",borderBottom:sourceTab===src?"2px solid #6366f1":"2px solid transparent",padding:"12px 14px",cursor:"pointer",fontWeight:sourceTab===src?600:500,fontSize:13,transition:"all .15s",marginBottom:-1,display:"flex",alignItems:"center",gap:6,whiteSpace:"nowrap"}}>
+              {src}
+              <span style={{background:sourceTab===src?"#eef2ff":"#f1f5f9",color:sourceTab===src?"#6366f1":"#94a3b8",borderRadius:20,padding:"1px 7px",fontSize:11,fontWeight:600}}>{sourceCounts[src]||0}</span>
+            </button>
           ))}
         </div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <MonthPicker selectedMonth={selectedMonth} currentMonth={currentMonth} availableMonths={availableMonths} onChange={setSelectedMonth}/>
+          {!isCurrentMonth&&<span style={{background:"#eef2ff",color:"#6366f1",border:"1px solid #c7d2fe",borderRadius:8,padding:"4px 10px",fontSize:11,fontWeight:600}}>📅 Past Month</span>}
+          <button onClick={()=>setShowInsight(true)} style={{background:"#f8fafc",color:"#64748b",border:"1px solid #e2e8f0",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:12,fontWeight:600}}>📊 Insights</button>
+        </div>
+      </div>
+      {/* Stat boxes */}
+      <div style={{background:"#fff",borderBottom:"1px solid #e2e8f0",padding:"10px 20px",display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+        {STAT_BOXES.map(s=> s.compare ? (
+            <div key={s.label} style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:10,padding:"8px 14px",display:"flex",flexDirection:"column",gap:5,minWidth:160,boxShadow:"0 1px 3px rgba(0,0,0,0.05)"}}>
+              <div style={{fontSize:10,color:"#94a3b8",fontWeight:600,marginBottom:1,textTransform:"uppercase",letterSpacing:"0.05em"}}>Monthly Sales</div>
+              <div onClick={()=>setSelectedMonth(lastMonth)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,cursor:"pointer",borderRadius:6,padding:"2px 4px",margin:"0 -4px",transition:"background .15s"}}
+                onMouseEnter={e=>e.currentTarget.style.background="#f8fafc"}
+                onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                <span style={{fontSize:11,color:"#6366f1",fontWeight:600}}>↩ Last Month</span>
+                <span style={{fontWeight:700,fontSize:13,color:"#6366f1"}}>${s.lastVal.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+              </div>
+              <div style={{height:1,background:"#f1f5f9"}}/>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
+                <span style={{fontSize:11,color:"#16a34a",fontWeight:600}}>This Month</span>
+                <span style={{fontWeight:700,fontSize:13,color:"#16a34a"}}>${s.thisVal.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+              </div>
+              {selectedMonth!==currentMonth&&<button onClick={()=>setSelectedMonth(currentMonth)} style={{width:"100%",background:"#f8fafc",color:"#64748b",border:"1px solid #e2e8f0",borderRadius:6,padding:"4px 0",cursor:"pointer",fontSize:10,fontWeight:500,marginTop:2}}>Go to Present →</button>}
+            </div>
+          ) : s.label==="Revenue (Won)" ? (
+            <div key={s.label} style={{background:`linear-gradient(135deg,${s.c}15,${s.c}05)`,border:`2px solid ${s.c}44`,borderRadius:12,padding:"10px 18px",display:"flex",flexDirection:"column",gap:3,minWidth:150,boxShadow:`0 2px 8px ${s.c}20`}}>
+              <div style={{fontWeight:800,fontSize:22,color:s.c,lineHeight:1}}>${s.val.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+              <div style={{fontSize:11,color:"#64748b",fontWeight:600}}>{s.label}</div>
+            </div>
+          ) : (
+            <div key={s.label} style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:10,padding:"8px 14px",display:"flex",flexDirection:"column",gap:2,minWidth:110,boxShadow:"0 1px 3px rgba(0,0,0,0.05)"}}>
+              <div style={{fontWeight:700,fontSize:15,color:s.c}}>${s.val.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+              <div style={{fontSize:10,color:"#94a3b8",fontWeight:500}}>{s.label}</div>
+            </div>
+          ))}
       </div>
       {/* Kanban */}
-      <div style={{flex:1,overflow:"auto",padding:"12px"}}>
+      <div style={{flex:1,overflow:"auto",padding:"16px 20px"}}>
+        {sourceTab!=="All"&&visibleByStage&&Object.values(visibleByStage).every(arr=>arr.length===0)&&(
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",gap:12,padding:60}}>
+            <div style={{width:56,height:56,borderRadius:16,background:"#f1f5f9",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28}}>📭</div>
+            <div style={{fontWeight:700,fontSize:16,color:"#0f172a"}}>No leads in {sourceTab}</div>
+            <div style={{fontSize:13,color:"#64748b",textAlign:"center",maxWidth:320}}>Import an Apollo CSV or add a lead with this source to populate the board.</div>
+          </div>
+        )}
         <div style={{display:"flex",gap:10,alignItems:"flex-start",height:"100%"}}>
           {HP_STAGES.map(stage=>(
-            <HPKanbanCol key={stage} stage={stage} contacts={byStage[stage]||[]}
+            <HPKanbanCol key={stage} stage={stage} contacts={visibleByStage[stage]||[]}
               onDragStart={onDragStart} onDrop={onDrop} onDragOver={onDragOver} onDragLeave={onDragLeave}
               onClick={c=>setEditModal(c)} isDragOver={dragOver===stage}
               onAdd={stage=>setAddModal(stage)} selectedMonth={selectedMonth}
@@ -945,21 +991,21 @@ function ACCard({client,onClick,onAction,actionLabel,actionColor,revenueColor,lo
   const viaHP=!!client.hotPipelineId;
   return (
     <div onClick={onClick?()=>onClick(client):undefined}
-      onMouseEnter={onClick?e=>e.currentTarget.style.borderColor="#22c55e88":undefined}
-      onMouseLeave={onClick?e=>e.currentTarget.style.borderColor="#22c55e22":undefined}
-      style={{background:"#13131f",border:"1px solid #22c55e22",borderRadius:12,padding:"12px 14px",marginBottom:8,cursor:onClick?"pointer":"default",transition:"border .15s"}}>
+      onMouseEnter={onClick?e=>e.currentTarget.style.borderColor="#22c55e66":undefined}
+      onMouseLeave={onClick?e=>e.currentTarget.style.borderColor="#e2e8f0":undefined}
+      style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:12,padding:"12px 14px",marginBottom:8,cursor:onClick?"pointer":"default",transition:"border .15s",boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
         <div>
-          <div style={{fontWeight:700,color:"#e2e8f0",fontSize:13}}>{client.firstName} {client.lastName}</div>
+          <div style={{fontWeight:600,color:"#0f172a",fontSize:13}}>{client.firstName} {client.lastName}</div>
           {client.company&&<div style={{fontSize:11,color:"#64748b",marginTop:1}}>{client.company}</div>}
         </div>
-        {viaHP&&<span style={{background:"#f59e0b22",color:"#f59e0b",border:"1px solid #f59e0b44",borderRadius:20,padding:"2px 7px",fontSize:10,fontWeight:700,flexShrink:0}}>via HP</span>}
+        {viaHP&&<span style={{background:"#fffbeb",color:"#d97706",borderRadius:20,padding:"2px 7px",fontSize:10,fontWeight:600,flexShrink:0}}>via HP</span>}
       </div>
-      {client.email&&<div style={{fontSize:11,color:"#94a3b8",marginBottom:4}}>✉ {client.email}</div>}
+      {client.email&&<div style={{fontSize:11,color:"#64748b",marginBottom:4}}>✉ {client.email}</div>}
       {client.phone&&<div style={{fontSize:11,color:"#64748b",marginBottom:4}}>📞 {client.phone}</div>}
-      {client.revenue>0&&<div style={{fontSize:13,color:revenueColor||"#22c55e",fontWeight:800,marginBottom:4}}>💰 ${client.revenue.toLocaleString(undefined,{maximumFractionDigits:0})}</div>}
-      {client.contractTerms&&<div style={{fontSize:11,color:"#a855f7",background:"#a855f711",border:"1px solid #a855f733",borderRadius:7,padding:"5px 9px",marginBottom:6,lineHeight:1.5}}>📄 {client.contractTerms.length>90?client.contractTerms.slice(0,90)+"…":client.contractTerms}</div>}
-      {lostReason&&<div style={{fontSize:11,color:"#ef4444",background:"#ef444411",border:"1px solid #ef444433",borderRadius:7,padding:"5px 9px",marginBottom:6,lineHeight:1.5}}>🚩 {lostReason}</div>}
+      {client.revenue>0&&<div style={{fontSize:13,color:revenueColor||"#16a34a",fontWeight:700,marginBottom:4}}>💰 ${client.revenue.toLocaleString(undefined,{maximumFractionDigits:0})}</div>}
+      {client.contractTerms&&<div style={{fontSize:11,color:"#7c3aed",background:"#f3e8ff",borderRadius:7,padding:"5px 9px",marginBottom:6,lineHeight:1.5}}>📄 {client.contractTerms.length>90?client.contractTerms.slice(0,90)+"…":client.contractTerms}</div>}
+      {lostReason&&<div style={{fontSize:11,color:"#dc2626",background:"#fef2f2",borderRadius:7,padding:"5px 9px",marginBottom:6,lineHeight:1.5}}>🚩 {lostReason}</div>}
       {onAction&&(
         <div style={{display:"flex",justifyContent:"flex-end",marginTop:4}} onClick={e=>e.stopPropagation()}>
           <button onClick={()=>onAction(client)} style={{background:actionColor+"22",color:actionColor,border:`1px solid ${actionColor}44`,borderRadius:8,padding:"4px 11px",cursor:"pointer",fontSize:11,fontWeight:600}}>{actionLabel}</button>
@@ -971,21 +1017,21 @@ function ACCard({client,onClick,onAction,actionLabel,actionColor,revenueColor,lo
 
 function ACWinningCard({client}){
   return (
-    <div style={{background:"#13131f",border:"1px solid #f59e0b33",borderRadius:12,padding:"12px 14px",marginBottom:8}}>
+    <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:12,padding:"12px 14px",marginBottom:8,boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
         <div>
-          <div style={{fontWeight:700,color:"#e2e8f0",fontSize:13}}>{client.firstName} {client.lastName}</div>
+          <div style={{fontWeight:600,color:"#0f172a",fontSize:13}}>{client.firstName} {client.lastName}</div>
           {client.accountName&&<div style={{fontSize:11,color:"#64748b",marginTop:1}}>{client.accountName}</div>}
         </div>
         <div style={{display:"flex",gap:4,flexDirection:"column",alignItems:"flex-end"}}>
-          <span style={{background:"#22c55e22",color:"#22c55e",border:"1px solid #22c55e44",borderRadius:20,padding:"2px 8px",fontSize:10,fontWeight:700}}>Won</span>
-          {client.source&&<span style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:20,padding:"2px 7px",fontSize:10,fontWeight:600}}>{client.source}</span>}
+          <span style={{background:"#f0fdf4",color:"#16a34a",borderRadius:20,padding:"2px 8px",fontSize:10,fontWeight:600}}>Won</span>
+          {client.source&&<span style={{background:"#eef2ff",color:"#6366f1",borderRadius:20,padding:"2px 7px",fontSize:10,fontWeight:600}}>{client.source}</span>}
         </div>
       </div>
-      {client.email&&<div style={{fontSize:11,color:"#94a3b8",marginBottom:4}}>✉ {client.email}</div>}
+      {client.email&&<div style={{fontSize:11,color:"#64748b",marginBottom:4}}>✉ {client.email}</div>}
       {client.industry&&<div style={{fontSize:11,color:"#64748b",marginBottom:4}}>🏢 {client.industry}</div>}
-      {client.saleValue>0&&<div style={{fontSize:13,color:"#22c55e",fontWeight:800,marginBottom:4}}>💰 ${client.saleValue.toLocaleString()}</div>}
-      {(client.tags||[]).length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:3,marginBottom:4}}>{(client.tags||[]).slice(0,3).map(t=><span key={t} style={{background:"#22c55e11",color:"#22c55e",border:"1px solid #22c55e33",borderRadius:20,padding:"1px 7px",fontSize:10}}>{t}</span>)}</div>}
+      {client.saleValue>0&&<div style={{fontSize:13,color:"#16a34a",fontWeight:700,marginBottom:4}}>💰 ${client.saleValue.toLocaleString()}</div>}
+      {(client.tags||[]).length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:3,marginBottom:4}}>{(client.tags||[]).slice(0,3).map(t=><span key={t} style={{background:"#f0fdf4",color:"#16a34a",borderRadius:20,padding:"1px 7px",fontSize:10}}>{t}</span>)}</div>}
       {client.linkedinUrl&&<a href={client.linkedinUrl} target="_blank" rel="noreferrer" style={{background:"#0a66c222",color:"#60a5fa",border:"1px solid #0a66c244",borderRadius:6,padding:"3px 9px",fontSize:10,fontWeight:700,textDecoration:"none",display:"inline-block"}}>View LinkedIn ↗</a>}
     </div>
   );
@@ -993,18 +1039,18 @@ function ACWinningCard({client}){
 
 function ACColumn({title,count,color,children,onAdd,note}){
   return (
-    <div style={{flex:"0 0 310px",background:color+"08",border:`1px solid ${color}33`,borderRadius:16,padding:14,display:"flex",flexDirection:"column",height:"100%",boxSizing:"border-box"}}>
+    <div style={{flex:"0 0 310px",background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:16,padding:14,display:"flex",flexDirection:"column",height:"100%",boxSizing:"border-box"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
         <div style={{display:"flex",alignItems:"center",gap:7}}>
-          <div style={{width:9,height:9,borderRadius:"50%",background:color}}/>
-          <span style={{fontWeight:800,fontSize:13,color:"#e2e8f0"}}>{title}</span>
-          <span style={{background:color+"22",color:color,borderRadius:20,padding:"1px 8px",fontSize:11,fontWeight:700}}>{count}</span>
+          <div style={{width:8,height:8,borderRadius:"50%",background:color}}/>
+          <span style={{fontWeight:700,fontSize:13,color:"#0f172a"}}>{title}</span>
+          <span style={{background:color+"18",color:color,borderRadius:20,padding:"1px 8px",fontSize:11,fontWeight:600}}>{count}</span>
         </div>
-        {onAdd&&<button onClick={onAdd} style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:8,padding:"4px 11px",cursor:"pointer",fontSize:12,fontWeight:700}}>+ Add</button>}
+        {onAdd&&<button onClick={onAdd} style={{background:"#eef2ff",color:"#6366f1",border:"none",borderRadius:8,padding:"4px 11px",cursor:"pointer",fontSize:12,fontWeight:600}}>+ Add</button>}
       </div>
-      {note&&<div style={{background:color+"11",border:`1px solid ${color}33`,borderRadius:8,padding:"6px 10px",marginBottom:10,fontSize:11,color:color}}>{note}</div>}
+      {note&&<div style={{background:color+"0d",border:`1px solid ${color}22`,borderRadius:8,padding:"6px 10px",marginBottom:10,fontSize:11,color:color}}>{note}</div>}
       <div style={{flex:1,overflowY:"auto"}}>
-        {count===0&&<div style={{textAlign:"center",color:"#2d2d3f",fontSize:12,padding:"30px 0"}}>No clients yet</div>}
+        {count===0&&<div style={{textAlign:"center",color:"#cbd5e1",fontSize:12,padding:"30px 0"}}>No clients yet</div>}
         {children}
       </div>
     </div>
@@ -1020,12 +1066,12 @@ function ComparisonGraph({cur,prv,curLabel,prvLabel}){
   ];
   const maxVal=Math.max(...metrics.flatMap(m=>[cur[m.key]||0,prv[m.key]||0]),1);
   return(
-    <div style={{flex:"0 0 270px",background:"#13131f",border:"1px solid #2d2d3f",borderRadius:16,padding:"14px 14px 12px",display:"flex",flexDirection:"column",height:"100%",boxSizing:"border-box",minWidth:220}}>
+    <div style={{flex:"0 0 270px",background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"14px 14px 12px",display:"flex",flexDirection:"column",height:"100%",boxSizing:"border-box",minWidth:220,boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}}>
       {/* Title */}
-      <div style={{fontWeight:800,fontSize:13,color:"#e2e8f0",marginBottom:5}}>{curLabel} <span style={{color:"#64748b",fontWeight:400,fontSize:12}}>vs</span> {prvLabel}</div>
+      <div style={{fontWeight:700,fontSize:13,color:"#0f172a",marginBottom:5}}>{curLabel} <span style={{color:"#94a3b8",fontWeight:400,fontSize:12}}>vs</span> {prvLabel}</div>
       {/* Legend */}
       <div style={{display:"flex",gap:12,marginBottom:10}}>
-        {[{label:curLabel,bg:"#818cf8"},{label:prvLabel,bg:"transparent",border:"1px solid #4d4d5f"}].map(l=>(
+        {[{label:curLabel,bg:"#6366f1"},{label:prvLabel,bg:"transparent",border:"1px solid #cbd5e1"}].map(l=>(
           <div key={l.label} style={{display:"flex",alignItems:"center",gap:4}}>
             <div style={{width:9,height:9,borderRadius:2,background:l.bg,border:l.border||"none",flexShrink:0}}/>
             <span style={{fontSize:10,color:"#64748b"}}>{l.label}</span>
@@ -1041,8 +1087,8 @@ function ComparisonGraph({cur,prv,curLabel,prvLabel}){
             <div key={m.key} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,height:"100%",justifyContent:"flex-end"}}>
               <div style={{fontSize:8,color:m.color,fontWeight:700,textAlign:"center",lineHeight:1.3}}>${cv>=1000?(cv/1000).toFixed(1)+"k":cv}</div>
               <div style={{width:"100%",display:"flex",gap:2,alignItems:"flex-end",flex:1}}>
-                <div style={{flex:1,background:m.color,borderRadius:"3px 3px 0 0",height:`${ch}%`,minHeight:cv>0?4:0,transition:"height .4s ease"}}/>
-                <div style={{flex:1,background:m.color+"33",borderRadius:"3px 3px 0 0",height:`${ph}%`,minHeight:pv>0?4:0,border:`1px solid ${m.color}55`,boxSizing:"border-box",transition:"height .4s ease"}}/>
+                <div style={{flex:1,background:m.color,borderRadius:"3px 3px 0 0",height:`${ch}%`,minHeight:cv>0?4:0,transition:"height .4s ease",opacity:0.85}}/>
+                <div style={{flex:1,background:m.color+"30",borderRadius:"3px 3px 0 0",height:`${ph}%`,minHeight:pv>0?4:0,border:`1px solid ${m.color}44`,boxSizing:"border-box",transition:"height .4s ease"}}/>
               </div>
               <span style={{fontSize:9,color:"#64748b",textAlign:"center"}}>{m.short}</span>
             </div>
@@ -1050,10 +1096,10 @@ function ComparisonGraph({cur,prv,curLabel,prvLabel}){
         })}
       </div>
       {/* Divider */}
-      <div style={{height:1,background:"#2d2d3f",marginBottom:10,flexShrink:0}}/>
+      <div style={{height:1,background:"#f1f5f9",marginBottom:10,flexShrink:0}}/>
       {/* Summary */}
       <div style={{flexShrink:0}}>
-        <div style={{fontSize:10,color:"#64748b",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:7}}>Summary</div>
+        <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:7}}>Summary</div>
         <div style={{display:"flex",flexDirection:"column",gap:5}}>
           {metrics.map(m=>{
             const cv=cur[m.key]||0,pv=prv[m.key]||0,diff=cv-pv;
@@ -1111,36 +1157,36 @@ function ProjectsModal({type,records,onClose}){
   }
 
   return(
-    <div style={{position:"fixed",inset:0,background:"#000b",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000}} onClick={onClose}>
-      <div style={{background:"#1a1a2e",border:`1px solid ${color}44`,borderRadius:18,width:780,maxWidth:"96vw",maxHeight:"85vh",display:"flex",flexDirection:"column",boxShadow:"0 8px 48px #0009"}} onClick={e=>e.stopPropagation()}>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000}} onClick={onClose}>
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:18,width:780,maxWidth:"96vw",maxHeight:"85vh",display:"flex",flexDirection:"column",boxShadow:"0 20px 60px rgba(0,0,0,0.15)"}} onClick={e=>e.stopPropagation()}>
         {/* Header */}
-        <div style={{padding:"18px 24px",borderBottom:`1px solid ${color}22`,display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+        <div style={{padding:"18px 24px",borderBottom:"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
           <div>
-            <span style={{fontWeight:800,fontSize:17,color}}>{isActive?"Active Projects":"Lost Projects"}</span>
-            <span style={{marginLeft:10,background:color+"22",color,borderRadius:20,padding:"2px 10px",fontSize:12,fontWeight:700}}>{records.length} clients</span>
-            <div style={{fontSize:11,color:"#64748b",marginTop:3}}>Jan {year} – Present (Year to Date)</div>
+            <span style={{fontWeight:700,fontSize:16,color:"#0f172a"}}>{isActive?"Active Projects":"Lost Projects"}</span>
+            <span style={{marginLeft:10,background:color+"18",color,borderRadius:20,padding:"2px 10px",fontSize:12,fontWeight:600}}>{records.length} clients</span>
+            <div style={{fontSize:11,color:"#94a3b8",marginTop:3}}>Jan {year} – Present (Year to Date)</div>
           </div>
           <div style={{display:"flex",gap:10,alignItems:"center"}}>
-            <button onClick={e=>downloadCSV(e)} style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:8,padding:"6px 16px",cursor:"pointer",fontSize:12,fontWeight:700}}>⬇ Export CSV</button>
-            <button onClick={onClose} style={{background:"#2d2d3f",color:"#94a3b8",border:"none",borderRadius:8,padding:"6px 14px",cursor:"pointer",fontSize:13,fontWeight:700}}>✕</button>
+            <button onClick={e=>downloadCSV(e)} style={{background:"#eef2ff",color:"#6366f1",border:"none",borderRadius:8,padding:"6px 16px",cursor:"pointer",fontSize:12,fontWeight:600}}>⬇ Export CSV</button>
+            <button onClick={onClose} style={{background:"#f8fafc",color:"#64748b",border:"1px solid #e2e8f0",borderRadius:8,padding:"6px 14px",cursor:"pointer",fontSize:13}}>✕</button>
           </div>
         </div>
         {/* Column headings */}
-        <div style={{padding:"10px 24px",borderBottom:"1px solid #2d2d3f",display:"grid",gridTemplateColumns:grid,gap:12,flexShrink:0}}>
-          {cols.map(h=><span key={h} style={{fontSize:10,color:"#64748b",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em"}}>{h}</span>)}
+        <div style={{padding:"10px 24px",borderBottom:"1px solid #f1f5f9",display:"grid",gridTemplateColumns:grid,gap:12,flexShrink:0,background:"#f8fafc"}}>
+          {cols.map(h=><span key={h} style={{fontSize:10,color:"#94a3b8",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em"}}>{h}</span>)}
         </div>
         {/* Rows */}
         <div style={{overflowY:"auto",flex:1,padding:"4px 24px 20px"}}>
-          {records.length===0&&<div style={{textAlign:"center",color:"#64748b",padding:"48px 0",fontSize:13}}>No records for {year}</div>}
+          {records.length===0&&<div style={{textAlign:"center",color:"#94a3b8",padding:"48px 0",fontSize:13}}>No records for {year}</div>}
           {records.map((r,i)=>(
-            <div key={r.id||i} style={{display:"grid",gridTemplateColumns:grid,gap:12,padding:"11px 0",borderBottom:"1px solid #ffffff08",alignItems:"center"}}>
-              <span style={{fontWeight:600,color:"#e2e8f0",fontSize:13}}>{r.firstName} {r.lastName}</span>
-              <span style={{color:"#94a3b8",fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.company||"—"}</span>
-              <span style={{color:"#64748b",fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.email||"—"}</span>
+            <div key={r.id||i} style={{display:"grid",gridTemplateColumns:grid,gap:12,padding:"11px 0",borderBottom:"1px solid #f1f5f9",alignItems:"center"}}>
+              <span style={{fontWeight:600,color:"#0f172a",fontSize:13}}>{r.firstName} {r.lastName}</span>
+              <span style={{color:"#64748b",fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.company||"—"}</span>
+              <span style={{color:"#94a3b8",fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.email||"—"}</span>
               <span style={{color:color,fontWeight:700,fontSize:13}}>${(r.revenue||0).toLocaleString(undefined,{maximumFractionDigits:0})}</span>
               {isActive
-                ?<><span style={{color:"#94a3b8",fontSize:12}}>{r.source||"—"}</span><span style={{color:"#818cf8",fontSize:12}}>{r.activeSince||"—"}</span></>
-                :<><span style={{color:"#f59e0b",fontSize:12}}>{r.lostMonth||"—"}</span><span style={{color:"#ef4444",fontSize:11,background:"#ef444411",borderRadius:6,padding:"3px 8px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.lostReason||"—"}</span></>
+                ?<><span style={{color:"#64748b",fontSize:12}}>{r.source||"—"}</span><span style={{color:"#6366f1",fontSize:12}}>{r.activeSince||"—"}</span></>
+                :<><span style={{color:"#f59e0b",fontSize:12}}>{r.lostMonth||"—"}</span><span style={{color:"#dc2626",fontSize:11,background:"#fef2f2",borderRadius:6,padding:"3px 8px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.lostReason||"—"}</span></>
               }
             </div>
           ))}
@@ -1158,20 +1204,20 @@ function MarkLostModal({client,onClose,onConfirm}){
     await onConfirm(client,reason.trim());
   }
   return(
-    <div style={{position:"fixed",inset:0,background:"#000a",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000}} onClick={onClose}>
-      <div style={{background:"#1a1a2e",border:"1px solid #ef444455",borderRadius:16,padding:"28px 28px 22px",width:400,maxWidth:"92vw",boxShadow:"0 8px 40px #0008"}} onClick={e=>e.stopPropagation()}>
-        <div style={{fontWeight:800,fontSize:16,color:"#ef4444",marginBottom:6}}>Mark as Lost</div>
-        <div style={{fontSize:12,color:"#94a3b8",marginBottom:16}}>
-          <span style={{fontWeight:600,color:"#e2e8f0"}}>{client.firstName} {client.lastName}</span> will be moved to Lost.
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000}} onClick={onClose}>
+      <div style={{background:"#fff",border:"1px solid #fecaca",borderRadius:16,padding:"28px 28px 22px",width:400,maxWidth:"92vw",boxShadow:"0 20px 60px rgba(0,0,0,0.15)"}} onClick={e=>e.stopPropagation()}>
+        <div style={{fontWeight:700,fontSize:16,color:"#dc2626",marginBottom:6}}>Mark as Lost</div>
+        <div style={{fontSize:12,color:"#64748b",marginBottom:16}}>
+          <span style={{fontWeight:600,color:"#0f172a"}}>{client.firstName} {client.lastName}</span> will be moved to Lost.
         </div>
-        <label style={{fontSize:12,color:"#94a3b8",display:"block",marginBottom:6}}>Reason for losing <span style={{color:"#64748b"}}>(optional)</span></label>
+        <label style={{fontSize:12,color:"#64748b",display:"block",marginBottom:6}}>Reason for losing <span style={{color:"#94a3b8"}}>(optional)</span></label>
         <textarea value={reason} onChange={e=>setReason(e.target.value)} rows={3} placeholder="e.g. Budget cut, went with competitor…"
-          style={{width:"100%",background:"#13131f",border:"1px solid #ef444444",borderRadius:8,padding:"9px 11px",color:"#e2e8f0",fontSize:13,resize:"vertical",boxSizing:"border-box",outline:"none"}}
+          style={{width:"100%",background:"#f8fafc",border:"1px solid #fecaca",borderRadius:8,padding:"9px 11px",color:"#0f172a",fontSize:13,resize:"vertical",boxSizing:"border-box",outline:"none"}}
           autoFocus
         />
         <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:18}}>
-          <button onClick={onClose} style={{background:"#2d2d3f",color:"#94a3b8",border:"none",borderRadius:8,padding:"8px 18px",cursor:"pointer",fontSize:13}}>Cancel</button>
-          <button onClick={handleSubmit} disabled={saving} style={{background:"#ef4444",color:"#fff",border:"none",borderRadius:8,padding:"8px 20px",cursor:saving?"default":"pointer",fontSize:13,fontWeight:700,opacity:saving?0.7:1}}>{saving?"Saving…":"Confirm Lost"}</button>
+          <button onClick={onClose} style={{background:"#f8fafc",color:"#64748b",border:"1px solid #e2e8f0",borderRadius:8,padding:"8px 18px",cursor:"pointer",fontSize:13}}>Cancel</button>
+          <button onClick={handleSubmit} disabled={saving} style={{background:"#ef4444",color:"#fff",border:"none",borderRadius:8,padding:"8px 20px",cursor:saving?"default":"pointer",fontSize:13,fontWeight:600,opacity:saving?0.7:1}}>{saving?"Saving…":"Confirm Lost"}</button>
         </div>
       </div>
     </div>
@@ -1208,8 +1254,8 @@ function ACContactModal({client,onClose,onSave,onDelete,saving}){
         <label style={{display:"block",fontSize:12,color:"#a855f7",marginBottom:4,fontWeight:700}}>📄 Contract Terms <span style={{color:"#ef4444"}}>*</span> <span style={{color:"#64748b",fontWeight:400,fontSize:11}}>(required)</span></label>
         <textarea value={form.contractTerms} onChange={e=>upd("contractTerms",e.target.value)} placeholder="e.g. Monthly retainer $2,000 — deliverables: 4 campaigns/month, 30-day payment terms, 3-month minimum commitment…" style={{...IS,resize:"vertical",minHeight:100}}/>
       </div>
-      {err&&<div style={{color:"#ef4444",fontSize:12,marginBottom:10,background:"#ef444415",border:"1px solid #ef444433",borderRadius:8,padding:"7px 10px"}}>⚠ {err}</div>}
-      <div style={{display:"flex",justifyContent:"space-between",marginTop:10,borderTop:"1px solid #2d2d3f",paddingTop:14}}>
+      {err&&<div style={{color:"#dc2626",fontSize:12,marginBottom:10,background:"#fef2f2",border:"1px solid #fecaca",borderRadius:8,padding:"7px 10px"}}>⚠ {err}</div>}
+      <div style={{display:"flex",justifyContent:"space-between",marginTop:10,borderTop:"1px solid #f1f5f9",paddingTop:14}}>
         {client?.id?<Btn variant="danger" onClick={()=>onDelete(client.id)}>Delete</Btn>:<div/>}
         <div style={{display:"flex",gap:8}}>
           <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
@@ -1220,10 +1266,9 @@ function ACContactModal({client,onClose,onSave,onDelete,saving}){
   );
 }
 
-function ActiveClientsGate(){
+function ActiveClientsGate({search="",setSearch=()=>{}}){
   const [clients,setClients]=useState([]); const [statuses,setStatuses]=useState([]); const [hpContacts,setHpContacts]=useState([]); const [loading,setLoading]=useState(true);
   const [addModal,setAddModal]=useState(false); const [editModal,setEditModal]=useState(null); const [saving,setSaving]=useState(false);
-  const [search,setSearch]=useState("");
   const currentMonth=useMemo(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;},[]);
   const [selectedMonth,setSelectedMonth]=useState(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;});
 
@@ -1383,35 +1428,29 @@ function ActiveClientsGate(){
 
   return (
     <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-      <div style={{background:"#13131f",borderBottom:"1px solid #2d2d3f",padding:"10px 16px",display:"flex",flexDirection:"column",gap:10}}>
-        <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-          <div style={{position:"relative",display:"flex",alignItems:"center"}}>
-            <span style={{position:"absolute",left:10,color:"#64748b",fontSize:13,pointerEvents:"none"}}>🔍</span>
-            <input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search clients…"
-              style={{background:"#0d0d17",border:"1px solid #2d2d3f",borderRadius:9,padding:"7px 30px 7px 32px",color:"#e2e8f0",fontSize:13,outline:"none",width:210}}/>
-            {search&&<span onClick={()=>setSearch("")} style={{position:"absolute",right:9,color:"#64748b",cursor:"pointer",fontSize:16,lineHeight:1,fontWeight:700}}>×</span>}
-          </div>
+      <div style={{background:"#fff",borderBottom:"1px solid #e2e8f0",padding:"12px 20px",display:"flex",flexDirection:"column",gap:10}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
           <MonthPicker selectedMonth={selectedMonth} currentMonth={currentMonth} availableMonths={availableMonths} onChange={setSelectedMonth}/>
-          <button onClick={()=>setProjectsModal('active')} style={{background:"#22c55e22",color:"#22c55e",border:"1px solid #22c55e44",borderRadius:9,padding:"6px 13px",cursor:"pointer",fontSize:12,fontWeight:700,display:"flex",alignItems:"center",gap:6}}>
-            Active Projects<span style={{background:"#22c55e",color:"#fff",borderRadius:20,padding:"1px 7px",fontSize:11,fontWeight:800}}>{activeProjects.length}</span>
+          <button onClick={()=>setProjectsModal('active')} style={{background:"#f0fdf4",color:"#16a34a",border:"1px solid #bbf7d0",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:12,fontWeight:600,display:"flex",alignItems:"center",gap:6}}>
+            Active Projects<span style={{background:"#22c55e",color:"#fff",borderRadius:20,padding:"1px 7px",fontSize:11,fontWeight:700}}>{activeProjects.length}</span>
           </button>
-          <button onClick={()=>setProjectsModal('lost')} style={{background:"#ef444422",color:"#ef4444",border:"1px solid #ef444444",borderRadius:9,padding:"6px 13px",cursor:"pointer",fontSize:12,fontWeight:700,display:"flex",alignItems:"center",gap:6}}>
-            Lost Projects<span style={{background:"#ef4444",color:"#fff",borderRadius:20,padding:"1px 7px",fontSize:11,fontWeight:800}}>{lostProjects.length}</span>
+          <button onClick={()=>setProjectsModal('lost')} style={{background:"#fef2f2",color:"#dc2626",border:"1px solid #fecaca",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:12,fontWeight:600,display:"flex",alignItems:"center",gap:6}}>
+            Lost Projects<span style={{background:"#ef4444",color:"#fff",borderRadius:20,padding:"1px 7px",fontSize:11,fontWeight:700}}>{lostProjects.length}</span>
           </button>
-          {!isCurrentMonth&&<span style={{background:"#6366f122",color:"#818cf8",border:"1px solid #6366f144",borderRadius:8,padding:"4px 12px",fontSize:11,fontWeight:700}}>📅 View Only</span>}
-          {!isCurrentMonth&&<button onClick={()=>setSelectedMonth(currentMonth)} style={{background:"#22c55e22",color:"#22c55e",border:"1px solid #22c55e44",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontSize:11,fontWeight:700}}>↩ Back to Present</button>}
-          {isCurrentMonth&&<button onClick={()=>setAddModal(true)} style={{marginLeft:"auto",background:"#22c55e",color:"#fff",border:"none",borderRadius:9,padding:"7px 16px",cursor:"pointer",fontSize:12,fontWeight:700}}>+ Add Client</button>}
+          {!isCurrentMonth&&<span style={{background:"#eef2ff",color:"#6366f1",border:"1px solid #c7d2fe",borderRadius:8,padding:"4px 10px",fontSize:11,fontWeight:600}}>📅 View Only</span>}
+          {!isCurrentMonth&&<button onClick={()=>setSelectedMonth(currentMonth)} style={{background:"#f0fdf4",color:"#16a34a",border:"1px solid #bbf7d0",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontSize:11,fontWeight:600}}>↩ Back to Present</button>}
+          {isCurrentMonth&&<button onClick={()=>setAddModal(true)} style={{marginLeft:"auto",background:"#22c55e",color:"#fff",border:"none",borderRadius:8,padding:"7px 16px",cursor:"pointer",fontSize:12,fontWeight:600}}>+ Add Client</button>}
         </div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-          {[{label:"Active Clients",val:stats.active,c:"#22c55e"},{label:"Winning This Month",val:stats.winning,c:"#f59e0b"},{label:"Lost Clients",val:stats.lost,c:"#ef4444"},{label:"Active Revenue",val:"$"+stats.activeRevenue.toLocaleString(undefined,{maximumFractionDigits:0}),c:"#22c55e",bold:true},{label:"Won Revenue",val:"$"+stats.wonRevenue.toLocaleString(undefined,{maximumFractionDigits:0}),c:"#f59e0b",bold:true},{label:"Lost Revenue",val:"$"+stats.lostRevenue.toLocaleString(undefined,{maximumFractionDigits:0}),c:"#ef4444",bold:true}].map(s=>(
-            <div key={s.label} style={{background:s.c+"12",border:`1px solid ${s.c}33`,borderRadius:9,padding:"5px 13px",display:"flex",alignItems:"center",gap:5}}>
-              <span style={{fontWeight:800,fontSize:s.bold?17:14,color:s.c}}>{s.val}</span>
-              <span style={{fontSize:11,color:"#64748b"}}>{s.label}</span>
+          {[{label:"Active Clients",val:stats.active,c:"#22c55e"},{label:"Winning This Month",val:stats.winning,c:"#f59e0b"},{label:"Lost Clients",val:stats.lost,c:"#ef4444"},{label:"Active Revenue",val:"$"+stats.activeRevenue.toLocaleString(undefined,{maximumFractionDigits:0}),c:"#22c55e"},{label:"Won Revenue",val:"$"+stats.wonRevenue.toLocaleString(undefined,{maximumFractionDigits:0}),c:"#f59e0b"},{label:"Lost Revenue",val:"$"+stats.lostRevenue.toLocaleString(undefined,{maximumFractionDigits:0}),c:"#ef4444"}].map(s=>(
+            <div key={s.label} style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:9,padding:"6px 13px",display:"flex",alignItems:"center",gap:6,boxShadow:"0 1px 3px rgba(0,0,0,0.05)"}}>
+              <span style={{fontWeight:700,fontSize:15,color:s.c}}>{s.val}</span>
+              <span style={{fontSize:11,color:"#94a3b8"}}>{s.label}</span>
             </div>
           ))}
-          <div style={{background:"linear-gradient(135deg,#a78bfa22,#7c3aed33)",border:"2px solid #a78bfa88",borderRadius:12,padding:"10px 20px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,boxShadow:"0 0 16px #a78bfa33",marginLeft:4}}>
-            <span style={{fontWeight:900,fontSize:26,color:"#a78bfa",letterSpacing:"-0.5px",lineHeight:1}}>${stats.totalRevenue.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
-            <span style={{fontSize:10,color:"#a78bfa99",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em"}}>Total Revenue</span>
+          <div style={{background:"linear-gradient(135deg,#ede9fe,#f3e8ff)",border:"1px solid #c4b5fd",borderRadius:12,padding:"10px 18px",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+            <span style={{fontWeight:800,fontSize:22,color:"#7c3aed",lineHeight:1}}>${stats.totalRevenue.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+            <span style={{fontSize:10,color:"#7c3aed",fontWeight:600,textTransform:"uppercase",letterSpacing:"0.08em",opacity:.8}}>Total Revenue</span>
           </div>
         </div>
       </div>
@@ -1455,50 +1494,318 @@ function ActiveClientsGate(){
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// ── ROOT APP ──────────────────────────────────────────────────────────────────
+// ── ROOT APP ──────────────────────────────────────────════════════════════════
 // ══════════════════════════════════════════════════════════════════════════════
-function App(){
-  const [unlocked,setUnlocked]=useState(false);
-  const [gate,setGate]=useState("linkedin");
 
-  if(!unlocked){
-    return <PasswordScreen onUnlock={()=>setUnlocked(true)}/>;
+function AllContactsView({search="",setSearch=()=>{}}){
+  const [rows,setRows]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [filterPipeline,setFilterPipeline]=useState("All");
+  const [filterIndustry,setFilterIndustry]=useState("All");
+  const [filterStage,setFilterStage]=useState("All");
+
+  useEffect(()=>{
+    setLoading(true);
+    Promise.all([sbGetAll("leads"),sbGetAll("hot_pipeline")]).then(([li,hp])=>{
+      const liRows=(li||[]).map(r=>({id:"li_"+r.id,firstName:r.first_name||"",lastName:r.last_name||"",company:r.affiliate_network||"",industry:r.industry||"",email:r.email||"",phone:r.phone||"",website:r.website||"",linkedinUrl:r.linkedin_url||"",pipeline:"LinkedIn Pipeline",stage:r.stage||""}));
+      const hpRows=(hp||[]).map(r=>({id:"hp_"+r.id,firstName:r.first_name||"",lastName:r.last_name||"",company:r.account_name||"",industry:r.industry||"",email:r.email||"",phone:r.phone||"",website:r.website||"",linkedinUrl:r.linkedin_url||"",pipeline:"Hot Pipeline",stage:r.stage||""}));
+      setRows([...liRows,...hpRows]);
+      setLoading(false);
+    }).catch(()=>setLoading(false));
+  },[]);
+
+  const industries=useMemo(()=>["All",...[...new Set(rows.map(r=>r.industry).filter(Boolean))].sort()],[rows]);
+  const allStages=useMemo(()=>["All",...[...new Set(rows.map(r=>r.stage).filter(Boolean))].sort()],[rows]);
+
+  const filtered=useMemo(()=>{
+    const q=search.toLowerCase();
+    return rows.filter(r=>{
+      if(q&&![r.firstName,r.lastName,r.company,r.industry,r.pipeline,r.stage].join(" ").toLowerCase().includes(q))return false;
+      if(filterPipeline!=="All"&&r.pipeline!==filterPipeline)return false;
+      if(filterIndustry!=="All"&&r.industry!==filterIndustry)return false;
+      if(filterStage!=="All"&&r.stage!==filterStage)return false;
+      return true;
+    });
+  },[rows,search,filterPipeline,filterIndustry,filterStage]);
+
+  function stageColor(pipeline,stage){ return pipeline==="LinkedIn Pipeline"?LI_COLORS[stage]||"#6366f1":HP_COLORS[stage]||"#6366f1"; }
+  function pipelineColor(p){ return p==="LinkedIn Pipeline"?"#0a66c2":"#1dbf73"; }
+
+  function doExport(){
+    const h=["First Name","Last Name","Company","Industry","Email","Phone","Website","Pipeline","Stage"];
+    const r=filtered.map(c=>[c.firstName,c.lastName,c.company,c.industry,c.email,c.phone,c.website,c.pipeline,c.stage].map(v=>`"${(v||"").replace(/"/g,'""')}"`).join(","));
+    const csv=[h.join(","),...r].join("\n");
+    const b=new Blob([csv],{type:"text/csv"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download="nexsol_contacts.csv";a.click();URL.revokeObjectURL(u);
   }
 
+  const activeFilters=(filterPipeline!=="All"?1:0)+(filterIndustry!=="All"?1:0)+(filterStage!=="All"?1:0);
+
+  const SEL=(val,opts,onChange)=>(
+    <select value={val} onChange={e=>onChange(e.target.value)}
+      style={{background:val!=="All"?"#eef2ff":"#f8fafc",border:`1px solid ${val!=="All"?"#c7d2fe":"#e2e8f0"}`,color:val!=="All"?"#6366f1":"#475569",borderRadius:7,padding:"4px 10px",fontSize:11,fontWeight:val!=="All"?600:500,cursor:"pointer",outline:"none"}}>
+      {opts.map(o=><option key={o}>{o}</option>)}
+    </select>
+  );
+
+  if(loading)return <Spinner text="Loading all contacts..."/>;
+
   return (
-    <div style={{display:"flex",height:"100vh",background:"#0d0d17",overflow:"hidden"}}>
-      {/* Left Sidebar */}
-      <div style={{width:180,background:"#13131f",borderRight:"1px solid #2d2d3f",display:"flex",flexDirection:"column",alignItems:"center",padding:"24px 12px",gap:12,flexShrink:0}}>
-        <div style={{background:"#6366f1",borderRadius:12,width:42,height:42,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,marginBottom:8}}>🚀</div>
-        <div style={{fontWeight:800,fontSize:13,color:"#e2e8f0",marginBottom:16,textAlign:"center"}}>AffiLinks.io</div>
-        {/* Gate buttons */}
-        <button onClick={()=>setGate("linkedin")}
-          style={{width:"100%",background:gate==="linkedin"?"#6366f1":"#1e1e2e",color:gate==="linkedin"?"#fff":"#64748b",border:`1px solid ${gate==="linkedin"?"#6366f1":"#2d2d3f"}`,borderRadius:12,padding:"14px 8px",cursor:"pointer",fontWeight:700,fontSize:12,transition:"all .2s",textAlign:"center"}}>
-          <div style={{fontSize:22,marginBottom:6}}>💼</div>
-          LinkedIn CRM
-        </button>
-        <button onClick={()=>setGate("hotpipeline")}
-          style={{width:"100%",background:gate==="hotpipeline"?"#f59e0b":"#1e1e2e",color:gate==="hotpipeline"?"#fff":"#64748b",border:`1px solid ${gate==="hotpipeline"?"#f59e0b":"#2d2d3f"}`,borderRadius:12,padding:"14px 8px",cursor:"pointer",fontWeight:700,fontSize:12,transition:"all .2s",textAlign:"center"}}>
-          <div style={{fontSize:22,marginBottom:6}}>🔥</div>
-          Hot Pipeline
-        </button>
-        <button onClick={()=>setGate("activeclients")}
-          style={{width:"100%",background:gate==="activeclients"?"#22c55e":"#1e1e2e",color:gate==="activeclients"?"#fff":"#64748b",border:`1px solid ${gate==="activeclients"?"#22c55e":"#2d2d3f"}`,borderRadius:12,padding:"14px 8px",cursor:"pointer",fontWeight:700,fontSize:12,transition:"all .2s",textAlign:"center"}}>
-          <div style={{fontSize:22,marginBottom:6}}>👥</div>
-          Active Clients
-        </button>
-        <div style={{marginTop:"auto",fontSize:10,color:"#2d2d3f",textAlign:"center"}}>● Supabase Connected</div>
-      </div>
-      {/* Right Content */}
-      <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-        {/* Top bar */}
-        <div style={{background:"#13131f",borderBottom:"1px solid #2d2d3f",padding:"10px 16px",display:"flex",alignItems:"center",gap:10}}>
-          <div style={{fontWeight:700,fontSize:15,color:"#e2e8f0"}}>{gate==="linkedin"?"💼 LinkedIn CRM":gate==="hotpipeline"?"🔥 Hot Pipeline":"👥 Active Clients"}</div>
-          <div style={{fontSize:12,color:"#22c55e",marginLeft:4}}>● Live</div>
+    <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+      {/* Toolbar */}
+      <div style={{background:"#fff",borderBottom:"1px solid #e2e8f0",padding:"11px 20px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+        <div style={{background:"#eef2ff",border:"1px solid #c7d2fe",borderRadius:9,padding:"4px 12px",display:"flex",gap:6,alignItems:"center"}}>
+          <span style={{fontWeight:700,fontSize:14,color:"#6366f1"}}>{filtered.length}</span>
+          <span style={{fontSize:11,color:"#94a3b8"}}>of {rows.length} contacts</span>
         </div>
-        {/* Gate Content */}
-        {gate==="linkedin"?<LinkedInGate/>:gate==="hotpipeline"?<HotPipelineGate/>:<ActiveClientsGate/>}
+        {activeFilters>0&&(
+          <button onClick={()=>{setFilterPipeline("All");setFilterIndustry("All");setFilterStage("All");}}
+            style={{background:"#fef2f2",color:"#ef4444",border:"1px solid #fecaca",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontSize:11,fontWeight:600}}>
+            ✕ Clear {activeFilters} filter{activeFilters>1?"s":""}
+          </button>
+        )}
+        <div style={{marginLeft:"auto"}}>
+          <button onClick={doExport} style={{background:"#f0fdf4",color:"#16a34a",border:"1px solid #bbf7d0",borderRadius:8,padding:"6px 14px",cursor:"pointer",fontSize:12,fontWeight:600}}>⬇ Export CSV</button>
+        </div>
       </div>
+
+      {/* Filter bar */}
+      <div style={{background:"#fff",borderBottom:"1px solid #e2e8f0",padding:"8px 20px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+        <span style={{fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",marginRight:2}}>FILTER BY</span>
+        <div style={{display:"flex",alignItems:"center",gap:5}}>
+          <span style={{fontSize:11,color:"#64748b",fontWeight:500}}>Pipeline</span>
+          {SEL(filterPipeline,["All","LinkedIn Pipeline","Hot Pipeline"],setFilterPipeline)}
+        </div>
+        <div style={{width:1,height:16,background:"#e2e8f0",flexShrink:0}}/>
+        <div style={{display:"flex",alignItems:"center",gap:5}}>
+          <span style={{fontSize:11,color:"#64748b",fontWeight:500}}>Industry</span>
+          {SEL(filterIndustry,industries,setFilterIndustry)}
+        </div>
+        <div style={{width:1,height:16,background:"#e2e8f0",flexShrink:0}}/>
+        <div style={{display:"flex",alignItems:"center",gap:5}}>
+          <span style={{fontSize:11,color:"#64748b",fontWeight:500}}>Stage</span>
+          {SEL(filterStage,allStages,setFilterStage)}
+        </div>
+      </div>
+
+      {/* Table */}
+      <div style={{flex:1,overflow:"auto",padding:"16px 20px",background:"#f1f5f9"}}>
+        {filtered.length===0?(
+          <div style={{textAlign:"center",padding:60,color:"#94a3b8"}}>
+            <div style={{fontSize:40,marginBottom:12}}>🔍</div>
+            <div style={{fontSize:14,fontWeight:600,color:"#64748b"}}>No contacts match your filters.</div>
+          </div>
+        ):(
+          <div style={{background:"#fff",borderRadius:14,border:"1px solid #e2e8f0",overflowX:"auto",boxShadow:"0 1px 4px rgba(0,0,0,0.05)"}}>
+            <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+              <thead>
+                <tr style={{background:"#f8fafc"}}>
+                  {["First Name","Last Name","Company","Industry","Email","Phone","Website","Pipeline","Stage"].map(h=>(
+                    <th key={h} style={{padding:"10px 14px",textAlign:"left",color:"#94a3b8",fontWeight:700,fontSize:11,borderBottom:"1px solid #e2e8f0",whiteSpace:"nowrap",textTransform:"uppercase",letterSpacing:"0.05em"}}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(c=>(
+                  <tr key={c.id} style={{borderBottom:"1px solid #f1f5f9",transition:"background .1s"}}
+                    onMouseEnter={e=>e.currentTarget.style.background="#f8fafc"}
+                    onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                    <td style={{padding:"10px 14px",fontWeight:600}}>
+                      {c.linkedinUrl
+                        ?<a href={c.linkedinUrl} target="_blank" rel="noreferrer" style={{color:"#0a66c2",fontWeight:600,display:"inline-flex",alignItems:"center",gap:4}}>
+                            {c.firstName||"—"}
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#0a66c2" strokeWidth="2.5" strokeLinecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                          </a>
+                        :<span style={{color:"#0f172a"}}>{c.firstName||"—"}</span>}
+                    </td>
+                    <td style={{padding:"10px 14px",color:"#0f172a"}}>{c.lastName||"—"}</td>
+                    <td style={{padding:"10px 14px",color:"#475569",fontSize:12}}>{c.company||<span style={{color:"#cbd5e1"}}>—</span>}</td>
+                    <td style={{padding:"10px 14px",color:"#64748b",fontSize:12}}>{c.industry||<span style={{color:"#cbd5e1"}}>—</span>}</td>
+                    <td style={{padding:"10px 14px",fontSize:12}}>
+                      {c.email
+                        ?<a href={"mailto:"+c.email} style={{color:"#6366f1",fontWeight:500}}>{c.email}</a>
+                        :<span style={{color:"#cbd5e1"}}>—</span>}
+                    </td>
+                    <td style={{padding:"10px 14px",fontSize:12}}>
+                      {c.phone
+                        ?<a href={"tel:"+c.phone} style={{color:"#475569",fontWeight:500}}>{c.phone}</a>
+                        :<span style={{color:"#cbd5e1"}}>—</span>}
+                    </td>
+                    <td style={{padding:"10px 14px",maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                      {c.website
+                        ?<a href={c.website.startsWith("http")?c.website:"https://"+c.website} target="_blank" rel="noreferrer" style={{color:"#6366f1",fontSize:12,fontWeight:500,display:"flex",alignItems:"center",gap:4}}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            {c.website.replace(/^https?:\/\//,"").replace(/\/$/,"").substring(0,26)}{c.website.replace(/^https?:\/\//,"").length>26?"…":""}
+                          </a>
+                        :<span style={{color:"#cbd5e1"}}>—</span>}
+                    </td>
+                    <td style={{padding:"10px 14px"}}>
+                      <span style={{background:pipelineColor(c.pipeline)+"18",color:pipelineColor(c.pipeline),border:`1px solid ${pipelineColor(c.pipeline)}30`,borderRadius:20,padding:"2px 10px",fontSize:11,fontWeight:600,whiteSpace:"nowrap"}}>{c.pipeline}</span>
+                    </td>
+                    <td style={{padding:"10px 14px"}}>
+                      {c.stage
+                        ?<span style={{background:stageColor(c.pipeline,c.stage)+"18",color:stageColor(c.pipeline,c.stage),border:`1px solid ${stageColor(c.pipeline,c.stage)}30`,borderRadius:20,padding:"2px 10px",fontSize:11,fontWeight:600,whiteSpace:"nowrap"}}>{c.stage}</span>
+                        :<span style={{color:"#cbd5e1"}}>—</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SettingsModal({darkMode,onToggleDark,onClose}){
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.35)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:18,padding:"26px 28px",width:420,maxWidth:"92vw",boxShadow:"0 24px 64px rgba(0,0,0,0.16)"}}>
+        {/* Header */}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
+          <div style={{display:"flex",alignItems:"center",gap:9}}>
+            <div style={{background:"#f1f5f9",borderRadius:10,width:34,height:34,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </div>
+            <div>
+              <div style={{fontWeight:700,fontSize:15,color:"#0f172a"}}>Settings</div>
+              <div style={{fontSize:11,color:"#94a3b8"}}>Manage your preferences</div>
+            </div>
+          </div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"#94a3b8",fontSize:20,cursor:"pointer",lineHeight:1,padding:4}}>✕</button>
+        </div>
+
+        {/* Display Section */}
+        <div style={{marginBottom:8}}>
+          <div style={{fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:"0.1em",marginBottom:10}}>DISPLAY</div>
+
+          {/* Dark Mode row */}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 16px",background:"#f8fafc",borderRadius:12,border:"1px solid #e2e8f0"}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:18}}>{darkMode?"🌙":"☀️"}</span>
+              <div>
+                <div style={{fontWeight:600,fontSize:13,color:"#0f172a"}}>Dark Mode</div>
+                <div style={{fontSize:11,color:"#94a3b8",marginTop:1}}>{darkMode?"Dark theme active":"Light theme active"}</div>
+              </div>
+            </div>
+            {/* Toggle pill */}
+            <div onClick={onToggleDark}
+              style={{width:46,height:26,background:darkMode?"#6366f1":"#e2e8f0",borderRadius:13,cursor:"pointer",position:"relative",transition:"background 0.25s",flexShrink:0}}>
+              <div style={{width:20,height:20,background:"#fff",borderRadius:"50%",position:"absolute",top:3,left:darkMode?23:3,transition:"left 0.25s",boxShadow:"0 1px 4px rgba(0,0,0,0.22)"}}/>
+            </div>
+          </div>
+        </div>
+
+        <div style={{marginTop:22,display:"flex",justifyContent:"flex-end"}}>
+          <Btn variant="ghost" onClick={onClose}>Close</Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NavIcon({name,active}){
+  const c=active?"#fff":"#64748b";
+  const s={stroke:c,fill:"none",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round"};
+  const icons={
+    dashboard:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
+    pipeline:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><rect x="2" y="4" width="6" height="16"/><rect x="9" y="8" width="6" height="12"/><rect x="16" y="12" width="6" height="8"/></svg>,
+    contacts:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><circle cx="8" cy="8" r="4"/><path d="M2 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><line x1="18" y1="8" x2="23" y2="8"/><line x1="20.5" y1="5.5" x2="20.5" y2="10.5"/></svg>,
+    deals:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>,
+    clients:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+    projects:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>,
+    tasks:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>,
+    proposals:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
+    invoices:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
+    import:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,
+    allcontacts:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>,
+    settings:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+  };
+  return icons[name]||null;
+}
+
+function ComingSoonView({label}){
+  return (
+    <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14,color:"#94a3b8",padding:60}}>
+      <div style={{width:60,height:60,borderRadius:18,background:"#f1f5f9",display:"flex",alignItems:"center",justifyContent:"center",fontSize:30}}>🔜</div>
+      <div style={{fontWeight:700,fontSize:18,color:"#0f172a"}}>{label} — Coming Soon</div>
+      <div style={{fontSize:13,color:"#64748b"}}>This feature is currently under development.</div>
+    </div>
+  );
+}
+
+function App(){
+  const [gate,setGate]=useState("pipeline");
+  const [darkMode,setDarkMode]=useState(false);
+  const [showSettings,setShowSettings]=useState(false);
+  const [search,setSearch]=useState("");
+
+  useEffect(()=>{ document.body.classList.toggle("dark-mode",darkMode); },[darkMode]);
+  useEffect(()=>{ setSearch(""); },[gate]);
+
+  const NAV=[
+    {section:"OVERVIEW",items:[{key:"dashboard",label:"Dashboard",soon:true},{key:"allcontacts",label:"All Contacts"}]},
+    {section:"PIPELINE",items:[{key:"pipeline",label:"Hot Pipeline"},{key:"contacts",label:"LinkedIn Pipeline"},{key:"clients",label:"Active Clients"}]},
+    {section:"DELIVERY",items:[{key:"projects",label:"Projects",soon:true},{key:"tasks",label:"Tasks",soon:true}]},
+    {section:"REVENUE",items:[{key:"proposals",label:"Proposals",soon:true},{key:"invoices",label:"Invoices",soon:true}]},
+    {section:"DATA",items:[{key:"import",label:"Import",soon:true},{key:"settings",label:"Settings"}]},
+  ];
+  const titles={dashboard:"Dashboard",allcontacts:"All Contacts",pipeline:"Hot Pipeline",contacts:"LinkedIn Pipeline",deals:"Deals",clients:"Active Clients",projects:"Projects",tasks:"Tasks",proposals:"Proposals",invoices:"Invoices",import:"Import",settings:"Settings"};
+
+  return (
+    <div style={{display:"flex",height:"100vh",background:"#f1f5f9",overflow:"hidden"}}>
+      {/* Sidebar */}
+      <div style={{width:220,background:"#fff",borderRight:"1px solid #e2e8f0",display:"flex",flexDirection:"column",flexShrink:0,overflowY:"auto"}}>
+        {/* Logo */}
+        <div style={{padding:"18px 16px 16px",borderBottom:"1px solid #f1f5f9",display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+          <div style={{background:"#6366f1",borderRadius:10,width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:800,fontSize:15,flexShrink:0}}>F</div>
+          <span style={{fontWeight:700,fontSize:14,color:"#0f172a"}}>Nexsol LLC</span>
+        </div>
+        {/* Nav */}
+        <nav style={{padding:"12px 8px",flex:1}}>
+          {NAV.map(sec=>(
+            <div key={sec.section} style={{marginBottom:20}}>
+              <div style={{fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:"0.1em",padding:"0 8px",marginBottom:4}}>{sec.section}</div>
+              {sec.items.map(item=>{
+                const active=gate===item.key&&item.key!=="settings";
+                return (
+                  <button key={item.key} className="nav-btn" onClick={()=>{if(item.soon)return;if(item.key==="settings"){setShowSettings(true);return;}setGate(item.key);}}
+                    style={{width:"100%",background:active?"#6366f1":"transparent",color:active?"#fff":item.soon?"#cbd5e1":"#475569",border:"none",borderRadius:8,padding:"7px 10px",cursor:item.soon?"default":"pointer",fontWeight:active?600:500,fontSize:13,display:"flex",alignItems:"center",gap:9,textAlign:"left",transition:"background .15s",marginBottom:2}}>
+                    <NavIcon name={item.key} active={active}/>
+                    <span style={{flex:1}}>{item.label}</span>
+                    {item.soon&&<span style={{background:"#f1f5f9",color:"#94a3b8",borderRadius:20,padding:"1px 7px",fontSize:10,fontWeight:500}}>soon</span>}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </nav>
+        <div style={{padding:"12px 16px",borderTop:"1px solid #f1f5f9",fontSize:11,color:"#22c55e",display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
+          <span style={{width:6,height:6,background:"#22c55e",borderRadius:"50%",display:"inline-block",flexShrink:0}}/>Supabase Connected
+        </div>
+      </div>
+      {/* Main */}
+      <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+        {/* Top Header */}
+        <div style={{background:"#fff",borderBottom:"1px solid #e2e8f0",padding:"0 24px",height:58,display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+          <h1 style={{fontWeight:700,fontSize:18,color:"#0f172a",margin:0}}>{titles[gate]||"CRM"}</h1>
+          <div style={{display:"flex",alignItems:"center",gap:12}}>
+            <div style={{position:"relative"}}>
+              <svg style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",pointerEvents:"none"}} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search…" style={{background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:8,padding:"7px 32px 7px 32px",fontSize:13,color:"#0f172a",outline:"none",width:190,transition:"border-color .15s"}} onFocus={e=>e.target.style.borderColor="#6366f1"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
+              {search&&<span onClick={()=>setSearch("")} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",color:"#94a3b8",cursor:"pointer",fontSize:15,lineHeight:1,fontWeight:400}}>×</span>}
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <div style={{width:34,height:34,background:"#6366f1",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:13,flexShrink:0}}>👤</div>
+            </div>
+          </div>
+        </div>
+        {/* Content */}
+        <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+          {gate==="pipeline"?<HotPipelineGate search={search} setSearch={setSearch}/>:gate==="contacts"?<LinkedInGate search={search} setSearch={setSearch}/>:gate==="clients"?<ActiveClientsGate search={search} setSearch={setSearch}/>:gate==="allcontacts"?<AllContactsView search={search} setSearch={setSearch}/>:<ComingSoonView label={titles[gate]||gate}/>}
+        </div>
+      </div>
+      {showSettings&&<SettingsModal darkMode={darkMode} onToggleDark={()=>setDarkMode(v=>!v)} onClose={()=>setShowSettings(false)}/>}
     </div>
   );
 }

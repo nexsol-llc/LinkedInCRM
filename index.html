@@ -105,6 +105,10 @@ async function sbUpsert(table, onConflict, data) {
   const r = await fetch(`${SB_URL}/rest/v1/${table}?on_conflict=${onConflict}`, { method:"POST", headers:{...HEADERS,"Prefer":"return=representation,resolution=merge-duplicates"}, body:JSON.stringify(data) });
   return r.json();
 }
+async function sbGetWhere(table, col, val) {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}?${col}=eq.${encodeURIComponent(val)}&order=date.desc,id.desc&limit=1000`, { headers: HEADERS });
+  return r.json();
+}
 
 // ── LinkedIn CRM mappers ──────────────────────────────────────────────────────
 function rowToLead(r) {
@@ -488,7 +492,7 @@ function LinkedInGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
       </div>
       {/* View tabs */}
       <div style={{background:"rgba(255,255,255,0.05)",borderBottom:"1px solid rgba(255,255,255,0.07)",padding:"0 20px",display:"flex",gap:0}}>
-        {["Kanban","Contacts","Calendar","Templates","Analytics"].map(t=><button key={t} onClick={()=>setTab(t)} style={{background:"none",color:tab===t?"#04bee7":"rgba(174,220,255,0.5)",border:"none",borderBottom:tab===t?"2px solid #23a1dd":"2px solid transparent",padding:"10px 14px",cursor:"pointer",fontWeight:tab===t?600:500,fontSize:13,transition:"all .15s",marginBottom:-1}}>{t}</button>)}
+        {["Kanban","Contacts","Calendar","Templates","Analytics","Activity"].map(t=><button key={t} onClick={()=>setTab(t)} style={{background:"none",color:tab===t?"#04bee7":"rgba(174,220,255,0.5)",border:"none",borderBottom:tab===t?"2px solid #23a1dd":"2px solid transparent",padding:"10px 14px",cursor:"pointer",fontWeight:tab===t?600:500,fontSize:13,transition:"all .15s",marginBottom:-1}}>{t}</button>)}
       </div>
       {/* Content */}
       <div style={{flex:1,overflow:"auto",padding:tab==="Kanban"?"12px 16px":"16px 20px",background:"rgba(174,251,102,0.025)"}}>
@@ -535,6 +539,7 @@ function LinkedInGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
             </div>
           </div>
         )}
+        {tab==="Activity"&&<ActivityLogTab pipeline="LinkedIn Pipeline"/>}
       </div>
       {/* Modals */}
       {showUpload&&<LIUploadModal onClose={()=>setShowUpload(false)} onImport={importLeads}/>}
@@ -1899,7 +1904,7 @@ function FreelancePipelineGate({search="",onRevenue=()=>{}}){
       </div>
       {/* View tabs */}
       <div style={{background:"rgba(255,255,255,0.05)",borderBottom:"1px solid rgba(255,255,255,0.07)",padding:"0 20px",display:"flex",gap:0}}>
-        {["Kanban","Contacts","Calendar","Templates","Analytics"].map(t=><button key={t} onClick={()=>setTab(t)} style={{background:"none",color:tab===t?"#04bee7":"rgba(174,220,255,0.5)",border:"none",borderBottom:tab===t?"2px solid #23a1dd":"2px solid transparent",padding:"10px 14px",cursor:"pointer",fontWeight:tab===t?600:500,fontSize:13,transition:"all .15s",marginBottom:-1}}>{t}</button>)}
+        {["Kanban","Contacts","Calendar","Templates","Analytics","Activity"].map(t=><button key={t} onClick={()=>setTab(t)} style={{background:"none",color:tab===t?"#04bee7":"rgba(174,220,255,0.5)",border:"none",borderBottom:tab===t?"2px solid #23a1dd":"2px solid transparent",padding:"10px 14px",cursor:"pointer",fontWeight:tab===t?600:500,fontSize:13,transition:"all .15s",marginBottom:-1}}>{t}</button>)}
       </div>
       {/* Content */}
       <div style={{flex:1,overflow:"auto",padding:tab==="Kanban"?"12px 16px":"16px 20px",background:"rgba(174,251,102,0.025)"}}>
@@ -1976,6 +1981,7 @@ function FreelancePipelineGate({search="",onRevenue=()=>{}}){
             </div>
           </div>
         )}
+        {tab==="Activity"&&<ActivityLogTab pipeline="Freelance Pipeline"/>}
       </div>
       {/* Modals */}
       {addModal&&<FPAddModal source={addModal} onClose={()=>setAddModal(null)} onSave={addContact}/>}
@@ -2528,7 +2534,7 @@ function ColdCallingGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
         {reminderCount>0&&<div style={{background:"rgba(245,158,11,0.1)",border:"1px solid rgba(245,158,11,0.25)",borderRadius:10,padding:"8px 14px",display:"flex",flexDirection:"column",gap:2,minWidth:100,boxShadow:"0 4px 16px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.04)"}}><div style={{fontWeight:700,fontSize:15,color:"#f59e0b"}}>{reminderCount}</div><div style={{fontSize:10,color:"rgba(174,220,255,0.38)",fontWeight:500}}>Overdue / Today</div></div>}
       </div>
       <div style={{background:"rgba(255,255,255,0.05)",borderBottom:"1px solid rgba(255,255,255,0.07)",padding:"0 20px",display:"flex",gap:0}}>
-        {["Kanban","Contacts","Calendar","Analytics"].map(t=><button key={t} onClick={()=>setTab(t)} style={{background:"none",color:tab===t?"#04bee7":"rgba(174,220,255,0.5)",border:"none",borderBottom:tab===t?"2px solid #23a1dd":"2px solid transparent",padding:"10px 14px",cursor:"pointer",fontWeight:tab===t?600:500,fontSize:13,transition:"all .15s",marginBottom:-1}}>{t}</button>)}
+        {["Kanban","Contacts","Calendar","Analytics","Activity"].map(t=><button key={t} onClick={()=>setTab(t)} style={{background:"none",color:tab===t?"#04bee7":"rgba(174,220,255,0.5)",border:"none",borderBottom:tab===t?"2px solid #23a1dd":"2px solid transparent",padding:"10px 14px",cursor:"pointer",fontWeight:tab===t?600:500,fontSize:13,transition:"all .15s",marginBottom:-1}}>{t}</button>)}
       </div>
       <div style={{flex:1,overflow:"auto",padding:tab==="Kanban"?"12px 16px":"16px 20px",background:"rgba(174,251,102,0.025)"}}>
         {tab==="Kanban"&&(
@@ -2610,6 +2616,7 @@ function ColdCallingGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
             </div>
           </div>
         )}
+        {tab==="Activity"&&<ActivityLogTab pipeline="Cold Calling"/>}
       </div>
       {addModal&&<CCAddModal stage={addModal.stage} onClose={()=>setAddModal(null)} onSave={saveLead}/>}
       {uploadModal&&<CCUploadModal stage={uploadModal.stage} onClose={()=>setUploadModal(null)} onImport={rows=>importLeads(rows,uploadModal.stage)}/>}
@@ -2873,6 +2880,7 @@ function EmailCampaignGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
   const [leads,setLeads]=useState([]);const [loading,setLoading]=useState(true);
   const [tab,setTab]=useState("Kanban");const [stageTab,setStageTab]=useState("All");
   const [modal,setModal]=useState(null);const [addModal,setAddModal]=useState(null);const [uploadModal,setUploadModal]=useState(null);
+  const [templates,setTemplates]=useState([]);const [copiedTpl,setCopiedTpl]=useState(null);const [newTplModal,setNewTplModal]=useState(false);
   const [connectedPending,setConnectedPending]=useState(null);
   const [fuPending,setFuPending]=useState(null);const [lostPending,setLostPending]=useState(null);
   const [apptPending,setApptPending]=useState(null);const [wonPending,setWonPending]=useState(null);
@@ -2881,7 +2889,7 @@ function EmailCampaignGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
   const [saving,setSaving]=useState(false);
   const today=todayStr();
 
-  useEffect(()=>{setLoading(true);sbGetAll("email_campaign").then(rows=>{if(Array.isArray(rows))setLeads(rows.map(rowToEC));setLoading(false);}).catch(()=>setLoading(false));},[]);
+  useEffect(()=>{setLoading(true);Promise.all([sbGetAll("email_campaign"),sbGetAll("ec_templates")]).then(([rows,tpl])=>{if(Array.isArray(rows))setLeads(rows.map(rowToEC));if(Array.isArray(tpl))setTemplates(tpl);setLoading(false);}).catch(()=>setLoading(false));},[]);
 
   const stageCounts=useMemo(()=>{const m={All:leads.length};EC_STAGES.forEach(s=>m[s]=leads.filter(l=>l.stage===s).length);return m;},[leads]);
   const filtered=useMemo(()=>{const q=search.toLowerCase();return leads.filter(l=>(stageTab==="All"||l.stage===stageTab)&&(!q||[l.firstName,l.lastName,l.companyName,l.email,l.industry,l.emailAccount].join(" ").toLowerCase().includes(q)));},[leads,search,stageTab]);
@@ -2918,6 +2926,8 @@ function EmailCampaignGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
   async function saveLead(form){setSaving(true);const row=ecToRow(form);if(form.id){const res=await sbUpdate("email_campaign",form.id,row);if(Array.isArray(res)&&res[0])setLeads(p=>p.map(l=>l.id===form.id?rowToEC(res[0]):l));}else{const res=await sbInsert("email_campaign",row);if(Array.isArray(res)&&res[0])setLeads(p=>[...p,rowToEC(res[0])]);} setSaving(false);setModal(null);setAddModal(null);}
   async function deleteLead(id){await sbDelete("email_campaign",id);setLeads(p=>p.filter(l=>l.id!==id));setModal(null);}
   async function importLeads(rows){const inserted=await Promise.all(rows.map(r=>sbInsert("email_campaign",ecToRow(r))));inserted.forEach(res=>{if(Array.isArray(res)&&res[0])setLeads(p=>[...p,rowToEC(res[0])]);});setUploadModal(null);}
+  async function addTemplate(name,body){const res=await sbInsert("ec_templates",{name,body});if(Array.isArray(res)&&res[0])setTemplates(p=>[...p,res[0]]);}
+  async function deleteTemplate(id){await sbDelete("ec_templates",id);setTemplates(p=>p.filter(t=>t.id!==id));}
 
   function saveConnected(date,emailAccount){
     if(!connectedPending)return;
@@ -2966,7 +2976,7 @@ function EmailCampaignGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
         ))}
       </div>
       <div style={{background:"rgba(255,255,255,0.05)",borderBottom:"1px solid rgba(255,255,255,0.07)",padding:"0 20px",display:"flex",gap:0}}>
-        {["Kanban","Contacts","Calendar","Analytics"].map(t=><button key={t} onClick={()=>setTab(t)} style={{background:"none",color:tab===t?"#04bee7":"rgba(174,220,255,0.5)",border:"none",borderBottom:tab===t?"2px solid #23a1dd":"2px solid transparent",padding:"10px 14px",cursor:"pointer",fontWeight:tab===t?600:500,fontSize:13,transition:"all .15s",marginBottom:-1}}>{t}</button>)}
+        {["Kanban","Contacts","Calendar","Templates","Analytics","Activity"].map(t=><button key={t} onClick={()=>setTab(t)} style={{background:"none",color:tab===t?"#04bee7":"rgba(174,220,255,0.5)",border:"none",borderBottom:tab===t?"2px solid #23a1dd":"2px solid transparent",padding:"10px 14px",cursor:"pointer",fontWeight:tab===t?600:500,fontSize:13,transition:"all .15s",marginBottom:-1}}>{t}</button>)}
       </div>
       <div style={{flex:1,overflow:"auto",padding:tab==="Kanban"?"12px 16px":"16px 20px",background:"rgba(174,251,102,0.025)"}}>
         {tab==="Kanban"&&(
@@ -3030,6 +3040,29 @@ function EmailCampaignGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
             {reminderCount===0&&upcomingFU.length===0&&upcomingAppt.length===0&&<div style={{color:"rgba(174,220,255,0.38)",fontSize:13,textAlign:"center",padding:40}}>No upcoming follow-ups or appointments.</div>}
           </div>
         )}
+        {tab==="Templates"&&(
+          <div>
+            <div style={{display:"flex",justifyContent:"flex-end",marginBottom:16}}>
+              <Btn onClick={()=>setNewTplModal(true)}>+ New Template</Btn>
+            </div>
+            <div style={{display:"grid",gap:14}}>
+              {templates.length===0&&<div style={{color:"rgba(174,220,255,0.38)",textAlign:"center",padding:40,background:"rgba(255,255,255,0.05)",borderRadius:12,border:"1px solid rgba(255,255,255,0.09)"}}>No templates yet. Click <strong>+ New Template</strong> to create one.</div>}
+              {templates.map(t=>(
+                <div key={t.id} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,padding:18,boxShadow:"0 4px 20px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05)"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                    <span style={{fontWeight:600,color:"#daeeff",fontSize:14}}>✉️ {t.name}</span>
+                    <div style={{display:"flex",gap:8}}>
+                      <button onClick={()=>copyText(t.body,()=>{setCopiedTpl(t.id);setTimeout(()=>setCopiedTpl(null),1500);})} style={{background:copiedTpl===t.id?"#f0fdf4":"#eef2ff",color:copiedTpl===t.id?"#16a34a":"#23a1dd",border:"none",borderRadius:6,padding:"5px 12px",cursor:"pointer",fontSize:12,fontWeight:600}}>{copiedTpl===t.id?"✓ Copied!":"📋 Copy"}</button>
+                      <button onClick={()=>{if(confirm(`Delete template "${t.name}"?`))deleteTemplate(t.id);}} style={{background:"rgba(239,68,68,0.1)",color:"#ef4444",border:"none",borderRadius:6,padding:"5px 10px",cursor:"pointer",fontSize:12}}>🗑</button>
+                    </div>
+                  </div>
+                  <p style={{color:"rgba(174,220,255,0.55)",fontSize:13,lineHeight:1.7,margin:0,background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"10px 12px",border:"1px solid rgba(255,255,255,0.09)"}}>{t.body}</p>
+                </div>
+              ))}
+            </div>
+            {newTplModal&&<FPNewTemplateModal onClose={()=>setNewTplModal(false)} onSave={addTemplate}/>}
+          </div>
+        )}
         {tab==="Analytics"&&(
           <div style={{display:"grid",gap:16}}>
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:12}}>
@@ -3041,6 +3074,7 @@ function EmailCampaignGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
             </div>
           </div>
         )}
+        {tab==="Activity"&&<ActivityLogTab pipeline="Email Campaign"/>}
       </div>
       {addModal&&<ECAddModal stage={addModal.stage} onClose={()=>setAddModal(null)} onSave={saveLead}/>}
       {modal&&typeof modal==="object"&&<ECEditModal lead={modal} onClose={()=>setModal(null)} onSave={saveLead} onDelete={deleteLead} saving={saving}/>}
@@ -3087,6 +3121,193 @@ function ComingSoonView({label}){
       <div style={{width:60,height:60,borderRadius:18,background:"rgba(255,255,255,0.03)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:30}}>🔜</div>
       <div style={{fontWeight:700,fontSize:18,color:"#daeeff"}}>{label} — Coming Soon</div>
       <div style={{fontSize:13,color:"rgba(174,220,255,0.55)"}}>This feature is currently under development.</div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── ACTIVITY LOG ──────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+function ActivityAddModal({defaultDate="",onClose,onSave}){
+  const today=new Date().toISOString().slice(0,10);
+  const [form,setForm]=useState({date:defaultDate||today,name:"",activity:"",achievement:""});
+  const [saving,setSaving]=useState(false);
+  const f=(k,v)=>setForm(p=>({...p,[k]:v}));
+  async function submit(){ if(!form.date||!form.name||!form.activity)return; setSaving(true); await onSave(form); setSaving(false); onClose(); }
+  return (
+    <Modal title="📋 Log Activity" onClose={onClose}>
+      <Inp label="Date *" type="date" value={form.date} onChange={e=>f("date",e.target.value)}/>
+      <Inp label="Name *" value={form.name} onChange={e=>f("name",e.target.value)} placeholder="Team member name..."/>
+      <Inp label="Activity *" value={form.activity} onChange={e=>f("activity",e.target.value)} placeholder="What did they do today?"/>
+      <Inp label="Achievement" value={form.achievement} onChange={e=>f("achievement",e.target.value)} placeholder="Notable win or result (optional)..."/>
+      <div style={{display:"flex",justifyContent:"flex-end",gap:8,marginTop:16}}>
+        <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
+        <Btn onClick={submit} disabled={saving||!form.date||!form.name||!form.activity}>{saving?"Saving...":"Save Entry"}</Btn>
+      </div>
+    </Modal>
+  );
+}
+
+function ActivityLogTab({pipeline}){
+  const [logs,setLogs]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [subTab,setSubTab]=useState("Log");
+  const [showAdd,setShowAdd]=useState(false);
+  const [addDate,setAddDate]=useState("");
+  const [dayModal,setDayModal]=useState(null);
+  const [calMonth,setCalMonth]=useState(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;});
+  const [filterFrom,setFilterFrom]=useState("");
+  const [filterTo,setFilterTo]=useState("");
+  const today=new Date().toISOString().slice(0,10);
+
+  useEffect(()=>{
+    setLoading(true);
+    sbGetWhere("activity_log","pipeline",pipeline)
+      .then(data=>{ if(Array.isArray(data))setLogs(data); setLoading(false); })
+      .catch(()=>setLoading(false));
+  },[pipeline]);
+
+  const filteredLogs=useMemo(()=>{ let l=logs; if(filterFrom)l=l.filter(e=>e.date>=filterFrom); if(filterTo)l=l.filter(e=>e.date<=filterTo); return l; },[logs,filterFrom,filterTo]);
+  const logsByDate=useMemo(()=>{ const m={}; logs.forEach(e=>{if(!m[e.date])m[e.date]=[];m[e.date].push(e);}); return m; },[logs]);
+
+  async function addEntry(form){
+    const row={pipeline,date:form.date,name:form.name,activity:form.activity,achievement:form.achievement||""};
+    const res=await sbInsert("activity_log",row);
+    if(Array.isArray(res)&&res[0])setLogs(p=>[res[0],...p]);
+  }
+  async function deleteEntry(id){ await sbDelete("activity_log",id); setLogs(p=>p.filter(e=>e.id!==id)); }
+
+  function exportCSV(){
+    const h=["Date","Name","Activity","Achievement"];
+    const rows=filteredLogs.map(e=>[e.date,e.name,e.activity,e.achievement||""]);
+    const csv=[h,...rows].map(r=>r.map(v=>`"${(v||"").replace(/"/g,'""')}"`).join(",")).join("\n");
+    const blob=new Blob([csv],{type:"text/csv"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;a.download=`activity_log_${pipeline.replace(/\s+/g,"_")}_${today}.csv`;a.click();URL.revokeObjectURL(url);
+  }
+
+  const calYear=parseInt(calMonth.split('-')[0]);
+  const calMonthNum=parseInt(calMonth.split('-')[1])-1;
+  const firstDay=new Date(calYear,calMonthNum,1).getDay();
+  const daysInMonth=new Date(calYear,calMonthNum+1,0).getDate();
+  const calLabel=new Date(calYear,calMonthNum,1).toLocaleString('default',{month:'long',year:'numeric'});
+  function prevMo(){ const[y,m]=calMonth.split('-').map(Number);const pm=m===1?12:m-1;const py=m===1?y-1:y;setCalMonth(`${py}-${String(pm).padStart(2,'0')}`); }
+  function nextMo(){ const[y,m]=calMonth.split('-').map(Number);const nm=m===12?1:m+1;const ny=m===12?y+1:y;setCalMonth(`${ny}-${String(nm).padStart(2,'0')}`); }
+
+  if(loading)return <Spinner text="Loading Activity Log..."/>;
+
+  return (
+    <div>
+      {/* Sub-tabs + toolbar */}
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:10}}>
+        <div style={{display:"flex",gap:6}}>
+          {["Log","Calendar"].map(t=>(
+            <button key={t} onClick={()=>setSubTab(t)} style={{background:subTab===t?"rgba(35,161,221,0.15)":"rgba(255,255,255,0.04)",color:subTab===t?"#04bee7":"rgba(174,220,255,0.55)",border:`1px solid ${subTab===t?"rgba(35,161,221,0.4)":"rgba(255,255,255,0.09)"}`,borderRadius:8,padding:"7px 16px",cursor:"pointer",fontWeight:subTab===t?600:500,fontSize:13,transition:"all .15s"}}>{t}</button>
+          ))}
+        </div>
+        <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+          {subTab==="Log"&&(
+            <>
+              <input type="date" value={filterFrom} onChange={e=>setFilterFrom(e.target.value)} style={{...IS,width:"auto",padding:"6px 10px",fontSize:12}}/>
+              <span style={{color:"rgba(174,220,255,0.38)",fontSize:12}}>to</span>
+              <input type="date" value={filterTo} onChange={e=>setFilterTo(e.target.value)} style={{...IS,width:"auto",padding:"6px 10px",fontSize:12}}/>
+              <button onClick={exportCSV} style={{background:"rgba(54,242,175,0.1)",color:"#36f2af",border:"1px solid #22c55e44",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:13,fontWeight:600}}>⬇ Export</button>
+            </>
+          )}
+          <button onClick={()=>{setAddDate(today);setShowAdd(true);}} style={{background:"rgba(35,161,221,0.12)",color:"#23a1dd",border:"1px solid rgba(35,161,221,0.25)",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontWeight:600,fontSize:13}}>+ Add Entry</button>
+        </div>
+      </div>
+
+      {/* Log Tab — Table */}
+      {subTab==="Log"&&(
+        <div style={{overflowX:"auto",borderRadius:12,border:"1px solid rgba(255,255,255,0.09)",background:"rgba(6,14,28,0.5)",backdropFilter:"blur(12px)"}}>
+          {filteredLogs.length===0?(
+            <div style={{color:"rgba(174,220,255,0.38)",fontSize:13,textAlign:"center",padding:40}}>No activity entries yet. Click "+ Add Entry" to start logging.</div>
+          ):(
+            <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+              <thead style={{background:"rgba(255,255,255,0.04)"}}>
+                <tr>{["Date","Name","Activity","Achievement",""].map(h=><th key={h} style={{padding:"9px 12px",textAlign:"left",color:"rgba(174,220,255,0.38)",fontWeight:600,fontSize:11,borderBottom:"1px solid rgba(255,255,255,0.07)",whiteSpace:"nowrap",textTransform:"uppercase",letterSpacing:"0.05em"}}>{h}</th>)}</tr>
+              </thead>
+              <tbody>
+                {filteredLogs.map(e=>(
+                  <tr key={e.id} style={{borderBottom:"1px solid rgba(255,255,255,0.05)"}} onMouseEnter={ev=>ev.currentTarget.style.background="rgba(35,161,221,0.06)"} onMouseLeave={ev=>ev.currentTarget.style.background="transparent"}>
+                    <td style={{padding:"9px 12px",color:"#23a1dd",fontWeight:600,whiteSpace:"nowrap"}}>{e.date}</td>
+                    <td style={{padding:"9px 12px",color:"#daeeff",fontWeight:600}}>{e.name}</td>
+                    <td style={{padding:"9px 12px",color:"rgba(174,220,255,0.7)"}}>{e.activity}</td>
+                    <td style={{padding:"9px 12px",color:"#36f2af"}}>{e.achievement||"—"}</td>
+                    <td style={{padding:"9px 12px"}}><button onClick={()=>deleteEntry(e.id)} style={{background:"rgba(239,68,68,0.1)",color:"#ef4444",border:"none",borderRadius:5,padding:"3px 8px",cursor:"pointer",fontSize:11}}>🗑</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {/* Calendar Tab */}
+      {subTab==="Calendar"&&(
+        <div>
+          <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:18,justifyContent:"center"}}>
+            <button onClick={prevMo} style={{background:"rgba(255,255,255,0.03)",color:"#daeeff",border:"1px solid rgba(255,255,255,0.09)",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:16}}>‹</button>
+            <span style={{fontWeight:700,fontSize:18,color:"#daeeff"}}>{calLabel}</span>
+            <button onClick={nextMo} style={{background:"rgba(255,255,255,0.03)",color:"#daeeff",border:"1px solid rgba(255,255,255,0.09)",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:16}}>›</button>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:4}}>
+            {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=><div key={d} style={{textAlign:"center",fontSize:11,fontWeight:600,color:"rgba(174,220,255,0.38)",padding:"4px 0"}}>{d}</div>)}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4}}>
+            {Array.from({length:firstDay}).map((_,i)=><div key={"e"+i}/>)}
+            {Array.from({length:daysInMonth}).map((_,i)=>{
+              const day=i+1;
+              const dateStr=`${calMonth}-${String(day).padStart(2,'0')}`;
+              const dayLogs=logsByDate[dateStr]||[];
+              const hasLogs=dayLogs.length>0;
+              const isToday=dateStr===today;
+              return (
+                <div key={day} onClick={()=>setDayModal(dateStr)}
+                  onMouseEnter={e=>e.currentTarget.style.background="rgba(35,161,221,0.18)"}
+                  onMouseLeave={e=>e.currentTarget.style.background=hasLogs?"rgba(35,161,221,0.1)":"rgba(255,255,255,0.03)"}
+                  style={{background:hasLogs?"rgba(35,161,221,0.1)":"rgba(255,255,255,0.03)",border:isToday?"1px solid #04bee7":hasLogs?"1px solid rgba(35,161,221,0.3)":"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"8px 4px",minHeight:64,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,transition:"all .15s",boxSizing:"border-box"}}>
+                  <span style={{fontWeight:isToday?700:500,fontSize:13,color:isToday?"#04bee7":"#daeeff"}}>{day}</span>
+                  {hasLogs&&<span style={{background:"#23a1dd",color:"#fff",borderRadius:20,padding:"1px 8px",fontSize:11,fontWeight:700}}>{dayLogs.length}</span>}
+                  {hasLogs&&dayLogs.slice(0,2).map((e,idx)=><span key={idx} style={{fontSize:10,color:"rgba(174,220,255,0.6)",textAlign:"center",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%",padding:"0 2px"}}>{e.name}</span>)}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {showAdd&&<ActivityAddModal defaultDate={addDate} onClose={()=>{setShowAdd(false);setAddDate("");}} onSave={addEntry}/>}
+
+      {dayModal&&(
+        <Modal title={`Activity Log — ${dayModal}`} onClose={()=>setDayModal(null)}>
+          <div style={{marginBottom:12,maxHeight:360,overflowY:"auto"}}>
+            {(logsByDate[dayModal]||[]).length===0?(
+              <div style={{color:"rgba(174,220,255,0.38)",fontSize:13,textAlign:"center",padding:20}}>No entries for this day.</div>
+            ):(
+              (logsByDate[dayModal]||[]).map(e=>(
+                <div key={e.id} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"10px 14px",marginBottom:8}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
+                    <div style={{flex:1}}>
+                      <div style={{fontWeight:600,color:"#daeeff",fontSize:13}}>{e.name}</div>
+                      <div style={{color:"rgba(174,220,255,0.7)",fontSize:12,marginTop:3}}>{e.activity}</div>
+                      {e.achievement&&<div style={{color:"#36f2af",fontSize:12,marginTop:3}}>✓ {e.achievement}</div>}
+                    </div>
+                    <button onClick={()=>deleteEntry(e.id)} style={{background:"rgba(239,68,68,0.1)",color:"#ef4444",border:"none",borderRadius:5,padding:"3px 8px",cursor:"pointer",fontSize:11,flexShrink:0}}>🗑</button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <button onClick={()=>{setAddDate(dayModal);setDayModal(null);setShowAdd(true);}} style={{background:"rgba(35,161,221,0.12)",color:"#23a1dd",border:"1px solid rgba(35,161,221,0.25)",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontWeight:600,fontSize:13}}>+ Add Entry</button>
+            <Btn variant="ghost" onClick={()=>setDayModal(null)}>Close</Btn>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

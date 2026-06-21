@@ -132,8 +132,12 @@ function rowToFP(r){ return {id:r.id,firstName:r.first_name||"",lastName:r.last_
 function fpToRow(c){ return {first_name:c.firstName||"",last_name:c.lastName||"",company_name:c.companyName||"",email:c.email||"",website:c.website||"",phone:c.phone||"",linkedin_url:c.linkedinUrl||"",client_freelance_name:c.clientFreelanceName||"",job_link:c.jobLink||"",project_type:c.projectType||"",client_budget:c.clientBudget||"",freelance_account_name:c.freelanceAccountName||"",remarks:c.remarks||"",stage:c.stage||"Fiverr",source:c.source||"",tags:c.tags||[],follow_up:c.followUp||null,deal:c.deal||null,follow_up_history:c.followUpHistory||[]}; }
 
 // ── Cold Calling mappers ──────────────────────────────────────────────────────
-function rowToCC(r){ return {id:r.id,firstName:r.first_name||"",lastName:r.last_name||"",companyName:r.company_name||"",website:r.website||"",industry:r.industry||"",region:r.region||"",phoneNumber:r.phone_number||"",affiliateNetwork:r.affiliate_network||"",stage:r.stage||"Awin Leads",callStatus:r.call_status||"",callStatusNote:r.call_status_note||"",followUp:r.follow_up||null,followUpHistory:r.follow_up_history||[],appointment:r.appointment||null,appointmentHistory:r.appointment_history||[],lost:r.lost||null,deal:r.deal||null,createdAt:r.created_at||null}; }
-function ccToRow(c){ return {first_name:c.firstName||"",last_name:c.lastName||"",company_name:c.companyName||"",website:c.website||"",industry:c.industry||"",region:c.region||"",phone_number:c.phoneNumber||"",affiliate_network:c.affiliateNetwork||"",stage:c.stage||"Awin Leads",call_status:c.callStatus||"",call_status_note:c.callStatusNote||"",follow_up:c.followUp||null,follow_up_history:c.followUpHistory||[],appointment:c.appointment||null,appointment_history:c.appointmentHistory||[],lost:c.lost||null,deal:c.deal||null}; }
+function rowToCC(r){ return {id:r.id,firstName:r.first_name||"",lastName:r.last_name||"",companyName:r.company_name||"",website:r.website||"",industry:r.industry||"",region:r.region||"",phoneNumber:r.phone_number||"",email:r.email||"",affiliateNetwork:r.affiliate_network||"",source:r.source||"",stage:r.stage||"Awin Leads",callStatus:r.call_status||"",callStatusNote:r.call_status_note||"",followUp:r.follow_up||null,followUpHistory:r.follow_up_history||[],appointment:r.appointment||null,appointmentHistory:r.appointment_history||[],lost:r.lost||null,deal:r.deal||null,createdAt:r.created_at||null}; }
+function ccToRow(c){ return {first_name:c.firstName||"",last_name:c.lastName||"",company_name:c.companyName||"",website:c.website||"",industry:c.industry||"",region:c.region||"",phone_number:c.phoneNumber||"",email:c.email||"",affiliate_network:c.affiliateNetwork||"",source:c.source||"",stage:c.stage||"Awin Leads",call_status:c.callStatus||"",call_status_note:c.callStatusNote||"",follow_up:c.followUp||null,follow_up_history:c.followUpHistory||[],appointment:c.appointment||null,appointment_history:c.appointmentHistory||[],lost:c.lost||null,deal:c.deal||null}; }
+
+// ── Email Campaign mappers ────────────────────────────────────────────────────
+function rowToEC(r){ return {id:r.id,firstName:r.first_name||"",lastName:r.last_name||"",companyName:r.company_name||"",website:r.website||"",industry:r.industry||"",email:r.email||"",phone:r.phone||"",affiliateNetwork:r.affiliate_network||"",emailAccount:r.email_account||"",source:r.source||"",connectedDate:r.connected_date||null,stage:r.stage||"Awin Leads",followUp:r.follow_up||null,followUpHistory:r.follow_up_history||[],appointment:r.appointment||null,appointmentHistory:r.appointment_history||[],lost:r.lost||null,deal:r.deal||null,createdAt:r.created_at||null}; }
+function ecToRow(c){ return {first_name:c.firstName||"",last_name:c.lastName||"",company_name:c.companyName||"",website:c.website||"",industry:c.industry||"",email:c.email||"",phone:c.phone||"",affiliate_network:c.affiliateNetwork||"",email_account:c.emailAccount||"",source:c.source||"",connected_date:c.connectedDate||null,stage:c.stage||"Awin Leads",follow_up:c.followUp||null,follow_up_history:c.followUpHistory||[],appointment:c.appointment||null,appointment_history:c.appointmentHistory||[],lost:c.lost||null,deal:c.deal||null}; }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const LI_STAGES = ["Cold","Sales Navigator","Connection Sent","Connected","Follow Up","Won","Lost"];
@@ -150,6 +154,10 @@ const CC_STAGES = ["Awin Leads","SN Leads","Apollo Leads","Other Leads","Call St
 const CC_COLORS = {"Awin Leads":"#23a1dd","SN Leads":"#01d9dd","Apollo Leads":"#f59e0b","Other Leads":"#64748b","Call Status":"#04bee7","Follow Up":"#a855f7","DND":"#94a3b8","Lost":"#ef4444","Appointment Booked":"#10b981","Won":"#36f2af"};
 const CC_SOURCE_STAGES = ["Awin Leads","SN Leads","Apollo Leads","Other Leads"];
 const CC_CALL_STATUSES = ["Call Connected","Voice Mail","Call Not Connected","Hang Up","Other"];
+
+const EC_STAGES = ["Awin Leads","SN Leads","Apollo Leads","Other Leads","Connected","Follow Up","DND","Lost","Appointment Booked","Won"];
+const EC_COLORS = {"Awin Leads":"#23a1dd","SN Leads":"#01d9dd","Apollo Leads":"#f59e0b","Other Leads":"#64748b","Connected":"#04bee7","Follow Up":"#a855f7","DND":"#94a3b8","Lost":"#ef4444","Appointment Booked":"#10b981","Won":"#36f2af"};
+const EC_SOURCE_STAGES = ["Awin Leads","SN Leads","Apollo Leads","Other Leads"];
 
 const DEFAULT_TAGS = [
   {name:"hot-lead",color:"#ef4444"},{name:"vip",color:"#f59e0b"},{name:"tech",color:"#23a1dd"},
@@ -176,12 +184,19 @@ function exportCSV(leads) {
 }
 function parseCCCSV(text,stage){
   const lines=text.trim().split("\n").map(l=>l.trim()).filter(Boolean); if(lines.length<2)return[];
-  const hmap={firstname:"firstName",lastname:"lastName",companyname:"companyName",website:"website",industry:"industry",region:"region",phonenumber:"phoneNumber",affiliatenetwork:"affiliateNetwork"};
+  const hmap={firstname:"firstName",lastname:"lastName",companyname:"companyName",website:"website",industry:"industry",region:"region",phonenumber:"phoneNumber",email:"email",affiliatenetwork:"affiliateNetwork"};
   const headers=lines[0].split(",").map(h=>h.trim().toLowerCase().replace(/\s+/g,"").replace(/[^a-z]/g,""));
-  return lines.slice(1).map(line=>{ const vals=line.split(",").map(v=>v.trim().replace(/^"|"$/g,"")); const obj={stage:stage||"Awin Leads",callStatus:"",callStatusNote:"",followUp:null,followUpHistory:[],appointment:null,appointmentHistory:[],lost:null,deal:null}; headers.forEach((h,idx)=>{if(hmap[h])obj[hmap[h]]=vals[idx]||"";}); return obj; }).filter(r=>r.firstName||r.lastName||r.companyName||r.phoneNumber);
+  return lines.slice(1).map(line=>{ const vals=line.split(",").map(v=>v.trim().replace(/^"|"$/g,"")); const obj={stage:stage||"Awin Leads",source:stage||"Awin Leads",callStatus:"",callStatusNote:"",followUp:null,followUpHistory:[],appointment:null,appointmentHistory:[],lost:null,deal:null}; headers.forEach((h,idx)=>{if(hmap[h])obj[hmap[h]]=vals[idx]||"";}); return obj; }).filter(r=>r.firstName||r.lastName||r.companyName||r.phoneNumber);
 }
 function exportCCCSV(leads){
   const h=["firstName","lastName","companyName","website","industry","region","phoneNumber","affiliateNetwork","stage","callStatus"]; const rows=leads.map(l=>[l.firstName,l.lastName,l.companyName,l.website,l.industry,l.region,l.phoneNumber,l.affiliateNetwork,l.stage,l.callStatus].map(v=>`"${v||""}"`).join(",")); const csv=[h.join(","),...rows].join("\n"); const b=new Blob([csv],{type:"text/csv"}); const u=URL.createObjectURL(b); const a=document.createElement("a"); a.href=u; a.download="cold_calling_leads.csv"; a.click(); URL.revokeObjectURL(u);
+}
+
+function parseECCSV(text,stage){
+  const lines=text.trim().split("\n").map(l=>l.trim()).filter(Boolean); if(lines.length<2)return[];
+  const hmap={firstname:"firstName",lastname:"lastName",companyname:"companyName",website:"website",industry:"industry",email:"email",phone:"phone",affiliatenetwork:"affiliateNetwork"};
+  const headers=lines[0].split(",").map(h=>h.trim().toLowerCase().replace(/\s+/g,"").replace(/[^a-z]/g,""));
+  return lines.slice(1).map(line=>{ const vals=line.split(",").map(v=>v.trim().replace(/^"|"$/g,"")); const obj={stage:stage||"Awin Leads",source:stage||"Awin Leads",phone:"",affiliateNetwork:"",emailAccount:"",connectedDate:null,followUp:null,followUpHistory:[],appointment:null,appointmentHistory:[],lost:null,deal:null}; headers.forEach((h,idx)=>{if(hmap[h])obj[hmap[h]]=vals[idx]||"";}); return obj; }).filter(r=>r.firstName||r.lastName||r.email||r.companyName);
 }
 
 // ── Base styles ───────────────────────────────────────────────────────────────
@@ -1647,7 +1662,7 @@ function FPCard({contact,onDragStart,onClick,today}){
       {contact.freelanceAccountName&&<div style={{fontSize:11,color:"#0369a1",background:"#e0f2fe",borderRadius:5,padding:"2px 8px",marginBottom:3,display:"inline-block",fontWeight:600,maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>🔑 {contact.freelanceAccountName}</div>}
       {contact.projectType&&<div style={{fontSize:11,color:"rgba(174,220,255,0.55)",marginBottom:2}}>📋 {contact.projectType}</div>}
       {contact.clientBudget&&<div style={{fontSize:11,color:"#36f2af",marginBottom:2,fontWeight:600}}>💰 {contact.clientBudget}</div>}
-      {contact.deal?.connectedDate&&contact.stage==="Connected"&&<div style={{fontSize:11,color:"#23a1dd",marginTop:3}}>🔗 Connected: {contact.deal.connectedDate}</div>}
+      {contact.stage==="Connected"&&contact.deal?.connectedDate&&<div style={{fontSize:11,color:"#23a1dd",marginTop:3}}>🔗 {contact.deal.connectedAccount&&<span style={{background:"rgba(35,161,221,0.12)",borderRadius:4,padding:"1px 6px",marginRight:4,fontWeight:600}}>{contact.deal.connectedAccount}</span>}{contact.deal.connectedDate}</div>}
       {contact.followUp?.date&&<div style={{fontSize:11,color:isOverdue?"#ef4444":"#a855f7",marginTop:3}}>📅 {contact.followUp.date}{(contact.followUpHistory||[]).length>0&&<span style={{marginLeft:6,background:"rgba(168,85,247,0.12)",color:"#a855f7",borderRadius:20,padding:"0 6px",fontSize:10}}>#{(contact.followUpHistory||[]).length+1}</span>}</div>}
       {contact.deal?.dealAmount&&<div style={{fontSize:11,color:"#36f2af",marginTop:3,fontWeight:700}}>🏆 ${Number(contact.deal.dealAmount).toLocaleString()}</div>}
     </div>
@@ -1733,12 +1748,15 @@ function FPNewTemplateModal({onClose,onSave}){
 
 function FPConnectedModal({contact,onClose,onSave}){
   const [date,setDate]=useState(todayStr());
+  const [account,setAccount]=useState(contact.freelanceAccountName||"");
   if(!contact)return null;
   return (
     <Modal title={`🔗 Connected — ${contact.firstName} ${contact.lastName}`} onClose={onClose}>
-      <div style={{background:"rgba(35,161,221,0.1)",border:"1px solid rgba(35,161,221,0.2)",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:"#23a1dd"}}>📅 Record when this connection was made.</div>
+      <div style={{background:"rgba(35,161,221,0.1)",border:"1px solid rgba(35,161,221,0.2)",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:"#23a1dd"}}>📅 Record the date and the name of the person you connected with.</div>
       <Inp label="Date Connected *" type="date" value={date} onChange={e=>setDate(e.target.value)} style={{colorScheme:"light"}}/>
-      <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}><Btn variant="ghost" onClick={onClose}>Cancel</Btn><Btn onClick={()=>{if(date){onSave(date);}}} style={{background:"#3b82f6"}}>✅ Confirm Connection</Btn></div>
+      <Inp label="Account Name *" value={account} onChange={e=>setAccount(e.target.value)} placeholder="e.g. John Smith"/>
+      {(!date||!account)&&<div style={{color:"rgba(245,158,11,0.8)",fontSize:11,marginBottom:8}}>⚠ Both date and account name are required.</div>}
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:4}}><Btn variant="ghost" onClick={onClose}>Cancel</Btn><Btn onClick={()=>{if(date&&account){onSave(date,account);}}} style={{background:"#3b82f6"}}>✅ Confirm Connection</Btn></div>
     </Modal>
   );
 }
@@ -1819,9 +1837,9 @@ function FreelancePipelineGate({search="",onRevenue=()=>{}}){
   async function addTemplate(name,body){ const res=await sbInsert("templates",{name,body}); if(Array.isArray(res)&&res[0])setTemplates(p=>[...p,res[0]]); }
   async function deleteFPTemplate(id){ await sbDelete("templates",id); setTemplates(p=>p.filter(t=>t.id!==id)); }
 
-  function saveConnected(date){
+  function saveConnected(date,account){
     if(!connectedPending)return;
-    updateContact(connectedPending.id,{stage:"Connected",deal:{...(connectedPending.deal||{}),connectedDate:date}});
+    updateContact(connectedPending.id,{stage:"Connected",freelanceAccountName:account||connectedPending.freelanceAccountName,deal:{...(connectedPending.deal||{}),connectedDate:date,connectedAccount:account}});
     setConnectedPending(null);
   }
 
@@ -2215,6 +2233,7 @@ function NavIcon({name,active}){
     allcontacts:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>,
     freelance:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>,
     coldcalling:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.95a16 16 0 0 0 5.55 5.55l.88-.88a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21 16c0 .32.01.62.01.92z"/></svg>,
+    emailcampaign:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
     settings:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
   };
   return icons[name]||null;
@@ -2239,9 +2258,11 @@ function CCLeadCard({lead,onDragStart,onClick,today}){
         {isOverdue&&<span style={{background:"#ef444422",color:"#ef4444",border:"1px solid #ef444444",borderRadius:20,padding:"1px 7px",fontSize:9,fontWeight:700}}>OVERDUE</span>}
       </div>
       {lead.companyName&&<div style={{fontSize:11,color:"rgba(174,220,255,0.55)",marginBottom:2}}>🏢 {lead.companyName}</div>}
-      {lead.phoneNumber&&<div style={{fontSize:11,color:"rgba(174,220,255,0.55)",marginBottom:2}}>📞 {lead.phoneNumber}</div>}
+      {lead.phoneNumber&&<div style={{fontSize:11,color:"rgba(174,220,255,0.55)",marginBottom:2,display:"flex",alignItems:"center",gap:4}}>📞 <span>{lead.phoneNumber}</span><button onClick={e=>{e.stopPropagation();copyText(lead.phoneNumber);}} title="Copy phone" style={{background:"none",border:"none",cursor:"pointer",padding:"0 2px",color:"rgba(174,220,255,0.4)",fontSize:10,lineHeight:1}}>⧉</button></div>}
+      {lead.email&&<div style={{fontSize:11,color:"rgba(174,220,255,0.55)",marginBottom:2,display:"flex",alignItems:"center",gap:4}}>✉️ <span>{lead.email}</span><button onClick={e=>{e.stopPropagation();copyText(lead.email);}} title="Copy email" style={{background:"none",border:"none",cursor:"pointer",padding:"0 2px",color:"rgba(174,220,255,0.4)",fontSize:10,lineHeight:1}}>⧉</button></div>}
       {lead.industry&&<div style={{fontSize:11,color:"rgba(174,220,255,0.55)",marginBottom:2}}>🏭 {lead.industry}</div>}
       {lead.region&&<div style={{fontSize:11,color:"rgba(174,220,255,0.38)",marginBottom:2}}>📍 {lead.region}</div>}
+      {lead.source&&<div style={{marginTop:4}}><span style={{background:(CC_COLORS[lead.source]||"#64748b")+"22",color:CC_COLORS[lead.source]||"#64748b",border:`1px solid ${(CC_COLORS[lead.source]||"#64748b")}44`,borderRadius:20,padding:"1px 8px",fontSize:10,fontWeight:600}}>{lead.source}</span></div>}
       {lead.callStatus&&<div style={{marginTop:4}}><span style={{background:"rgba(35,161,221,0.1)",color:"#23a1dd",borderRadius:20,padding:"1px 8px",fontSize:10,fontWeight:600}}>📞 {lead.callStatus}</span></div>}
       {lead.stage==="Follow Up"&&lead.followUp?.date&&<div style={{fontSize:11,color:isOverdueFU?"#ef4444":"#a855f7",marginTop:3}}>📅 {lead.followUp.date}{lead.followUp.time&&` at ${lead.followUp.time}`}{(lead.followUpHistory||[]).length>0&&<span style={{marginLeft:6,background:"rgba(168,85,247,0.12)",color:"#a855f7",borderRadius:20,padding:"0 6px",fontSize:10}}>#{(lead.followUpHistory||[]).length+1}</span>}</div>}
       {lead.stage==="Appointment Booked"&&lead.appointment?.date&&<div style={{fontSize:11,color:isOverdueAppt?"#ef4444":"#10b981",marginTop:3}}>📅 Appt: {lead.appointment.date}{lead.appointment.time&&` at ${lead.appointment.time}`}{(lead.appointmentHistory||[]).length>0&&<span style={{marginLeft:6,background:"#d1fae5",color:"#10b981",borderRadius:20,padding:"0 6px",fontSize:10}}>#{(lead.appointmentHistory||[]).length+1}</span>}</div>}
@@ -2276,7 +2297,7 @@ function CCKanbanCol({stage,leads,onDragStart,onDrop,onDragOver,onDragLeave,onCl
 }
 
 function CCAddModal({stage,onClose,onSave}){
-  const [form,setForm]=useState({firstName:"",lastName:"",companyName:"",website:"",industry:"",region:"",phoneNumber:"",affiliateNetwork:"",stage,callStatus:"",callStatusNote:"",followUp:null,followUpHistory:[],appointment:null,appointmentHistory:[],lost:null,deal:null});
+  const [form,setForm]=useState({firstName:"",lastName:"",companyName:"",website:"",industry:"",region:"",phoneNumber:"",email:"",affiliateNetwork:"",source:stage,stage,callStatus:"",callStatusNote:"",followUp:null,followUpHistory:[],appointment:null,appointmentHistory:[],lost:null,deal:null});
   const f=(k,v)=>setForm(p=>({...p,[k]:v}));
   return (
     <Modal title={`➕ Add Contact — ${stage}`} onClose={onClose}>
@@ -2290,7 +2311,10 @@ function CCAddModal({stage,onClose,onSave}){
         <Inp label="Industry" value={form.industry} onChange={e=>f("industry",e.target.value)}/>
         <Inp label="Region" value={form.region} onChange={e=>f("region",e.target.value)}/>
       </div>
-      <Inp label="Phone Number" type="tel" value={form.phoneNumber} onChange={e=>f("phoneNumber",e.target.value)}/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
+        <Inp label="Phone Number" type="tel" value={form.phoneNumber} onChange={e=>f("phoneNumber",e.target.value)}/>
+        <Inp label="Email" type="email" value={form.email} onChange={e=>f("email",e.target.value)}/>
+      </div>
       <Inp label="Affiliate Network" value={form.affiliateNetwork} onChange={e=>f("affiliateNetwork",e.target.value)}/>
       <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:8}}>
         <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
@@ -2315,7 +2339,10 @@ function CCEditModal({lead,onClose,onSave,onDelete,saving}){
         <Inp label="Industry" value={form.industry||""} onChange={e=>f("industry",e.target.value)}/>
         <Inp label="Region" value={form.region||""} onChange={e=>f("region",e.target.value)}/>
       </div>
-      <Inp label="Phone Number" value={form.phoneNumber||""} onChange={e=>f("phoneNumber",e.target.value)}/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
+        <Inp label="Phone Number" value={form.phoneNumber||""} onChange={e=>f("phoneNumber",e.target.value)}/>
+        <Inp label="Email" type="email" value={form.email||""} onChange={e=>f("email",e.target.value)}/>
+      </div>
       <Inp label="Affiliate Network" value={form.affiliateNetwork||""} onChange={e=>f("affiliateNetwork",e.target.value)}/>
       <Sel label="Stage" value={form.stage||"Awin Leads"} onChange={e=>f("stage",e.target.value)}>{CC_STAGES.map(s=><option key={s}>{s}</option>)}</Sel>
       {(form.followUpHistory||[]).length>0&&<div style={{background:"rgba(168,85,247,0.1)",borderRadius:10,padding:"10px 14px",marginBottom:12}}>
@@ -2623,6 +2650,437 @@ function ColdCallingGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
   );
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// ── EMAIL CAMPAIGN PIPELINE ───────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+function ECLeadCard({lead,onDragStart,onClick,today}){
+  const c=EC_COLORS[lead.stage]||"#23a1dd";
+  const isOverdueFU=lead.stage==="Follow Up"&&lead.followUp?.date&&lead.followUp.date<today;
+  const isOverdueAppt=lead.stage==="Appointment Booked"&&lead.appointment?.date&&lead.appointment.date<today;
+  const isOverdue=isOverdueFU||isOverdueAppt;
+  return (
+    <div draggable onDragStart={e=>onDragStart(e,lead.id)} onClick={()=>onClick(lead)}
+      style={{background:"rgba(255,255,255,0.04)",backdropFilter:"blur(12px)",border:`1px solid ${isOverdue?"rgba(239,68,68,0.4)":"rgba(255,255,255,0.08)"}`,borderRadius:10,padding:"11px 13px",cursor:"grab",marginBottom:8,userSelect:"none",transition:"all .15s",boxShadow:"0 4px 16px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.06)"}}
+      onMouseEnter={e=>e.currentTarget.style.borderColor=isOverdue?"#ef4444":c+"88"}
+      onMouseLeave={e=>e.currentTarget.style.borderColor=isOverdue?"#fca5a5":"rgba(255,255,255,0.08)"}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+        <div style={{fontWeight:600,color:"#daeeff",fontSize:13,marginBottom:3}}>{lead.firstName} {lead.lastName}</div>
+        {isOverdue&&<span style={{background:"#ef444422",color:"#ef4444",border:"1px solid #ef444444",borderRadius:20,padding:"1px 7px",fontSize:9,fontWeight:700}}>OVERDUE</span>}
+      </div>
+      {lead.companyName&&<div style={{fontSize:11,color:"rgba(174,220,255,0.55)",marginBottom:2}}>🏢 {lead.companyName}</div>}
+      {lead.website&&<div style={{fontSize:11,color:"rgba(174,220,255,0.55)",marginBottom:2}}>🌐 <a href={lead.website.startsWith("http")?lead.website:"https://"+lead.website} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{color:"#23a1dd",textDecoration:"none"}}>{lead.website}</a></div>}
+      {lead.email&&<div style={{fontSize:11,color:"rgba(174,220,255,0.55)",marginBottom:2,display:"flex",alignItems:"center",gap:4}}>✉️ <span>{lead.email}</span><button onClick={e=>{e.stopPropagation();copyText(lead.email);}} title="Copy email" style={{background:"none",border:"none",cursor:"pointer",padding:"0 2px",color:"rgba(174,220,255,0.4)",fontSize:10,lineHeight:1}}>⧉</button></div>}
+      {lead.phone&&<div style={{fontSize:11,color:"rgba(174,220,255,0.55)",marginBottom:2,display:"flex",alignItems:"center",gap:4}}>📞 <span>{lead.phone}</span><button onClick={e=>{e.stopPropagation();copyText(lead.phone);}} title="Copy phone" style={{background:"none",border:"none",cursor:"pointer",padding:"0 2px",color:"rgba(174,220,255,0.4)",fontSize:10,lineHeight:1}}>⧉</button></div>}
+      {lead.industry&&<div style={{fontSize:11,color:"rgba(174,220,255,0.55)",marginBottom:2}}>🏭 {lead.industry}</div>}
+      {lead.source&&<div style={{marginTop:4}}><span style={{background:(EC_COLORS[lead.source]||"#64748b")+"22",color:EC_COLORS[lead.source]||"#64748b",border:`1px solid ${(EC_COLORS[lead.source]||"#64748b")}44`,borderRadius:20,padding:"1px 8px",fontSize:10,fontWeight:600}}>{lead.source}</span></div>}
+      {lead.emailAccount&&<div style={{marginTop:4}}><span style={{background:"rgba(4,190,231,0.1)",color:"#04bee7",borderRadius:20,padding:"1px 8px",fontSize:10,fontWeight:600}}>📧 {lead.emailAccount}</span></div>}
+      {lead.connectedDate&&lead.stage==="Connected"&&<div style={{fontSize:11,color:"#01d9dd",marginTop:3}}>🔗 Connected: {lead.connectedDate}</div>}
+      {lead.stage==="Follow Up"&&lead.followUp?.date&&<div style={{fontSize:11,color:isOverdueFU?"#ef4444":"#a855f7",marginTop:3}}>📅 {lead.followUp.date}{lead.followUp.time&&` at ${lead.followUp.time}`}{(lead.followUpHistory||[]).length>0&&<span style={{marginLeft:6,background:"rgba(168,85,247,0.12)",color:"#a855f7",borderRadius:20,padding:"0 6px",fontSize:10}}>#{(lead.followUpHistory||[]).length+1}</span>}</div>}
+      {lead.stage==="Appointment Booked"&&lead.appointment?.date&&<div style={{fontSize:11,color:isOverdueAppt?"#ef4444":"#10b981",marginTop:3}}>📅 Appt: {lead.appointment.date}{lead.appointment.time&&` at ${lead.appointment.time}`}</div>}
+      {lead.deal?.amount&&<div style={{fontSize:11,color:"#36f2af",marginTop:3,fontWeight:600}}>💰 ${Number(lead.deal.amount).toLocaleString()}</div>}
+    </div>
+  );
+}
+
+function ECKanbanCol({stage,leads,onDragStart,onDrop,onDragOver,onDragLeave,onClick,isDragOver,today,isSource,onAdd,onImport,onExport}){
+  const c=EC_COLORS[stage]||"#23a1dd";
+  return (
+    <div onDrop={e=>onDrop(e,stage)} onDragOver={e=>{e.preventDefault();onDragOver(stage);}} onDragLeave={onDragLeave}
+      style={{minWidth:210,flex:"0 0 210px",background:isDragOver?"rgba(35,161,221,0.12)":"rgba(255,255,255,0.04)",backdropFilter:"blur(12px)",border:`1px solid ${isDragOver?c+"66":"rgba(255,255,255,0.08)"}`,borderRadius:14,display:"flex",flexDirection:"column",transition:"all .15s",height:"calc(100vh - 270px)"}}>
+      <div style={{padding:"10px 12px 8px",borderBottom:`2px solid ${c}`,flexShrink:0}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+          <span style={{fontWeight:700,fontSize:12,color:c}}>{stage}</span>
+          <span style={{background:c+"18",color:c,borderRadius:20,padding:"2px 8px",fontSize:11,fontWeight:700}}>{leads.length}</span>
+        </div>
+        <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+          {isSource&&<button onClick={e=>{e.stopPropagation();onAdd();}} style={{background:c+"18",color:c,border:`1px solid ${c}44`,borderRadius:6,padding:"2px 8px",cursor:"pointer",fontSize:10,fontWeight:600}}>+ Add</button>}
+          {isSource&&<button onClick={e=>{e.stopPropagation();onImport();}} style={{background:"#f0f9ff",color:"#0ea5e9",border:"1px solid #bae6fd",borderRadius:6,padding:"2px 8px",cursor:"pointer",fontSize:10,fontWeight:600}}>📥 Import</button>}
+          <button onClick={e=>{e.stopPropagation();onExport();}} style={{background:"rgba(54,242,175,0.08)",color:"#36f2af",border:"1px solid rgba(54,242,175,0.2)",borderRadius:6,padding:"2px 8px",cursor:"pointer",fontSize:10,fontWeight:600}}>⬇ Export</button>
+        </div>
+      </div>
+      <div style={{padding:"9px 9px 0",flex:1,overflowY:"auto",minHeight:0}}>
+        {leads.map(l=><ECLeadCard key={l.id} lead={l} onDragStart={onDragStart} onClick={onClick} today={today}/>)}
+        {!leads.length&&<div style={{color:"rgba(174,220,255,0.22)",fontSize:11,textAlign:"center",paddingTop:18}}>Drop here</div>}
+      </div>
+    </div>
+  );
+}
+
+function ECAddModal({stage,onClose,onSave}){
+  const [form,setForm]=useState({firstName:"",lastName:"",companyName:"",website:"",industry:"",email:"",phone:"",affiliateNetwork:"",emailAccount:"",source:stage,stage,followUp:null,followUpHistory:[],appointment:null,appointmentHistory:[],lost:null,deal:null,connectedDate:null});
+  const f=(k,v)=>setForm(p=>({...p,[k]:v}));
+  return (
+    <Modal title={`➕ Add Contact — ${stage}`} onClose={onClose}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
+        <Inp label="First Name *" value={form.firstName} onChange={e=>f("firstName",e.target.value)}/>
+        <Inp label="Last Name" value={form.lastName} onChange={e=>f("lastName",e.target.value)}/>
+      </div>
+      <Inp label="Company Name" value={form.companyName} onChange={e=>f("companyName",e.target.value)}/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
+        <Inp label="Email" type="email" value={form.email} onChange={e=>f("email",e.target.value)}/>
+        <Inp label="Phone Number" value={form.phone} onChange={e=>f("phone",e.target.value)}/>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
+        <Inp label="Industry" value={form.industry} onChange={e=>f("industry",e.target.value)}/>
+        <Inp label="Affiliate Network" value={form.affiliateNetwork} onChange={e=>f("affiliateNetwork",e.target.value)}/>
+      </div>
+      <Inp label="Website" value={form.website} onChange={e=>f("website",e.target.value)}/>
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:8}}>
+        <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
+        <Btn onClick={()=>{if(form.firstName||form.email||form.companyName)onSave(form);}}>Add Contact</Btn>
+      </div>
+    </Modal>
+  );
+}
+
+function ECEditModal({lead,onClose,onSave,onDelete,saving}){
+  const [form,setForm]=useState({...lead});
+  const f=(k,v)=>setForm(p=>({...p,[k]:v}));
+  return (
+    <Modal title="Edit Contact" onClose={onClose} wide>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
+        <Inp label="First Name" value={form.firstName||""} onChange={e=>f("firstName",e.target.value)}/>
+        <Inp label="Last Name" value={form.lastName||""} onChange={e=>f("lastName",e.target.value)}/>
+      </div>
+      <Inp label="Company Name" value={form.companyName||""} onChange={e=>f("companyName",e.target.value)}/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
+        <Inp label="Email" type="email" value={form.email||""} onChange={e=>f("email",e.target.value)}/>
+        <Inp label="Phone Number" value={form.phone||""} onChange={e=>f("phone",e.target.value)}/>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
+        <Inp label="Industry" value={form.industry||""} onChange={e=>f("industry",e.target.value)}/>
+        <Inp label="Affiliate Network" value={form.affiliateNetwork||""} onChange={e=>f("affiliateNetwork",e.target.value)}/>
+      </div>
+      <Inp label="Website" value={form.website||""} onChange={e=>f("website",e.target.value)}/>
+      <Inp label="Account Name" value={form.emailAccount||""} onChange={e=>f("emailAccount",e.target.value)} placeholder="e.g. John Smith"/>
+      <Sel label="Stage" value={form.stage||"Awin Leads"} onChange={e=>f("stage",e.target.value)}>{EC_STAGES.map(s=><option key={s}>{s}</option>)}</Sel>
+      {(form.followUpHistory||[]).length>0&&<div style={{background:"rgba(168,85,247,0.1)",borderRadius:10,padding:"10px 14px",marginBottom:12}}>
+        <div style={{fontSize:12,fontWeight:700,color:"#c084fc",marginBottom:6}}>Follow-Up History</div>
+        {(form.followUpHistory||[]).map((h,i)=><div key={i} style={{fontSize:12,color:"rgba(174,220,255,0.55)",padding:"3px 0",borderTop:i?"1px solid rgba(168,85,247,0.2)":"none"}}><span style={{fontWeight:600,color:"#c084fc"}}>#{h.attempt}</span> · {h.date}{h.time&&` at ${h.time}`}{h.notes&&` — ${h.notes}`}</div>)}
+      </div>}
+      <div style={{display:"flex",gap:8,justifyContent:"space-between",marginTop:10,borderTop:"1px solid rgba(255,255,255,0.05)",paddingTop:14}}>
+        {lead.id?<Btn variant="danger" onClick={()=>onDelete(lead.id)}>Delete</Btn>:<div/>}
+        <div style={{display:"flex",gap:8}}><Btn variant="ghost" onClick={onClose}>Cancel</Btn><Btn onClick={()=>onSave(form)} style={{opacity:saving?0.6:1}}>{saving?"Saving...":"Save"}</Btn></div>
+      </div>
+    </Modal>
+  );
+}
+
+function ECConnectedModal({lead,onClose,onSave}){
+  const [date,setDate]=useState(todayStr());
+  const [account,setAccount]=useState(lead.emailAccount||"");
+  if(!lead)return null;
+  return (
+    <Modal title={`📧 Connected — ${lead.firstName} ${lead.lastName}`} onClose={onClose}>
+      <div style={{background:"rgba(1,217,221,0.08)",border:"1px solid rgba(1,217,221,0.2)",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:"#01d9dd"}}>Record the date and the name of the person you connected with.</div>
+      <Inp label="Date Connected *" type="date" value={date} onChange={e=>setDate(e.target.value)} style={{colorScheme:"light"}}/>
+      <div style={{marginBottom:12}}>
+        <label style={{display:"block",fontSize:12,color:"rgba(174,220,255,0.38)",marginBottom:6,fontWeight:600}}>Account Name *</label>
+        <input value={account} onChange={e=>setAccount(e.target.value)} placeholder="e.g. John Smith" style={{...IS}}/>
+      </div>
+      {(!date||!account)&&<div style={{color:"rgba(245,158,11,0.8)",fontSize:11,marginBottom:8}}>⚠ Both date and account name are required.</div>}
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}><Btn variant="ghost" onClick={onClose}>Cancel</Btn><Btn onClick={()=>{if(date&&account){onSave(date,account);}}} style={{background:"#01d9dd",color:"#071525"}}>✅ Confirm Connection</Btn></div>
+    </Modal>
+  );
+}
+
+function ECFollowUpModal({lead,onClose,onSave}){
+  const [date,setDate]=useState(addDays(7));const [time,setTime]=useState("10:00");const [notes,setNotes]=useState("");
+  if(!lead)return null;const attempt=(lead.followUpHistory||[]).length+1;
+  return (
+    <Modal title={`📅 Follow-Up #${attempt} — ${lead.firstName} ${lead.lastName}`} onClose={onClose}>
+      <div style={{background:"rgba(168,85,247,0.1)",border:"1px solid rgba(168,85,247,0.2)",borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:13,color:"#c084fc"}}>Follow-Up <strong>#{attempt}</strong> · Previous: <strong>{attempt-1}</strong></div>
+      <div style={{marginBottom:10}}><label style={{display:"block",fontSize:12,color:"rgba(174,220,255,0.38)",marginBottom:6,fontWeight:600}}>Quick Schedule</label><div style={{display:"flex",gap:6}}>{[3,7,14].map(d=><button key={d} onClick={()=>setDate(addDays(d))} style={{background:"rgba(35,161,221,0.1)",color:"#04bee7",border:"1px solid rgba(35,161,221,0.25)",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontSize:12,fontWeight:600}}>+{d} days</button>)}</div></div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 12px"}}>
+        <Inp label="Date *" type="date" value={date} onChange={e=>setDate(e.target.value)} style={{colorScheme:"light"}}/>
+        <Inp label="Time" type="time" value={time} onChange={e=>setTime(e.target.value)} style={{colorScheme:"light"}}/>
+      </div>
+      <Tex label="Notes" value={notes} onChange={e=>setNotes(e.target.value)} placeholder="What to discuss..."/>
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}><Btn variant="ghost" onClick={onClose}>Cancel</Btn><Btn onClick={()=>{if(date){onSave(date,time,notes);onClose();}}}>Schedule #{attempt}</Btn></div>
+    </Modal>
+  );
+}
+
+function ECLostModal({lead,onClose,onSave}){
+  const [date,setDate]=useState(todayStr());const [reason,setReason]=useState("");
+  if(!lead)return null;
+  const REASONS=["Not interested","No budget","No response","Unsubscribed","Spam complaint","Wrong contact","Other"];
+  return (
+    <Modal title={`❌ Moving to Lost — ${lead.firstName} ${lead.lastName}`} onClose={onClose}>
+      <div style={{background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:"#ef4444"}}>Mark this email lead as lost.</div>
+      <Inp label="Date *" type="date" value={date} onChange={e=>setDate(e.target.value)} style={{colorScheme:"light"}}/>
+      <Sel label="Reason" value={reason} onChange={e=>setReason(e.target.value)}><option value="">Select reason...</option>{REASONS.map(r=><option key={r}>{r}</option>)}</Sel>
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}><Btn variant="ghost" onClick={onClose}>Cancel</Btn><Btn variant="danger" onClick={()=>{onSave(date,reason);onClose();}}>Move to Lost</Btn></div>
+    </Modal>
+  );
+}
+
+function ECAppointmentModal({lead,onClose,onSave}){
+  const [date,setDate]=useState(addDays(3));const [time,setTime]=useState("10:00");const [notes,setNotes]=useState("");
+  if(!lead)return null;const attempt=(lead.appointmentHistory||[]).length+1;
+  return (
+    <Modal title={`📅 Book Appointment${attempt>1?` #${attempt}`:""} — ${lead.firstName} ${lead.lastName}`} onClose={onClose}>
+      <div style={{background:"rgba(54,242,175,0.08)",border:"1px solid rgba(54,242,175,0.2)",borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:13,color:"#36f2af"}}>{attempt>1?`Rescheduling — appointment #${attempt}`:"Book an appointment with this email lead."}</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 12px"}}>
+        <Inp label="Date *" type="date" value={date} onChange={e=>setDate(e.target.value)} style={{colorScheme:"light"}}/>
+        <Inp label="Time *" type="time" value={time} onChange={e=>setTime(e.target.value)} style={{colorScheme:"light"}}/>
+      </div>
+      <Tex label="Notes" value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Appointment details..."/>
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}><Btn variant="ghost" onClick={onClose}>Cancel</Btn><Btn onClick={()=>{if(date&&time){onSave(date,time,notes);onClose();}}} style={{background:"#10b981"}}>Book Appointment</Btn></div>
+    </Modal>
+  );
+}
+
+function ECWonModal({lead,onClose,onSave}){
+  const [date,setDate]=useState(todayStr());const [amount,setAmount]=useState("");const [err,setErr]=useState("");
+  if(!lead)return null;
+  function submit(){if(!date){setErr("Enter deal date.");return;}if(!amount||isNaN(parseFloat(amount))){setErr("Enter valid revenue amount.");return;}onSave(date,amount);onClose();}
+  return (
+    <Modal title={`🏆 Deal Won — ${lead.firstName} ${lead.lastName}`} onClose={onClose}>
+      <div style={{background:"rgba(54,242,175,0.08)",border:"1px solid rgba(54,242,175,0.2)",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:"#36f2af"}}>🎉 This lead will also be cloned to <strong>Hot Pipeline → Email</strong>.</div>
+      {lead.emailAccount&&<div style={{background:"rgba(4,190,231,0.08)",border:"1px solid rgba(4,190,231,0.15)",borderRadius:8,padding:"8px 12px",marginBottom:14,fontSize:12,color:"#04bee7"}}>📧 Email account: <strong>{lead.emailAccount}</strong></div>}
+      <Inp label="Deal Date *" type="date" value={date} onChange={e=>setDate(e.target.value)} style={{colorScheme:"light"}}/>
+      <div style={{marginBottom:12}}><label style={{display:"block",fontSize:12,color:"rgba(174,220,255,0.38)",marginBottom:4,fontWeight:600}}>Revenue * (USD)</label><div style={{position:"relative"}}><span style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",color:"rgba(174,220,255,0.55)",fontWeight:700}}>$</span><input type="number" min="0" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="0.00" style={{...IS,paddingLeft:26}}/></div></div>
+      {err&&<div style={{color:"#ef4444",fontSize:12,marginBottom:10}}>⚠ {err}</div>}
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}><Btn variant="ghost" onClick={onClose}>Cancel</Btn><Btn onClick={submit} style={{background:"#36f2af",color:"#071525"}}>🏆 Mark as Won</Btn></div>
+    </Modal>
+  );
+}
+
+function ECUploadModal({stage,onClose,onImport}){
+  const [preview,setPreview]=useState(null);const [err,setErr]=useState("");const [importing,setImporting]=useState(false);const fileRef=useRef();
+  const c=EC_COLORS[stage]||"#23a1dd";
+  function handle(text){const rows=parseECCSV(text,stage);if(!rows.length){setErr("Could not parse file.");setPreview(null);}else{setErr("");setPreview(rows);}}
+  async function doImport(){if(!preview)return;setImporting(true);await onImport(preview);setImporting(false);}
+  return (
+    <Modal title={`📥 Import to ${stage}`} onClose={onClose} wide>
+      <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:12,marginBottom:14}}>
+        <div style={{fontSize:12,color:"rgba(174,220,255,0.55)",marginBottom:6,fontWeight:600}}>CSV Headers:</div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{["firstname","lastname","companyname","website","industry","email","phone","affiliatenetwork"].map(h=><span key={h} style={{background:"rgba(35,161,221,0.1)",color:"#23a1dd",borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:500}}>{h}</span>)}</div>
+      </div>
+      <input ref={fileRef} type="file" accept=".csv" onChange={e=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=ev=>handle(ev.target.result);r.readAsText(f);}}} style={{display:"none"}}/>
+      <div onClick={()=>fileRef.current.click()} style={{border:`2px dashed ${c}66`,borderRadius:10,padding:20,textAlign:"center",cursor:"pointer",color:"rgba(174,220,255,0.55)",fontSize:13,marginBottom:12,background:"rgba(255,255,255,0.04)"}}>📂 Click to choose CSV file</div>
+      <Tex label="Or paste CSV text" onChange={e=>handle(e.target.value)} style={{fontFamily:"monospace",fontSize:12}}/>
+      {err&&<div style={{color:"#ef4444",fontSize:12,marginBottom:8}}>⚠ {err}</div>}
+      {preview&&<div style={{background:"rgba(255,255,255,0.04)",border:`1px solid ${c}33`,borderRadius:8,padding:10,marginBottom:10}}><div style={{fontSize:12,color:c,marginBottom:4,fontWeight:600}}>✓ {preview.length} contacts ready</div>{preview.slice(0,5).map((r,i)=><div key={i} style={{fontSize:11,color:"rgba(174,220,255,0.55)",padding:"2px 0"}}>{r.firstName} {r.lastName} · {r.companyName||r.email}</div>)}{preview.length>5&&<div style={{fontSize:11,color:"rgba(174,220,255,0.38)"}}>...and {preview.length-5} more</div>}</div>}
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}><Btn variant="ghost" onClick={onClose}>Cancel</Btn><button onClick={doImport} style={{background:c,color:"#fff",border:"none",borderRadius:8,padding:"8px 16px",cursor:"pointer",fontSize:13,fontWeight:600,opacity:preview&&!importing?1:0.4}}>{importing?"Importing...":`Import ${preview?.length||0} Contacts`}</button></div>
+    </Modal>
+  );
+}
+
+function EmailCampaignGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
+  const [leads,setLeads]=useState([]);const [loading,setLoading]=useState(true);
+  const [tab,setTab]=useState("Kanban");const [stageTab,setStageTab]=useState("All");
+  const [modal,setModal]=useState(null);const [addModal,setAddModal]=useState(null);const [uploadModal,setUploadModal]=useState(null);
+  const [connectedPending,setConnectedPending]=useState(null);
+  const [fuPending,setFuPending]=useState(null);const [lostPending,setLostPending]=useState(null);
+  const [apptPending,setApptPending]=useState(null);const [wonPending,setWonPending]=useState(null);
+  const [reviewPending,setReviewPending]=useState(null);
+  const [dragId,setDragId]=useState(null);const [dragOver,setDragOver]=useState(null);
+  const [saving,setSaving]=useState(false);
+  const today=todayStr();
+
+  useEffect(()=>{setLoading(true);sbGetAll("email_campaign").then(rows=>{if(Array.isArray(rows))setLeads(rows.map(rowToEC));setLoading(false);}).catch(()=>setLoading(false));},[]);
+
+  const stageCounts=useMemo(()=>{const m={All:leads.length};EC_STAGES.forEach(s=>m[s]=leads.filter(l=>l.stage===s).length);return m;},[leads]);
+  const filtered=useMemo(()=>{const q=search.toLowerCase();return leads.filter(l=>(stageTab==="All"||l.stage===stageTab)&&(!q||[l.firstName,l.lastName,l.companyName,l.email,l.industry,l.emailAccount].join(" ").toLowerCase().includes(q)));},[leads,search,stageTab]);
+  const byStage=useMemo(()=>{const m={};EC_STAGES.forEach(s=>m[s]=filtered.filter(l=>l.stage===s));return m;},[filtered]);
+  const stats=useMemo(()=>{const won=leads.filter(l=>l.stage==="Won");return{total:leads.length,won:won.length,lost:leads.filter(l=>l.stage==="Lost").length,dnd:leads.filter(l=>l.stage==="DND").length,connected:leads.filter(l=>l.stage==="Connected").length,revenue:won.reduce((s,l)=>s+(parseFloat(l.deal?.amount)||0),0)};},[leads]);
+  useEffect(()=>{onRevenue({val:stats.revenue,label:"Revenue Won",color:"#36f2af"});},[stats.revenue]);
+
+  const overdueFU=useMemo(()=>leads.filter(l=>l.stage==="Follow Up"&&l.followUp?.date&&l.followUp.date<today),[leads,today]);
+  const todayFU=useMemo(()=>leads.filter(l=>l.stage==="Follow Up"&&l.followUp?.date===today),[leads,today]);
+  const upcomingFU=useMemo(()=>leads.filter(l=>l.stage==="Follow Up"&&l.followUp?.date&&l.followUp.date>today&&l.followUp.date<=addDays(7)),[leads,today]);
+  const overdueAppt=useMemo(()=>leads.filter(l=>l.stage==="Appointment Booked"&&l.appointment?.date&&l.appointment.date<today),[leads,today]);
+  const todayAppt=useMemo(()=>leads.filter(l=>l.stage==="Appointment Booked"&&l.appointment?.date===today),[leads,today]);
+  const upcomingAppt=useMemo(()=>leads.filter(l=>l.stage==="Appointment Booked"&&l.appointment?.date&&l.appointment.date>today&&l.appointment.date<=addDays(7)),[leads,today]);
+  const reminderCount=overdueFU.length+todayFU.length+overdueAppt.length+todayAppt.length;
+
+  const onDragStart=useCallback((e,id)=>{setDragId(id);e.dataTransfer.effectAllowed="move";},[]);
+  const onDragOver=useCallback(stage=>setDragOver(stage),[]);
+  const onDragLeave=useCallback(()=>setDragOver(null),[]);
+
+  const updateLead=useCallback(async(id,patch)=>{const lead=leads.find(l=>l.id===id);if(!lead)return;const res=await sbUpdate("email_campaign",id,ecToRow({...lead,...patch}));if(Array.isArray(res)&&res[0])setLeads(p=>p.map(l=>l.id===id?rowToEC(res[0]):l));},[leads]);
+
+  const onDrop=useCallback((e,stage)=>{
+    e.preventDefault();setDragOver(null);if(dragId==null)return;
+    const lead=leads.find(l=>l.id===dragId);if(!lead||lead.stage===stage){setDragId(null);return;}
+    if(stage==="Connected")setConnectedPending(lead);
+    else if(stage==="Follow Up")setFuPending(lead);
+    else if(stage==="Lost")setLostPending(lead);
+    else if(stage==="Appointment Booked")setApptPending(lead);
+    else if(stage==="Won")setWonPending(lead);
+    else updateLead(dragId,{stage});
+    setDragId(null);
+  },[dragId,leads,updateLead]);
+
+  async function saveLead(form){setSaving(true);const row=ecToRow(form);if(form.id){const res=await sbUpdate("email_campaign",form.id,row);if(Array.isArray(res)&&res[0])setLeads(p=>p.map(l=>l.id===form.id?rowToEC(res[0]):l));}else{const res=await sbInsert("email_campaign",row);if(Array.isArray(res)&&res[0])setLeads(p=>[...p,rowToEC(res[0])]);} setSaving(false);setModal(null);setAddModal(null);}
+  async function deleteLead(id){await sbDelete("email_campaign",id);setLeads(p=>p.filter(l=>l.id!==id));setModal(null);}
+  async function importLeads(rows){const inserted=await Promise.all(rows.map(r=>sbInsert("email_campaign",ecToRow(r))));inserted.forEach(res=>{if(Array.isArray(res)&&res[0])setLeads(p=>[...p,rowToEC(res[0])]);});setUploadModal(null);}
+
+  function saveConnected(date,emailAccount){
+    if(!connectedPending)return;
+    updateLead(connectedPending.id,{stage:"Connected",emailAccount,connectedDate:date});
+    setConnectedPending(null);
+  }
+  function saveFU(date,time,notes){if(!fuPending)return;const lead=fuPending;const nh=[...(lead.followUpHistory||[]),{date:lead.followUp?.date||date,time:lead.followUp?.time||"",notes:lead.followUp?.notes||"",attempt:(lead.followUpHistory||[]).length+1}];updateLead(lead.id,{stage:"Follow Up",followUp:{date,time,notes},followUpHistory:nh});setFuPending(null);}
+  function saveLost(date,reason){if(!lostPending)return;updateLead(lostPending.id,{stage:"Lost",lost:{date,reason}});setLostPending(null);}
+  function saveAppt(date,time,notes){if(!apptPending)return;const lead=apptPending;const nh=[...(lead.appointmentHistory||[]),{date:lead.appointment?.date||date,time:lead.appointment?.time||"",notes:lead.appointment?.notes||"",attempt:(lead.appointmentHistory||[]).length+1}];updateLead(lead.id,{stage:"Appointment Booked",appointment:{date,time,notes},appointmentHistory:nh});setApptPending(null);}
+
+  async function saveWon(date,amount){
+    if(!wonPending)return;
+    updateLead(wonPending.id,{stage:"Won",deal:{date,amount:parseFloat(amount)||0}});
+    await sbInsert("hot_pipeline",hpToRow({
+      firstName:wonPending.firstName,lastName:wonPending.lastName,
+      linkedinUrl:"",website:wonPending.website||"",industry:wonPending.industry||"",
+      email:wonPending.email||"",accountName:wonPending.emailAccount||wonPending.companyName||"",
+      source:"Email",stage:"Email",
+      saleValue:parseFloat(amount)||0,tags:[],followUp:null,deal:null,followUpHistory:[]
+    }));
+    setWonPending(null);
+  }
+
+  if(loading)return <Spinner text="Loading Email Campaign..."/>;
+
+  return (
+    <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+      <div style={{background:"rgba(6,14,28,0.6)",backdropFilter:"blur(16px)",borderBottom:"1px solid rgba(255,255,255,0.07)",padding:"0 20px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{display:"flex",gap:0,overflowX:"auto"}}>
+          {["All",...EC_STAGES].map(s=>(
+            <button key={s} onClick={()=>setStageTab(s)} style={{background:"none",color:stageTab===s?"#04bee7":"rgba(174,220,255,0.5)",border:"none",borderBottom:stageTab===s?"2px solid #23a1dd":"2px solid transparent",padding:"12px 10px",cursor:"pointer",fontWeight:stageTab===s?600:500,fontSize:12,transition:"all .15s",marginBottom:-1,display:"flex",alignItems:"center",gap:4,whiteSpace:"nowrap"}}>
+              {s}<span style={{background:stageTab===s?"rgba(35,161,221,0.15)":"rgba(255,255,255,0.06)",color:stageTab===s?"#23a1dd":"rgba(174,220,255,0.38)",borderRadius:20,padding:"1px 6px",fontSize:10,fontWeight:600}}>{stageCounts[s]||0}</span>
+            </button>
+          ))}
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0,paddingLeft:10}}>
+          <button style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:8,width:32,height:32,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,position:"relative"}}>🔔{reminderCount>0&&<span style={{position:"absolute",top:-3,right:-3,background:"#ef4444",color:"#fff",borderRadius:"50%",width:15,height:15,fontSize:8,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}}>{reminderCount}</span>}</button>
+        </div>
+      </div>
+      <div style={{background:"rgba(255,255,255,0.05)",borderBottom:"1px solid rgba(255,255,255,0.07)",padding:"10px 20px",display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+        {[{label:"Total Leads",val:stats.total,c:"#04bee7"},{label:"Connected",val:stats.connected,c:"#01d9dd"},{label:"Follow Up",val:stageCounts["Follow Up"]||0,c:"#a855f7"},{label:"Appointment",val:stageCounts["Appointment Booked"]||0,c:"#10b981"},{label:"Won",val:stats.won,c:"#36f2af"},{label:"DND",val:stats.dnd,c:"#94a3b8"}].map(s=>(
+          <div key={s.label} style={{background:"rgba(255,255,255,0.04)",backdropFilter:"blur(10px)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"8px 14px",display:"flex",flexDirection:"column",gap:2,minWidth:100,boxShadow:"0 4px 16px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.05)"}}>
+            <div style={{fontWeight:700,fontSize:15,color:s.c}}>{s.val}</div>
+            <div style={{fontSize:10,color:"rgba(174,220,255,0.38)",fontWeight:500}}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{background:"rgba(255,255,255,0.05)",borderBottom:"1px solid rgba(255,255,255,0.07)",padding:"0 20px",display:"flex",gap:0}}>
+        {["Kanban","Contacts","Calendar","Analytics"].map(t=><button key={t} onClick={()=>setTab(t)} style={{background:"none",color:tab===t?"#04bee7":"rgba(174,220,255,0.5)",border:"none",borderBottom:tab===t?"2px solid #23a1dd":"2px solid transparent",padding:"10px 14px",cursor:"pointer",fontWeight:tab===t?600:500,fontSize:13,transition:"all .15s",marginBottom:-1}}>{t}</button>)}
+      </div>
+      <div style={{flex:1,overflow:"auto",padding:tab==="Kanban"?"12px 16px":"16px 20px",background:"rgba(174,251,102,0.025)"}}>
+        {tab==="Kanban"&&(
+          <div style={{display:"flex",gap:10,alignItems:"flex-start",height:"100%"}}>
+            {EC_STAGES.map(stage=>(
+              <ECKanbanCol key={stage} stage={stage} leads={byStage[stage]||[]} onDragStart={onDragStart} onDrop={onDrop} onDragOver={onDragOver} onDragLeave={onDragLeave} onClick={lead=>setModal(lead)} isDragOver={dragOver===stage} today={today} isSource={EC_SOURCE_STAGES.includes(stage)} onAdd={()=>setAddModal({stage})} onImport={()=>setUploadModal({stage})} onExport={()=>{const h=["firstName","lastName","companyName","email","industry","emailAccount","stage"];const rows=filtered.filter(l=>l.stage===stage).map(l=>[l.firstName,l.lastName,l.companyName,l.email,l.industry,l.emailAccount,l.stage].map(v=>`"${v||""}"`).join(","));const csv=[h.join(","),...rows].join("\n");const b=new Blob([csv],{type:"text/csv"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=`email_campaign_${stage}.csv`;a.click();URL.revokeObjectURL(u);}}/>
+            ))}
+          </div>
+        )}
+        {tab==="Contacts"&&(
+          <div>
+            <div style={{marginBottom:14,display:"flex",alignItems:"center",gap:10}}>
+              <span style={{color:"rgba(174,220,255,0.55)",fontSize:12}}>{leads.length} contacts</span>
+            </div>
+            <div style={{overflowX:"auto",borderRadius:12,border:"1px solid rgba(255,255,255,0.09)",background:"rgba(6,14,28,0.5)",backdropFilter:"blur(12px)"}}>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+                <thead style={{background:"rgba(255,255,255,0.04)"}}><tr>{["First","Last","Company","Email","Industry","Account Name","Stage","Follow-Up","Appointment","Deal","Actions"].map(h=><th key={h} style={{padding:"9px 12px",textAlign:"left",color:"rgba(174,220,255,0.38)",fontWeight:600,fontSize:11,borderBottom:"1px solid rgba(255,255,255,0.07)",whiteSpace:"nowrap",textTransform:"uppercase",letterSpacing:"0.05em"}}>{h}</th>)}</tr></thead>
+                <tbody>{leads.map(l=>(
+                  <tr key={l.id} style={{borderBottom:"1px solid rgba(255,255,255,0.05)"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(35,161,221,0.06)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                    <td style={{padding:"9px 12px",color:"#daeeff",fontWeight:600}}>{l.firstName}</td>
+                    <td style={{padding:"9px 12px",color:"#daeeff"}}>{l.lastName}</td>
+                    <td style={{padding:"9px 12px",color:"rgba(174,220,255,0.55)"}}>{l.companyName||"—"}</td>
+                    <td style={{padding:"9px 12px",color:"rgba(174,220,255,0.55)",fontSize:12}}>{l.email||"—"}</td>
+                    <td style={{padding:"9px 12px",color:"rgba(174,220,255,0.55)"}}>{l.industry||"—"}</td>
+                    <td style={{padding:"9px 12px"}}>{l.emailAccount?<span style={{background:"rgba(4,190,231,0.1)",color:"#04bee7",borderRadius:20,padding:"1px 8px",fontSize:11,fontWeight:600}}>📧 {l.emailAccount}</span>:"—"}</td>
+                    <td style={{padding:"9px 12px"}}><span style={{background:(EC_COLORS[l.stage]||"#23a1dd")+"18",color:EC_COLORS[l.stage]||"#23a1dd",borderRadius:20,padding:"2px 9px",fontSize:11,fontWeight:600}}>{l.stage}</span></td>
+                    <td style={{padding:"9px 12px",color:"#a855f7",fontSize:12}}>{l.followUp?.date?(l.followUp.date+(l.followUp.time?` ${l.followUp.time}`:"")):"—"}</td>
+                    <td style={{padding:"9px 12px",color:"#10b981",fontSize:12}}>{l.appointment?.date?(l.appointment.date+(l.appointment.time?` ${l.appointment.time}`:"")):"—"}</td>
+                    <td style={{padding:"9px 12px",color:"#36f2af",fontSize:12,fontWeight:600}}>{l.deal?.amount?"$"+Number(l.deal.amount).toLocaleString():"—"}</td>
+                    <td style={{padding:"9px 12px"}}><div style={{display:"flex",gap:5}}><button onClick={()=>setModal(l)} style={{background:"rgba(255,255,255,0.04)",color:"rgba(174,220,255,0.55)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:5,padding:"3px 8px",cursor:"pointer",fontSize:11}}>✏</button><button onClick={()=>deleteLead(l.id)} style={{background:"rgba(239,68,68,0.1)",color:"#ef4444",border:"none",borderRadius:5,padding:"3px 8px",cursor:"pointer",fontSize:11}}>🗑</button></div></td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            </div>
+          </div>
+        )}
+        {tab==="Calendar"&&(
+          <div>
+            {(overdueFU.length>0||todayFU.length>0)&&<div style={{background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.25)",borderRadius:12,padding:"12px 16px",marginBottom:18}}>
+              <div style={{fontWeight:700,color:"#f59e0b",marginBottom:8}}>✉️ Follow-Up Reminders ({overdueFU.length+todayFU.length})</div>
+              {[...overdueFU,...todayFU].map(l=><div key={l.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderTop:"1px solid rgba(245,158,11,0.2)"}}>
+                <span style={{color:"#daeeff",fontWeight:600,fontSize:13}}>{l.firstName} {l.lastName}{l.companyName&&<span style={{color:"rgba(174,220,255,0.55)",fontWeight:400}}> · {l.companyName}</span>}<span style={{color:"rgba(174,220,255,0.55)",fontSize:12}}> · {l.followUp?.date}</span></span>
+                <div style={{display:"flex",gap:6}}>{l.followUp?.date<today?<span style={{background:"rgba(239,68,68,0.1)",color:"#ef4444",borderRadius:20,padding:"1px 8px",fontSize:10,fontWeight:700}}>OVERDUE</span>:<span style={{background:"rgba(245,158,11,0.08)",color:"#f59e0b",borderRadius:20,padding:"1px 8px",fontSize:10,fontWeight:700}}>TODAY</span>}<button onClick={()=>setReviewPending({lead:l,type:"followup"})} style={{background:"rgba(35,161,221,0.1)",color:"#23a1dd",border:"none",borderRadius:8,padding:"3px 10px",cursor:"pointer",fontSize:11,fontWeight:600}}>Review →</button></div>
+              </div>)}
+            </div>}
+            {(overdueAppt.length>0||todayAppt.length>0)&&<div style={{background:"rgba(54,242,175,0.08)",border:"1px solid rgba(54,242,175,0.2)",borderRadius:12,padding:"12px 16px",marginBottom:18}}>
+              <div style={{fontWeight:700,color:"#36f2af",marginBottom:8}}>📅 Appointment Reminders ({overdueAppt.length+todayAppt.length})</div>
+              {[...overdueAppt,...todayAppt].map(l=><div key={l.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderTop:"1px solid rgba(54,242,175,0.15)"}}>
+                <span style={{color:"#daeeff",fontWeight:600,fontSize:13}}>{l.firstName} {l.lastName}{l.companyName&&<span style={{color:"rgba(174,220,255,0.55)",fontWeight:400}}> · {l.companyName}</span>}<span style={{color:"rgba(174,220,255,0.55)",fontSize:12}}> · {l.appointment?.date}{l.appointment?.time&&` at ${l.appointment.time}`}</span></span>
+                <div style={{display:"flex",gap:6}}>{l.appointment?.date<today?<span style={{background:"rgba(239,68,68,0.1)",color:"#ef4444",borderRadius:20,padding:"1px 8px",fontSize:10,fontWeight:700}}>OVERDUE</span>:<span style={{background:"rgba(54,242,175,0.08)",color:"#36f2af",borderRadius:20,padding:"1px 8px",fontSize:10,fontWeight:700}}>TODAY</span>}<button onClick={()=>setReviewPending({lead:l,type:"appointment"})} style={{background:"rgba(54,242,175,0.08)",color:"#36f2af",border:"none",borderRadius:8,padding:"3px 10px",cursor:"pointer",fontSize:11,fontWeight:600}}>Review →</button></div>
+              </div>)}
+            </div>}
+            {upcomingFU.length>0&&<div style={{background:"rgba(35,161,221,0.08)",border:"1px solid rgba(35,161,221,0.2)",borderRadius:12,padding:"12px 16px",marginBottom:18}}>
+              <div style={{fontWeight:700,color:"#23a1dd",marginBottom:8}}>✉️ Upcoming Follow-Ups — next 7 days</div>
+              {upcomingFU.map(l=><div key={l.id} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderTop:"1px solid rgba(35,161,221,0.15)"}}><span style={{color:"#daeeff",fontWeight:600}}>{l.firstName} {l.lastName}<span style={{color:"rgba(174,220,255,0.55)",fontSize:12}}> · {l.followUp?.date}</span></span><span style={{background:"rgba(35,161,221,0.1)",color:"#23a1dd",borderRadius:20,padding:"1px 8px",fontSize:10,fontWeight:700}}>UPCOMING</span></div>)}
+            </div>}
+            {upcomingAppt.length>0&&<div style={{background:"rgba(54,242,175,0.07)",border:"1px solid rgba(54,242,175,0.2)",borderRadius:12,padding:"12px 16px",marginBottom:18}}>
+              <div style={{fontWeight:700,color:"#059669",marginBottom:8}}>📅 Upcoming Appointments — next 7 days</div>
+              {upcomingAppt.map(l=><div key={l.id} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderTop:"1px solid rgba(54,242,175,0.15)"}}><span style={{color:"#daeeff",fontWeight:600}}>{l.firstName} {l.lastName}<span style={{color:"rgba(174,220,255,0.55)",fontSize:12}}> · {l.appointment?.date}{l.appointment?.time&&` at ${l.appointment.time}`}</span></span><span style={{background:"rgba(54,242,175,0.07)",color:"#059669",borderRadius:20,padding:"1px 8px",fontSize:10,fontWeight:700}}>UPCOMING</span></div>)}
+            </div>}
+            {reminderCount===0&&upcomingFU.length===0&&upcomingAppt.length===0&&<div style={{color:"rgba(174,220,255,0.38)",fontSize:13,textAlign:"center",padding:40}}>No upcoming follow-ups or appointments.</div>}
+          </div>
+        )}
+        {tab==="Analytics"&&(
+          <div style={{display:"grid",gap:16}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:12}}>
+              {[{label:"Total",val:stats.total,c:"#04bee7"},{label:"Connected",val:stats.connected,c:"#01d9dd"},{label:"Won",val:stats.won,c:"#36f2af"},{label:"Lost",val:stats.lost,c:"#ef4444"},{label:"DND",val:stats.dnd,c:"#94a3b8"},{label:"Win Rate",val:stats.total?Math.round(stats.won/stats.total*100)+"%":"0%",c:"#a855f7"},{label:"Revenue",val:"$"+stats.revenue.toLocaleString(undefined,{maximumFractionDigits:0}),c:"#f59e0b"}].map(k=><div key={k.label} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,padding:"14px 16px",boxShadow:"0 4px 20px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05)"}}><div style={{fontWeight:700,fontSize:22,color:k.c}}>{k.val}</div><div style={{fontSize:12,color:"rgba(174,220,255,0.55)",marginTop:2}}>{k.label}</div></div>)}
+            </div>
+            <div style={{background:"rgba(6,14,28,0.6)",backdropFilter:"blur(16px)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:20}}>
+              <div style={{fontWeight:700,color:"#daeeff",marginBottom:16,fontSize:14}}>Pipeline by Stage</div>
+              {EC_STAGES.map(s=>{const count=leads.filter(l=>l.stage===s).length;const max=Math.max(...EC_STAGES.map(st=>leads.filter(l=>l.stage===st).length),1);return(<div key={s} style={{marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4}}><span style={{color:EC_COLORS[s],fontWeight:600}}>{s}</span><span style={{color:"rgba(174,220,255,0.38)"}}>{count}</span></div><div style={{background:"rgba(255,255,255,0.03)",borderRadius:6,height:8,overflow:"hidden"}}><div style={{width:`${(count/max)*100}%`,background:EC_COLORS[s],height:"100%",borderRadius:6}}/></div></div>);})}
+            </div>
+          </div>
+        )}
+      </div>
+      {addModal&&<ECAddModal stage={addModal.stage} onClose={()=>setAddModal(null)} onSave={saveLead}/>}
+      {modal&&typeof modal==="object"&&<ECEditModal lead={modal} onClose={()=>setModal(null)} onSave={saveLead} onDelete={deleteLead} saving={saving}/>}
+      {uploadModal&&<ECUploadModal stage={uploadModal.stage} onClose={()=>setUploadModal(null)} onImport={rows=>importLeads(rows)}/>}
+      {connectedPending&&<ECConnectedModal lead={connectedPending} onClose={()=>setConnectedPending(null)} onSave={saveConnected}/>}
+      {fuPending&&<ECFollowUpModal lead={fuPending} onClose={()=>setFuPending(null)} onSave={saveFU}/>}
+      {lostPending&&<ECLostModal lead={lostPending} onClose={()=>setLostPending(null)} onSave={saveLost}/>}
+      {apptPending&&<ECAppointmentModal lead={apptPending} onClose={()=>setApptPending(null)} onSave={saveAppt}/>}
+      {wonPending&&<ECWonModal lead={wonPending} onClose={()=>setWonPending(null)} onSave={saveWon}/>}
+      {reviewPending&&(
+        reviewPending.type==="followup"?(
+          <Modal title={`✉️ Follow-Up Review — ${reviewPending.lead.firstName} ${reviewPending.lead.lastName}`} onClose={()=>setReviewPending(null)}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:16}}>
+              {[{emoji:"📧",label:"Follow Up Again",action:()=>{setFuPending(reviewPending.lead);setReviewPending(null);}},{emoji:"🚫",label:"DND",action:()=>{updateLead(reviewPending.lead.id,{stage:"DND"});setReviewPending(null);}},{emoji:"❌",label:"Lost",action:()=>{setLostPending(reviewPending.lead);setReviewPending(null);}}].map(o=>(
+                <button key={o.label} onClick={o.action} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"12px 8px",cursor:"pointer",textAlign:"center"}}>
+                  <div style={{fontSize:20,marginBottom:4}}>{o.emoji}</div>
+                  <div style={{fontSize:11,color:"rgba(174,220,255,0.55)",fontWeight:600}}>{o.label}</div>
+                </button>
+              ))}
+            </div>
+            <div style={{display:"flex",justifyContent:"flex-end"}}><Btn variant="ghost" onClick={()=>setReviewPending(null)}>Later</Btn></div>
+          </Modal>
+        ):(
+          <Modal title={`📅 Appointment Review — ${reviewPending.lead.firstName} ${reviewPending.lead.lastName}`} onClose={()=>setReviewPending(null)}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:16}}>
+              {[{emoji:"🏆",label:"Won",action:()=>{setWonPending(reviewPending.lead);setReviewPending(null);}},{emoji:"🔁",label:"Reschedule",action:()=>{setApptPending(reviewPending.lead);setReviewPending(null);}},{emoji:"❌",label:"No Show / Lost",action:()=>{setLostPending(reviewPending.lead);setReviewPending(null);}}].map(o=>(
+                <button key={o.label} onClick={o.action} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"12px 8px",cursor:"pointer",textAlign:"center"}}>
+                  <div style={{fontSize:20,marginBottom:4}}>{o.emoji}</div>
+                  <div style={{fontSize:11,color:"rgba(174,220,255,0.55)",fontWeight:600}}>{o.label}</div>
+                </button>
+              ))}
+            </div>
+            <div style={{display:"flex",justifyContent:"flex-end"}}><Btn variant="ghost" onClick={()=>setReviewPending(null)}>Later</Btn></div>
+          </Modal>
+        )
+      )}
+    </div>
+  );
+}
+
 function ComingSoonView({label}){
   return (
     <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14,color:"rgba(174,220,255,0.38)",padding:60}}>
@@ -2645,12 +3103,12 @@ function App(){
 
   const NAV=[
     {section:"OVERVIEW",items:[{key:"dashboard",label:"Dashboard",soon:true},{key:"allcontacts",label:"All Contacts"}]},
-    {section:"PIPELINE",items:[{key:"pipeline",label:"Hot Pipeline"},{key:"contacts",label:"LinkedIn Pipeline"},{key:"freelance",label:"Freelance Pipeline"},{key:"clients",label:"Active Clients"},{key:"coldcalling",label:"Cold Calling"}]},
+    {section:"PIPELINE",items:[{key:"pipeline",label:"Hot Pipeline"},{key:"contacts",label:"LinkedIn Pipeline"},{key:"freelance",label:"Freelance Pipeline"},{key:"clients",label:"Active Clients"},{key:"coldcalling",label:"Cold Calling"},{key:"emailcampaign",label:"Email Campaign"}]},
     {section:"DELIVERY",items:[{key:"projects",label:"Projects",soon:true},{key:"tasks",label:"Tasks",soon:true}]},
     {section:"REVENUE",items:[{key:"proposals",label:"Proposals",soon:true},{key:"invoices",label:"Invoices",soon:true}]},
     {section:"DATA",items:[{key:"import",label:"Import",soon:true},{key:"settings",label:"Settings"}]},
   ];
-  const titles={dashboard:"Dashboard",allcontacts:"All Contacts",pipeline:"Hot Pipeline",contacts:"LinkedIn Pipeline",freelance:"Freelance Pipeline",deals:"Deals",clients:"Active Clients",coldcalling:"Cold Calling",projects:"Projects",tasks:"Tasks",proposals:"Proposals",invoices:"Invoices",import:"Import",settings:"Settings"};
+  const titles={dashboard:"Dashboard",allcontacts:"All Contacts",pipeline:"Hot Pipeline",contacts:"LinkedIn Pipeline",freelance:"Freelance Pipeline",deals:"Deals",clients:"Active Clients",coldcalling:"Cold Calling",emailcampaign:"Email Campaign",projects:"Projects",tasks:"Tasks",proposals:"Proposals",invoices:"Invoices",import:"Import",settings:"Settings"};
 
   return (
     <div style={{display:"flex",height:"100vh",overflow:"hidden"}}>
@@ -2710,7 +3168,7 @@ function App(){
         </div>
         {/* Content */}
         <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-          {gate==="pipeline"?<HotPipelineGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="contacts"?<LinkedInGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="freelance"?<FreelancePipelineGate search={search} onRevenue={setPipelineRevenue}/>:gate==="clients"?<ActiveClientsGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="allcontacts"?<AllContactsView search={search} setSearch={setSearch}/>:gate==="coldcalling"?<ColdCallingGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:<ComingSoonView label={titles[gate]||gate}/>}
+          {gate==="pipeline"?<HotPipelineGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="contacts"?<LinkedInGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="freelance"?<FreelancePipelineGate search={search} onRevenue={setPipelineRevenue}/>:gate==="clients"?<ActiveClientsGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="allcontacts"?<AllContactsView search={search} setSearch={setSearch}/>:gate==="coldcalling"?<ColdCallingGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="emailcampaign"?<EmailCampaignGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:<ComingSoonView label={titles[gate]||gate}/>}
         </div>
       </div>
       {showSettings&&<SettingsModal darkMode={darkMode} onToggleDark={()=>setDarkMode(v=>!v)} onClose={()=>setShowSettings(false)}/>}

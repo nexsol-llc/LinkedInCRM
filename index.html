@@ -112,10 +112,10 @@ async function sbGetWhere(table, col, val) {
 
 // ── LinkedIn CRM mappers ──────────────────────────────────────────────────────
 function rowToLead(r) {
-  return { id:r.id, firstName:r.first_name||"", lastName:r.last_name||"", linkedinUrl:r.linkedin_url||"", website:r.website||"", industry:r.industry||"", affiliateNetwork:r.affiliate_network||"", email:r.email||"", stage:r.stage||"Cold", tags:r.tags||[], followUp:r.follow_up||null, deal:r.deal||null, followUpHistory:r.follow_up_history||[] };
+  return { id:r.id, firstName:r.first_name||"", lastName:r.last_name||"", linkedinUrl:r.linkedin_url||"", website:r.website||"", industry:r.industry||"", affiliateNetwork:r.affiliate_network||"", email:r.email||"", companyName:r.company_name||"", phoneNumber:r.phone_number||"", trendingProduct:r.trending_product||"", stage:r.stage||"Cold", tags:r.tags||[], followUp:r.follow_up||null, deal:r.deal||null, followUpHistory:r.follow_up_history||[] };
 }
 function leadToRow(l) {
-  return { first_name:l.firstName||"", last_name:l.lastName||"", linkedin_url:l.linkedinUrl||"", website:l.website||"", industry:l.industry||"", affiliate_network:l.affiliateNetwork||"", email:l.email||"", stage:l.stage||"Cold", tags:l.tags||[], follow_up:l.followUp||null, deal:l.deal||null, follow_up_history:l.followUpHistory||[] };
+  return { first_name:l.firstName||"", last_name:l.lastName||"", linkedin_url:l.linkedinUrl||"", website:l.website||"", industry:l.industry||"", affiliate_network:l.affiliateNetwork||"", email:l.email||"", company_name:l.companyName||"", phone_number:l.phoneNumber||"", trending_product:l.trendingProduct||"", stage:l.stage||"Cold", tags:l.tags||[], follow_up:l.followUp||null, deal:l.deal||null, follow_up_history:l.followUpHistory||[] };
 }
 
 // ── Hot Pipeline mappers ──────────────────────────────────────────────────────
@@ -136,12 +136,12 @@ function rowToFP(r){ return {id:r.id,firstName:r.first_name||"",lastName:r.last_
 function fpToRow(c){ return {first_name:c.firstName||"",last_name:c.lastName||"",company_name:c.companyName||"",email:c.email||"",website:c.website||"",phone:c.phone||"",linkedin_url:c.linkedinUrl||"",client_freelance_name:c.clientFreelanceName||"",job_link:c.jobLink||"",project_type:c.projectType||"",client_budget:c.clientBudget||"",freelance_account_name:c.freelanceAccountName||"",remarks:c.remarks||"",stage:c.stage||"Fiverr",source:c.source||"",tags:c.tags||[],follow_up:c.followUp||null,deal:c.deal||null,follow_up_history:c.followUpHistory||[]}; }
 
 // ── Cold Calling mappers ──────────────────────────────────────────────────────
-function rowToCC(r){ return {id:r.id,firstName:r.first_name||"",lastName:r.last_name||"",companyName:r.company_name||"",website:r.website||"",industry:r.industry||"",region:r.region||"",phoneNumber:r.phone_number||"",email:r.email||"",affiliateNetwork:r.affiliate_network||"",source:r.source||"",stage:r.stage||"Awin Leads",callStatus:r.call_status||"",callStatusNote:r.call_status_note||"",followUp:r.follow_up||null,followUpHistory:r.follow_up_history||[],appointment:r.appointment||null,appointmentHistory:r.appointment_history||[],lost:r.lost||null,deal:r.deal||null,createdAt:r.created_at||null}; }
-function ccToRow(c){ return {first_name:c.firstName||"",last_name:c.lastName||"",company_name:c.companyName||"",website:c.website||"",industry:c.industry||"",region:c.region||"",phone_number:c.phoneNumber||"",email:c.email||"",affiliate_network:c.affiliateNetwork||"",source:c.source||"",stage:c.stage||"Awin Leads",call_status:c.callStatus||"",call_status_note:c.callStatusNote||"",follow_up:c.followUp||null,follow_up_history:c.followUpHistory||[],appointment:c.appointment||null,appointment_history:c.appointmentHistory||[],lost:c.lost||null,deal:c.deal||null}; }
+function rowToCC(r){ return {id:r.id,firstName:r.first_name||"",lastName:r.last_name||"",companyName:r.company_name||"",website:r.website||"",industry:r.industry||"",region:r.region||"",phoneNumber:r.phone_number||"",email:r.email||"",linkedinUrl:r.linkedin_url||"",trendingProduct:r.trending_product||"",affiliateNetwork:r.affiliate_network||"",source:r.source||"",stage:r.stage||"Awin Leads",callStatus:r.call_status||"",callStatusNote:r.call_status_note||"",followUp:r.follow_up||null,followUpHistory:r.follow_up_history||[],appointment:r.appointment||null,appointmentHistory:r.appointment_history||[],lost:r.lost||null,deal:r.deal||null,createdAt:r.created_at||null}; }
+function ccToRow(c){ return {first_name:c.firstName||"",last_name:c.lastName||"",company_name:c.companyName||"",website:c.website||"",industry:c.industry||"",region:c.region||"",phone_number:c.phoneNumber||"",email:c.email||"",linkedin_url:c.linkedinUrl||"",trending_product:c.trendingProduct||"",affiliate_network:c.affiliateNetwork||"",source:c.source||"",stage:c.stage||"Awin Leads",call_status:c.callStatus||"",call_status_note:c.callStatusNote||"",follow_up:c.followUp||null,follow_up_history:c.followUpHistory||[],appointment:c.appointment||null,appointment_history:c.appointmentHistory||[],lost:c.lost||null,deal:c.deal||null}; }
 
 // ── Email Campaign mappers ────────────────────────────────────────────────────
-function rowToEC(r){ return {id:r.id,firstName:r.first_name||"",lastName:r.last_name||"",companyName:r.company_name||"",website:r.website||"",industry:r.industry||"",email:r.email||"",phone:r.phone||"",affiliateNetwork:r.affiliate_network||"",emailAccount:r.email_account||"",source:r.source||"",connectedDate:r.connected_date||null,stage:r.stage||"Awin Leads",followUp:r.follow_up||null,followUpHistory:r.follow_up_history||[],appointment:r.appointment||null,appointmentHistory:r.appointment_history||[],lost:r.lost||null,deal:r.deal||null,createdAt:r.created_at||null}; }
-function ecToRow(c){ return {first_name:c.firstName||"",last_name:c.lastName||"",company_name:c.companyName||"",website:c.website||"",industry:c.industry||"",email:c.email||"",phone:c.phone||"",affiliate_network:c.affiliateNetwork||"",email_account:c.emailAccount||"",source:c.source||"",connected_date:c.connectedDate||null,stage:c.stage||"Awin Leads",follow_up:c.followUp||null,follow_up_history:c.followUpHistory||[],appointment:c.appointment||null,appointment_history:c.appointmentHistory||[],lost:c.lost||null,deal:c.deal||null}; }
+function rowToEC(r){ return {id:r.id,firstName:r.first_name||"",lastName:r.last_name||"",companyName:r.company_name||"",website:r.website||"",industry:r.industry||"",email:r.email||"",phone:r.phone||"",linkedinUrl:r.linkedin_url||"",trendingProduct:r.trending_product||"",affiliateNetwork:r.affiliate_network||"",emailAccount:r.email_account||"",source:r.source||"",connectedDate:r.connected_date||null,stage:r.stage||"Awin Leads",followUp:r.follow_up||null,followUpHistory:r.follow_up_history||[],appointment:r.appointment||null,appointmentHistory:r.appointment_history||[],lost:r.lost||null,deal:r.deal||null,createdAt:r.created_at||null}; }
+function ecToRow(c){ return {first_name:c.firstName||"",last_name:c.lastName||"",company_name:c.companyName||"",website:c.website||"",industry:c.industry||"",email:c.email||"",phone:c.phone||"",linkedin_url:c.linkedinUrl||"",trending_product:c.trendingProduct||"",affiliate_network:c.affiliateNetwork||"",email_account:c.emailAccount||"",source:c.source||"",connected_date:c.connectedDate||null,stage:c.stage||"Awin Leads",follow_up:c.followUp||null,follow_up_history:c.followUpHistory||[],appointment:c.appointment||null,appointment_history:c.appointmentHistory||[],lost:c.lost||null,deal:c.deal||null}; }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const LI_STAGES = ["Cold","Sales Navigator","Connection Sent","Connected","Follow Up","Won","Lost"];
@@ -177,20 +177,30 @@ function copyText(text, cb) {
   try { const el = document.createElement("textarea"); el.value=text; el.style.cssText="position:absolute;left:-9999px;"; document.body.appendChild(el); el.focus(); el.select(); el.setSelectionRange(0,el.value.length); document.execCommand("copy"); document.body.removeChild(el); if(cb)cb(); } catch(e){}
 }
 function interp(t,l) { return (t||"").replace(/{first_name}/g,l.firstName||"").replace(/{last_name}/g,l.lastName||"").replace(/{company}/g,l.affiliateNetwork||"").replace(/{industry}/g,l.industry||"").replace(/{network}/g,l.affiliateNetwork||""); }
+function parseCSVLine(line){
+  const res=[]; let cur=''; let q=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(q){ if(c==='"'){ if(line[i+1]==='"'){cur+='"';i++;}else{q=false;} }else cur+=c; }
+    else{ if(c==='"'){q=true;}else if(c===','){res.push(cur.trim());cur='';}else cur+=c; }
+  }
+  res.push(cur.trim());
+  return res;
+}
 function parseCSV(text) {
   const lines=text.trim().split("\n").map(l=>l.trim()).filter(Boolean); if(lines.length<2)return[];
-  const hmap={firstname:"firstName",lastname:"lastName",linkedinurl:"linkedinUrl",website:"website",industry:"industry",affiliatenetwork:"affiliateNetwork",email:"email"};
-  const headers=lines[0].split(",").map(h=>h.trim().toLowerCase().replace(/\s+/g,""));
-  return lines.slice(1).map((line,i)=>{ const vals=line.split(",").map(v=>v.trim().replace(/^"|"$/g,"")); const obj={stage:"Cold",tags:[],followUp:null,deal:null,followUpHistory:[]}; headers.forEach((h,idx)=>{if(hmap[h])obj[hmap[h]]=vals[idx]||"";}); return obj; }).filter(r=>r.firstName||r.lastName);
+  const hmap={firstname:"firstName",lastname:"lastName",linkedinurl:"linkedinUrl",personlinkedinurl:"linkedinUrl",companyname:"companyName",website:"website",industry:"industry",phonenumber:"phoneNumber",affiliatenetwork:"affiliateNetwork",email:"email",trendingproduct:"trendingProduct"};
+  const headers=parseCSVLine(lines[0]).map(h=>h.toLowerCase().replace(/\s+/g,"").replace(/[^a-z]/g,""));
+  return lines.slice(1).map((line,i)=>{ const vals=parseCSVLine(line); const obj={stage:"Cold",companyName:"",phoneNumber:"",trendingProduct:"",tags:[],followUp:null,deal:null,followUpHistory:[]}; headers.forEach((h,idx)=>{if(hmap[h])obj[hmap[h]]=vals[idx]||"";}); return obj; }).filter(r=>r.firstName||r.lastName);
 }
 function exportCSV(leads) {
   const h=["firstName","lastName","linkedinUrl","website","industry","affiliateNetwork","email","stage","tags"]; const rows=leads.map(l=>[l.firstName,l.lastName,l.linkedinUrl,l.website,l.industry,l.affiliateNetwork,l.email||"",l.stage,(l.tags||[]).join(";")].map(v=>`"${v||""}"`).join(",")); const csv=[h.join(","),...rows].join("\n"); const b=new Blob([csv],{type:"text/csv"}); const u=URL.createObjectURL(b); const a=document.createElement("a"); a.href=u; a.download="affilinks_contacts.csv"; a.click(); URL.revokeObjectURL(u);
 }
 function parseCCCSV(text,stage){
   const lines=text.trim().split("\n").map(l=>l.trim()).filter(Boolean); if(lines.length<2)return[];
-  const hmap={firstname:"firstName",lastname:"lastName",companyname:"companyName",website:"website",industry:"industry",region:"region",phonenumber:"phoneNumber",email:"email",affiliatenetwork:"affiliateNetwork"};
-  const headers=lines[0].split(",").map(h=>h.trim().toLowerCase().replace(/\s+/g,"").replace(/[^a-z]/g,""));
-  return lines.slice(1).map(line=>{ const vals=line.split(",").map(v=>v.trim().replace(/^"|"$/g,"")); const obj={stage:stage||"Awin Leads",source:stage||"Awin Leads",callStatus:"",callStatusNote:"",followUp:null,followUpHistory:[],appointment:null,appointmentHistory:[],lost:null,deal:null}; headers.forEach((h,idx)=>{if(hmap[h])obj[hmap[h]]=vals[idx]||"";}); return obj; }).filter(r=>r.firstName||r.lastName||r.companyName||r.phoneNumber);
+  const hmap={firstname:"firstName",lastname:"lastName",companyname:"companyName",website:"website",industry:"industry",region:"region",phonenumber:"phoneNumber",email:"email",linkedinurl:"linkedinUrl",personlinkedinurl:"linkedinUrl",affiliatenetwork:"affiliateNetwork",trendingproduct:"trendingProduct"};
+  const headers=parseCSVLine(lines[0]).map(h=>h.toLowerCase().replace(/\s+/g,"").replace(/[^a-z]/g,""));
+  return lines.slice(1).map(line=>{ const vals=parseCSVLine(line); const obj={stage:stage||"Awin Leads",source:stage||"Awin Leads",linkedinUrl:"",trendingProduct:"",callStatus:"",callStatusNote:"",followUp:null,followUpHistory:[],appointment:null,appointmentHistory:[],lost:null,deal:null}; headers.forEach((h,idx)=>{if(hmap[h])obj[hmap[h]]=vals[idx]||"";}); return obj; }).filter(r=>r.firstName||r.lastName||r.companyName||r.phoneNumber);
 }
 function exportCCCSV(leads){
   const h=["firstName","lastName","companyName","website","industry","region","phoneNumber","affiliateNetwork","stage","callStatus"]; const rows=leads.map(l=>[l.firstName,l.lastName,l.companyName,l.website,l.industry,l.region,l.phoneNumber,l.affiliateNetwork,l.stage,l.callStatus].map(v=>`"${v||""}"`).join(",")); const csv=[h.join(","),...rows].join("\n"); const b=new Blob([csv],{type:"text/csv"}); const u=URL.createObjectURL(b); const a=document.createElement("a"); a.href=u; a.download="cold_calling_leads.csv"; a.click(); URL.revokeObjectURL(u);
@@ -198,9 +208,9 @@ function exportCCCSV(leads){
 
 function parseECCSV(text,stage){
   const lines=text.trim().split("\n").map(l=>l.trim()).filter(Boolean); if(lines.length<2)return[];
-  const hmap={firstname:"firstName",lastname:"lastName",companyname:"companyName",website:"website",industry:"industry",email:"email",phone:"phone",affiliatenetwork:"affiliateNetwork"};
-  const headers=lines[0].split(",").map(h=>h.trim().toLowerCase().replace(/\s+/g,"").replace(/[^a-z]/g,""));
-  return lines.slice(1).map(line=>{ const vals=line.split(",").map(v=>v.trim().replace(/^"|"$/g,"")); const obj={stage:stage||"Awin Leads",source:stage||"Awin Leads",phone:"",affiliateNetwork:"",emailAccount:"",connectedDate:null,followUp:null,followUpHistory:[],appointment:null,appointmentHistory:[],lost:null,deal:null}; headers.forEach((h,idx)=>{if(hmap[h])obj[hmap[h]]=vals[idx]||"";}); return obj; }).filter(r=>r.firstName||r.lastName||r.email||r.companyName);
+  const hmap={firstname:"firstName",lastname:"lastName",companyname:"companyName",website:"website",industry:"industry",email:"email",phone:"phone",phonenumber:"phone",linkedinurl:"linkedinUrl",personlinkedinurl:"linkedinUrl",affiliatenetwork:"affiliateNetwork",trendingproduct:"trendingProduct"};
+  const headers=parseCSVLine(lines[0]).map(h=>h.toLowerCase().replace(/\s+/g,"").replace(/[^a-z]/g,""));
+  return lines.slice(1).map(line=>{ const vals=parseCSVLine(line); const obj={stage:stage||"Awin Leads",source:stage||"Awin Leads",phone:"",linkedinUrl:"",trendingProduct:"",affiliateNetwork:"",emailAccount:"",connectedDate:null,followUp:null,followUpHistory:[],appointment:null,appointmentHistory:[],lost:null,deal:null}; headers.forEach((h,idx)=>{if(hmap[h])obj[hmap[h]]=vals[idx]||"";}); return obj; }).filter(r=>r.firstName||r.lastName||r.email||r.companyName);
 }
 
 // ── Base styles ───────────────────────────────────────────────────────────────
@@ -271,6 +281,41 @@ function TagSelector({selected,allTags,onChange}){
         <button onClick={()=>add(input)} style={{background:"#23a1dd",color:"#fff",border:"none",borderRadius:8,padding:"8px 12px",cursor:"pointer",fontWeight:600}}>+</button>
       </div>
       <div style={{display:"flex",flexWrap:"wrap",gap:5,marginTop:6}}>{allTags.filter(t=>!safe.includes(t.name)).map(t=><span key={t.name} onClick={()=>add(t.name)} style={{background:t.color+"22",color:t.color,border:`1px solid ${t.color}44`,borderRadius:20,padding:"1px 9px",fontSize:11,cursor:"pointer"}}>+ {t.name}</span>)}</div>
+    </div>
+  );
+}
+
+// ── Contact Info Bar ─────────────────────────────────────────────────────────
+function ContactInfoBar({data}){
+  const [cp,setCp]=useState(null);
+  function doCopy(val,key){copyText(val,()=>{setCp(key);setTimeout(()=>setCp(null),1500);});}
+  const href=v=>v?(v.startsWith("http")?v:"https://"+v):null;
+  const chip=(children,extra={})=>(
+    <div style={{display:"flex",alignItems:"center",gap:5,borderRadius:7,padding:"5px 10px",fontSize:12,background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",...(extra.style||{})}}>{children}</div>
+  );
+  const lbl=t=><span style={{fontSize:11,color:"rgba(174,220,255,0.45)",fontWeight:600}}>{t}:</span>;
+  const val=v=><span style={{color:"#daeeff"}}>{v}</span>;
+  const cpBtn=(key,v)=><button onClick={()=>doCopy(v,key)} title="Copy" style={{background:cp===key?"rgba(54,242,175,0.18)":"rgba(255,255,255,0.07)",border:"none",borderRadius:5,padding:"2px 8px",cursor:"pointer",fontSize:11,color:cp===key?"#36f2af":"rgba(174,220,255,0.45)",fontWeight:700,marginLeft:2,transition:"all .15s"}}>{cp===key?"✓":"⎘"}</button>;
+  const phone=data.phoneNumber||data.phone||"";
+  return (
+    <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"10px 14px",marginBottom:14}}>
+      <div style={{fontSize:10,fontWeight:700,color:"rgba(174,220,255,0.3)",marginBottom:8,letterSpacing:"1px"}}>CONTACT OVERVIEW</div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+        {data.email&&chip(<>{lbl("Email")}{val(data.email)}{cpBtn("email",data.email)}</>,{style:{background:"rgba(35,161,221,0.08)",border:"1px solid rgba(35,161,221,0.22)"}})}
+        {phone&&chip(<>{lbl("Phone")}{val(phone)}{cpBtn("phone",phone)}</>,{style:{background:"rgba(168,85,247,0.08)",border:"1px solid rgba(168,85,247,0.22)"}})}
+        {data.website&&href(data.website)&&<a href={href(data.website)} target="_blank" rel="noopener noreferrer" style={{display:"flex",alignItems:"center",gap:5,borderRadius:7,padding:"5px 10px",fontSize:12,background:"rgba(4,190,231,0.08)",border:"1px solid rgba(4,190,231,0.25)",color:"#04bee7",textDecoration:"none"}}>🌐{val(data.website)}<span style={{fontSize:10,opacity:.7}}>↗</span></a>}
+        {data.linkedinUrl&&href(data.linkedinUrl)&&<a href={href(data.linkedinUrl)} target="_blank" rel="noopener noreferrer" style={{display:"flex",alignItems:"center",gap:5,borderRadius:7,padding:"5px 10px",fontSize:12,background:"rgba(35,161,221,0.08)",border:"1px solid rgba(35,161,221,0.3)",color:"#23a1dd",textDecoration:"none"}}>🔗{val("LinkedIn")}<span style={{fontSize:10,opacity:.7}}>↗</span></a>}
+        {data.companyName&&chip(<>🏢{lbl("Company")}{val(data.companyName)}</>)}
+        {data.industry&&chip(<>🏭{lbl("Industry")}{val(data.industry)}</>)}
+        {data.affiliateNetwork&&chip(<>🔌{lbl("Network")}{val(data.affiliateNetwork)}</>,{style:{background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.2)"}})}
+        {data.trendingProduct&&chip(<>📈{lbl("Trending")}{val(data.trendingProduct)}</>,{style:{background:"rgba(54,242,175,0.08)",border:"1px solid rgba(54,242,175,0.2)"}})}
+        {data.region&&chip(<>📍{lbl("Region")}{val(data.region)}</>)}
+        {data.accountName&&chip(<>👤{lbl("Account")}{val(data.accountName)}</>)}
+        {data.emailAccount&&chip(<>📧{lbl("Email Acct")}{val(data.emailAccount)}</>)}
+        {data.clientFreelanceName&&chip(<>👤{lbl("Client")}{val(data.clientFreelanceName)}</>,{style:{background:"rgba(168,85,247,0.08)",border:"1px solid rgba(168,85,247,0.2)"}})}
+        {data.projectType&&chip(<>📋{lbl("Project")}{val(data.projectType)}</>)}
+        {data.clientBudget&&chip(<>💰{lbl("Budget")}{val(data.clientBudget)}</>,{style:{background:"rgba(54,242,175,0.08)",border:"1px solid rgba(54,242,175,0.2)"}})}
+      </div>
     </div>
   );
 }
@@ -369,14 +414,16 @@ function LILeadModal({lead,onClose,onSave,onDelete,allTags,templates,saving}){
   const f=(k,v)=>setForm(p=>({...p,[k]:v}));
   return (
     <Modal title={lead.id?"Edit Contact":"Add Contact"} onClose={onClose} wide>
+      <ContactInfoBar data={form}/>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
         <div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 10px"}}><Inp label="First Name *" value={form.firstName||""} onChange={e=>f("firstName",e.target.value)}/><Inp label="Last Name" value={form.lastName||""} onChange={e=>f("lastName",e.target.value)}/></div>
+          <Inp label="Company Name" value={form.companyName||""} onChange={e=>f("companyName",e.target.value)}/>
           <Inp label="LinkedIn URL" value={form.linkedinUrl||""} onChange={e=>f("linkedinUrl",e.target.value)}/>
           <Inp label="Website" value={form.website||""} onChange={e=>f("website",e.target.value)}/>
-          <Inp label="Industry" value={form.industry||""} onChange={e=>f("industry",e.target.value)}/>
-          <Inp label="Affiliate Network" value={form.affiliateNetwork||""} onChange={e=>f("affiliateNetwork",e.target.value)}/>
-          <Inp label="Email" type="email" value={form.email||""} onChange={e=>f("email",e.target.value)}/>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 10px"}}><Inp label="Industry" value={form.industry||""} onChange={e=>f("industry",e.target.value)}/><Inp label="Affiliate Network" value={form.affiliateNetwork||""} onChange={e=>f("affiliateNetwork",e.target.value)}/></div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 10px"}}><Inp label="Email" type="email" value={form.email||""} onChange={e=>f("email",e.target.value)}/><Inp label="Phone Number" value={form.phoneNumber||""} onChange={e=>f("phoneNumber",e.target.value)}/></div>
+          <Inp label="Trending Product" value={form.trendingProduct||""} onChange={e=>f("trendingProduct",e.target.value)}/>
           <Sel label="Stage" value={form.stage||"Cold"} onChange={e=>f("stage",e.target.value)}>{LI_STAGES.map(s=><option key={s}>{s}</option>)}</Sel>
           <TagSelector selected={form.tags||[]} allTags={allTags} onChange={v=>f("tags",v)}/>
           {form.stage==="Follow Up"&&<><Inp label="Follow-Up Date" type="date" value={form.followUp?.date||""} style={{colorScheme:"light"}} onChange={e=>f("followUp",{...form.followUp,date:e.target.value})}/><Tex label="Notes" value={form.followUp?.notes||""} onChange={e=>f("followUp",{...form.followUp,notes:e.target.value})}/></>}
@@ -402,7 +449,7 @@ function LIUploadModal({onClose,onImport,stage="Cold",title="📥 Import Contact
   return (
     <Modal title={title} onClose={onClose} wide>
       {stage==="Sales Navigator"&&<div style={{background:"rgba(1,217,221,0.08)",border:"1px solid rgba(1,217,221,0.25)",borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:13,color:"#01d9dd"}}>Contacts → <strong>Sales Navigator</strong> with <strong>sales-navigator</strong> tag.</div>}
-      <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:12,marginBottom:14}}><div style={{fontSize:12,color:"rgba(174,220,255,0.55)",marginBottom:6,fontWeight:600}}>CSV Headers:</div><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{["firstname","lastname","linkedinurl","website","industry","affiliatenetwork","email"].map(h=><span key={h} style={{background:"rgba(35,161,221,0.12)",color:"#23a1dd",borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:500}}>{h}</span>)}</div></div>
+      <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:12,marginBottom:14}}><div style={{fontSize:12,color:"rgba(174,220,255,0.55)",marginBottom:6,fontWeight:600}}>CSV Headers:</div><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{["First Name","Last Name","Company Name","Email","Phone Number","Industry","Person Linkedin Url","Website","Trending Product","Affiliate Network"].map(h=><span key={h} style={{background:"rgba(35,161,221,0.12)",color:"#23a1dd",borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:500}}>{h}</span>)}</div></div>
       <input ref={fileRef} type="file" accept=".csv" onChange={e=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=ev=>handle(ev.target.result);r.readAsText(f);}}} style={{display:"none"}}/>
       <div onClick={()=>fileRef.current.click()} style={{border:`2px dashed ${color}66`,borderRadius:10,padding:20,textAlign:"center",cursor:"pointer",color:"rgba(174,220,255,0.55)",fontSize:13,marginBottom:12,background:"rgba(255,255,255,0.04)"}}>📂 Click to choose CSV file</div>
       <Tex label="Or paste CSV text" onChange={e=>handle(e.target.value)} style={{fontFamily:"monospace",fontSize:12}}/>
@@ -622,6 +669,10 @@ function HPCard({contact,onDragStart,onClick,color,selectedMonth}){
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:6}}>
         <span style={{background:color+"22",color,border:`1px solid ${color}44`,borderRadius:20,padding:"1px 8px",fontSize:10,fontWeight:700}}>📌 {contact.source}</span>
         {contact.saleValue>0&&<span style={{color:"#36f2af",fontWeight:700,fontSize:12}}>💰 ${Number(contact.saleValue).toLocaleString()}</span>}
+      </div>
+      <div style={{display:"flex",gap:5,marginTop:7}}>
+        {contact.linkedinUrl&&<a href={contact.linkedinUrl.startsWith("http")?contact.linkedinUrl:"https://"+contact.linkedinUrl} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{background:"rgba(35,161,221,0.1)",color:"#23a1dd",borderRadius:5,padding:"2px 7px",fontSize:10,fontWeight:600}}>LinkedIn ↗</a>}
+        {contact.website&&<a href={contact.website.startsWith("http")?contact.website:"https://"+contact.website} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{background:"rgba(255,255,255,0.04)",color:"rgba(174,220,255,0.55)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:5,padding:"2px 7px",fontSize:10,fontWeight:600}}>Web ↗</a>}
       </div>
     </div>
   );
@@ -1048,13 +1099,20 @@ function HotPipelineGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
       {/* Edit Modal */}
       {editModal&&(
         <Modal title={`✏️ Edit — ${editModal.firstName} ${editModal.lastName}`} onClose={()=>setEditModal(null)}>
+          <ContactInfoBar data={editModal}/>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 12px"}}>
             <Inp label="First Name" value={editModal.firstName} onChange={e=>setEditModal(p=>({...p,firstName:e.target.value}))}/>
             <Inp label="Last Name" value={editModal.lastName} onChange={e=>setEditModal(p=>({...p,lastName:e.target.value}))}/>
           </div>
           <Inp label="Account Name" value={editModal.accountName||""} onChange={e=>setEditModal(p=>({...p,accountName:e.target.value}))} placeholder="Company or account name..."/>
-          <Inp label="Email" value={editModal.email} onChange={e=>setEditModal(p=>({...p,email:e.target.value}))}/>
-          <Inp label="Industry" value={editModal.industry} onChange={e=>setEditModal(p=>({...p,industry:e.target.value}))}/>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 12px"}}>
+            <Inp label="Email" value={editModal.email} onChange={e=>setEditModal(p=>({...p,email:e.target.value}))}/>
+            <Inp label="Industry" value={editModal.industry} onChange={e=>setEditModal(p=>({...p,industry:e.target.value}))}/>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 12px"}}>
+            <Inp label="LinkedIn URL" value={editModal.linkedinUrl||""} onChange={e=>setEditModal(p=>({...p,linkedinUrl:e.target.value}))}/>
+            <Inp label="Website" value={editModal.website||""} onChange={e=>setEditModal(p=>({...p,website:e.target.value}))}/>
+          </div>
           <Sel label="Source (Origin — permanent)" value={editModal.source} onChange={e=>setEditModal(p=>({...p,source:e.target.value}))}>
             {HP_SOURCES.map(s=><option key={s}>{s}</option>)}
           </Sel>
@@ -1621,6 +1679,7 @@ function FPEditModal({contact,onClose,onSave,onDelete,saving}){
   const f=(k,v)=>setForm(p=>({...p,[k]:v}));
   return (
     <Modal title={`✏️ Edit — ${contact.firstName} ${contact.lastName}`} onClose={onClose} wide>
+      <ContactInfoBar data={form}/>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
         <div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 10px"}}><Inp label="First Name *" value={form.firstName||""} onChange={e=>f("firstName",e.target.value)}/><Inp label="Last Name" value={form.lastName||""} onChange={e=>f("lastName",e.target.value)}/></div>
@@ -1670,6 +1729,10 @@ function FPCard({contact,onDragStart,onClick,today}){
       {contact.stage==="Connected"&&contact.deal?.connectedDate&&<div style={{fontSize:11,color:"#23a1dd",marginTop:3}}>🔗 {contact.deal.connectedAccount&&<span style={{background:"rgba(35,161,221,0.12)",borderRadius:4,padding:"1px 6px",marginRight:4,fontWeight:600}}>{contact.deal.connectedAccount}</span>}{contact.deal.connectedDate}</div>}
       {contact.followUp?.date&&<div style={{fontSize:11,color:isOverdue?"#ef4444":"#a855f7",marginTop:3}}>📅 {contact.followUp.date}{(contact.followUpHistory||[]).length>0&&<span style={{marginLeft:6,background:"rgba(168,85,247,0.12)",color:"#a855f7",borderRadius:20,padding:"0 6px",fontSize:10}}>#{(contact.followUpHistory||[]).length+1}</span>}</div>}
       {contact.deal?.dealAmount&&<div style={{fontSize:11,color:"#36f2af",marginTop:3,fontWeight:700}}>🏆 ${Number(contact.deal.dealAmount).toLocaleString()}</div>}
+      <div style={{display:"flex",gap:5,marginTop:7}}>
+        {contact.linkedinUrl&&<a href={contact.linkedinUrl.startsWith("http")?contact.linkedinUrl:"https://"+contact.linkedinUrl} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{background:"rgba(35,161,221,0.1)",color:"#23a1dd",borderRadius:5,padding:"2px 7px",fontSize:10,fontWeight:600}}>LinkedIn ↗</a>}
+        {contact.website&&<a href={contact.website.startsWith("http")?contact.website:"https://"+contact.website} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{background:"rgba(255,255,255,0.04)",color:"rgba(174,220,255,0.55)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:5,padding:"2px 7px",fontSize:10,fontWeight:600}}>Web ↗</a>}
+      </div>
     </div>
   );
 }
@@ -2273,7 +2336,10 @@ function CCLeadCard({lead,onDragStart,onClick,today}){
       {lead.stage==="Follow Up"&&lead.followUp?.date&&<div style={{fontSize:11,color:isOverdueFU?"#ef4444":"#a855f7",marginTop:3}}>📅 {lead.followUp.date}{lead.followUp.time&&` at ${lead.followUp.time}`}{(lead.followUpHistory||[]).length>0&&<span style={{marginLeft:6,background:"rgba(168,85,247,0.12)",color:"#a855f7",borderRadius:20,padding:"0 6px",fontSize:10}}>#{(lead.followUpHistory||[]).length+1}</span>}</div>}
       {lead.stage==="Appointment Booked"&&lead.appointment?.date&&<div style={{fontSize:11,color:isOverdueAppt?"#ef4444":"#10b981",marginTop:3}}>📅 Appt: {lead.appointment.date}{lead.appointment.time&&` at ${lead.appointment.time}`}{(lead.appointmentHistory||[]).length>0&&<span style={{marginLeft:6,background:"#d1fae5",color:"#10b981",borderRadius:20,padding:"0 6px",fontSize:10}}>#{(lead.appointmentHistory||[]).length+1}</span>}</div>}
       {lead.deal?.amount&&<div style={{fontSize:11,color:"#36f2af",marginTop:3,fontWeight:600}}>💰 ${Number(lead.deal.amount).toLocaleString()}</div>}
-      {lead.website&&<div style={{marginTop:7}}><a href={lead.website.startsWith("http")?lead.website:"https://"+lead.website} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{background:"rgba(255,255,255,0.04)",color:"rgba(174,220,255,0.55)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:5,padding:"2px 7px",fontSize:10,fontWeight:600}}>Web ↗</a></div>}
+      <div style={{display:"flex",gap:5,marginTop:7}}>
+        {lead.linkedinUrl&&<a href={lead.linkedinUrl.startsWith("http")?lead.linkedinUrl:"https://"+lead.linkedinUrl} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{background:"rgba(35,161,221,0.1)",color:"#23a1dd",borderRadius:5,padding:"2px 7px",fontSize:10,fontWeight:600}}>LinkedIn ↗</a>}
+        {lead.website&&<a href={lead.website.startsWith("http")?lead.website:"https://"+lead.website} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{background:"rgba(255,255,255,0.04)",color:"rgba(174,220,255,0.55)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:5,padding:"2px 7px",fontSize:10,fontWeight:600}}>Web ↗</a>}
+      </div>
     </div>
   );
 }
@@ -2335,21 +2401,26 @@ function CCEditModal({lead,onClose,onSave,onDelete,saving}){
   const f=(k,v)=>setForm(p=>({...p,[k]:v}));
   return (
     <Modal title="Edit Contact" onClose={onClose} wide>
+      <ContactInfoBar data={form}/>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
         <Inp label="First Name" value={form.firstName||""} onChange={e=>f("firstName",e.target.value)}/>
         <Inp label="Last Name" value={form.lastName||""} onChange={e=>f("lastName",e.target.value)}/>
       </div>
       <Inp label="Company Name" value={form.companyName||""} onChange={e=>f("companyName",e.target.value)}/>
-      <Inp label="Website" value={form.website||""} onChange={e=>f("website",e.target.value)}/>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
-        <Inp label="Industry" value={form.industry||""} onChange={e=>f("industry",e.target.value)}/>
-        <Inp label="Region" value={form.region||""} onChange={e=>f("region",e.target.value)}/>
-      </div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
         <Inp label="Phone Number" value={form.phoneNumber||""} onChange={e=>f("phoneNumber",e.target.value)}/>
         <Inp label="Email" type="email" value={form.email||""} onChange={e=>f("email",e.target.value)}/>
       </div>
-      <Inp label="Affiliate Network" value={form.affiliateNetwork||""} onChange={e=>f("affiliateNetwork",e.target.value)}/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
+        <Inp label="Industry" value={form.industry||""} onChange={e=>f("industry",e.target.value)}/>
+        <Inp label="Region" value={form.region||""} onChange={e=>f("region",e.target.value)}/>
+      </div>
+      <Inp label="LinkedIn URL" value={form.linkedinUrl||""} onChange={e=>f("linkedinUrl",e.target.value)}/>
+      <Inp label="Website" value={form.website||""} onChange={e=>f("website",e.target.value)}/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
+        <Inp label="Affiliate Network" value={form.affiliateNetwork||""} onChange={e=>f("affiliateNetwork",e.target.value)}/>
+        <Inp label="Trending Product" value={form.trendingProduct||""} onChange={e=>f("trendingProduct",e.target.value)}/>
+      </div>
       <Sel label="Stage" value={form.stage||"Awin Leads"} onChange={e=>f("stage",e.target.value)}>{CC_STAGES.map(s=><option key={s}>{s}</option>)}</Sel>
       {(form.followUpHistory||[]).length>0&&<div style={{background:"rgba(168,85,247,0.1)",borderRadius:10,padding:"10px 14px",marginBottom:12}}>
         <div style={{fontSize:12,fontWeight:700,color:"#c084fc",marginBottom:6}}>Follow-Up History</div>
@@ -2376,7 +2447,7 @@ function CCUploadModal({stage,onClose,onImport}){
     <Modal title={`📥 Import to ${stage}`} onClose={onClose} wide>
       <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:12,marginBottom:14}}>
         <div style={{fontSize:12,color:"rgba(174,220,255,0.55)",marginBottom:6,fontWeight:600}}>CSV Headers:</div>
-        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{["firstname","lastname","companyname","website","industry","region","phonenumber","affiliatenetwork"].map(h=><span key={h} style={{background:"rgba(35,161,221,0.1)",color:"#23a1dd",borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:500}}>{h}</span>)}</div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{["First Name","Last Name","Company Name","Email","Phone Number","Industry","Person Linkedin Url","Website","Trending Product","Affiliate Network"].map(h=><span key={h} style={{background:"rgba(35,161,221,0.1)",color:"#23a1dd",borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:500}}>{h}</span>)}</div>
       </div>
       <input ref={fileRef} type="file" accept=".csv" onChange={e=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=ev=>handle(ev.target.result);r.readAsText(f);}}} style={{display:"none"}}/>
       <div onClick={()=>fileRef.current.click()} style={{border:`2px dashed ${c}66`,borderRadius:10,padding:20,textAlign:"center",cursor:"pointer",color:"rgba(174,220,255,0.55)",fontSize:13,marginBottom:12,background:"rgba(255,255,255,0.04)"}}>📂 Click to choose CSV file</div>
@@ -2676,7 +2747,6 @@ function ECLeadCard({lead,onDragStart,onClick,today}){
         {isOverdue&&<span style={{background:"#ef444422",color:"#ef4444",border:"1px solid #ef444444",borderRadius:20,padding:"1px 7px",fontSize:9,fontWeight:700}}>OVERDUE</span>}
       </div>
       {lead.companyName&&<div style={{fontSize:11,color:"rgba(174,220,255,0.55)",marginBottom:2}}>🏢 {lead.companyName}</div>}
-      {lead.website&&<div style={{fontSize:11,color:"rgba(174,220,255,0.55)",marginBottom:2}}>🌐 <a href={lead.website.startsWith("http")?lead.website:"https://"+lead.website} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{color:"#23a1dd",textDecoration:"none"}}>{lead.website}</a></div>}
       {lead.email&&<div style={{fontSize:11,color:"rgba(174,220,255,0.55)",marginBottom:2,display:"flex",alignItems:"center",gap:4}}>✉️ <span>{lead.email}</span><button onClick={e=>{e.stopPropagation();copyText(lead.email);}} title="Copy email" style={{background:"none",border:"none",cursor:"pointer",padding:"0 2px",color:"rgba(174,220,255,0.4)",fontSize:10,lineHeight:1}}>⧉</button></div>}
       {lead.phone&&<div style={{fontSize:11,color:"rgba(174,220,255,0.55)",marginBottom:2,display:"flex",alignItems:"center",gap:4}}>📞 <span>{lead.phone}</span><button onClick={e=>{e.stopPropagation();copyText(lead.phone);}} title="Copy phone" style={{background:"none",border:"none",cursor:"pointer",padding:"0 2px",color:"rgba(174,220,255,0.4)",fontSize:10,lineHeight:1}}>⧉</button></div>}
       {lead.industry&&<div style={{fontSize:11,color:"rgba(174,220,255,0.55)",marginBottom:2}}>🏭 {lead.industry}</div>}
@@ -2686,6 +2756,10 @@ function ECLeadCard({lead,onDragStart,onClick,today}){
       {lead.stage==="Follow Up"&&lead.followUp?.date&&<div style={{fontSize:11,color:isOverdueFU?"#ef4444":"#a855f7",marginTop:3}}>📅 {lead.followUp.date}{lead.followUp.time&&` at ${lead.followUp.time}`}{(lead.followUpHistory||[]).length>0&&<span style={{marginLeft:6,background:"rgba(168,85,247,0.12)",color:"#a855f7",borderRadius:20,padding:"0 6px",fontSize:10}}>#{(lead.followUpHistory||[]).length+1}</span>}</div>}
       {lead.stage==="Appointment Booked"&&lead.appointment?.date&&<div style={{fontSize:11,color:isOverdueAppt?"#ef4444":"#10b981",marginTop:3}}>📅 Appt: {lead.appointment.date}{lead.appointment.time&&` at ${lead.appointment.time}`}</div>}
       {lead.deal?.amount&&<div style={{fontSize:11,color:"#36f2af",marginTop:3,fontWeight:600}}>💰 ${Number(lead.deal.amount).toLocaleString()}</div>}
+      <div style={{display:"flex",gap:5,marginTop:7}}>
+        {lead.linkedinUrl&&<a href={lead.linkedinUrl.startsWith("http")?lead.linkedinUrl:"https://"+lead.linkedinUrl} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{background:"rgba(35,161,221,0.1)",color:"#23a1dd",borderRadius:5,padding:"2px 7px",fontSize:10,fontWeight:600}}>LinkedIn ↗</a>}
+        {lead.website&&<a href={lead.website.startsWith("http")?lead.website:"https://"+lead.website} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{background:"rgba(255,255,255,0.04)",color:"rgba(174,220,255,0.55)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:5,padding:"2px 7px",fontSize:10,fontWeight:600}}>Web ↗</a>}
+      </div>
     </div>
   );
 }
@@ -2746,6 +2820,7 @@ function ECEditModal({lead,onClose,onSave,onDelete,saving}){
   const f=(k,v)=>setForm(p=>({...p,[k]:v}));
   return (
     <Modal title="Edit Contact" onClose={onClose} wide>
+      <ContactInfoBar data={form}/>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
         <Inp label="First Name" value={form.firstName||""} onChange={e=>f("firstName",e.target.value)}/>
         <Inp label="Last Name" value={form.lastName||""} onChange={e=>f("lastName",e.target.value)}/>
@@ -2759,8 +2834,12 @@ function ECEditModal({lead,onClose,onSave,onDelete,saving}){
         <Inp label="Industry" value={form.industry||""} onChange={e=>f("industry",e.target.value)}/>
         <Inp label="Affiliate Network" value={form.affiliateNetwork||""} onChange={e=>f("affiliateNetwork",e.target.value)}/>
       </div>
+      <Inp label="LinkedIn URL" value={form.linkedinUrl||""} onChange={e=>f("linkedinUrl",e.target.value)}/>
       <Inp label="Website" value={form.website||""} onChange={e=>f("website",e.target.value)}/>
-      <Inp label="Account Name" value={form.emailAccount||""} onChange={e=>f("emailAccount",e.target.value)} placeholder="e.g. John Smith"/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
+        <Inp label="Trending Product" value={form.trendingProduct||""} onChange={e=>f("trendingProduct",e.target.value)}/>
+        <Inp label="Account Name" value={form.emailAccount||""} onChange={e=>f("emailAccount",e.target.value)} placeholder="e.g. John Smith"/>
+      </div>
       <Sel label="Stage" value={form.stage||"Awin Leads"} onChange={e=>f("stage",e.target.value)}>{EC_STAGES.map(s=><option key={s}>{s}</option>)}</Sel>
       {(form.followUpHistory||[]).length>0&&<div style={{background:"rgba(168,85,247,0.1)",borderRadius:10,padding:"10px 14px",marginBottom:12}}>
         <div style={{fontSize:12,fontWeight:700,color:"#c084fc",marginBottom:6}}>Follow-Up History</div>
@@ -2864,7 +2943,7 @@ function ECUploadModal({stage,onClose,onImport}){
     <Modal title={`📥 Import to ${stage}`} onClose={onClose} wide>
       <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:12,marginBottom:14}}>
         <div style={{fontSize:12,color:"rgba(174,220,255,0.55)",marginBottom:6,fontWeight:600}}>CSV Headers:</div>
-        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{["firstname","lastname","companyname","website","industry","email","phone","affiliatenetwork"].map(h=><span key={h} style={{background:"rgba(35,161,221,0.1)",color:"#23a1dd",borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:500}}>{h}</span>)}</div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{["First Name","Last Name","Company Name","Email","Phone Number","Industry","Person Linkedin Url","Website","Trending Product","Affiliate Network"].map(h=><span key={h} style={{background:"rgba(35,161,221,0.1)",color:"#23a1dd",borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:500}}>{h}</span>)}</div>
       </div>
       <input ref={fileRef} type="file" accept=".csv" onChange={e=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=ev=>handle(ev.target.result);r.readAsText(f);}}} style={{display:"none"}}/>
       <div onClick={()=>fileRef.current.click()} style={{border:`2px dashed ${c}66`,borderRadius:10,padding:20,textAlign:"center",cursor:"pointer",color:"rgba(174,220,255,0.55)",fontSize:13,marginBottom:12,background:"rgba(255,255,255,0.04)"}}>📂 Click to choose CSV file</div>

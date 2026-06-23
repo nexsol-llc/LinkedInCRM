@@ -4343,10 +4343,10 @@ function App(){
   useEffect(()=>{ setSearch(""); setPipelineRevenue(null); },[gate]);
 
   const NAV=[
-    {section:"OVERVIEW",items:[{key:"dashboard",label:"Dashboard",soon:true},{key:"allcontacts",label:"All Contacts"},{key:"pipeline",label:"Hot Pipeline"},{key:"clients",label:"Active Clients"},{key:"clientpayments",label:"Client Payments"}]},
+    {section:"OVERVIEW",items:[{key:"dashboard",label:"Dashboard",soon:true},{key:"allcontacts",label:"All Contacts"},{key:"pipeline",label:"Hot Pipeline"},{key:"clients",label:"Active Clients"}]},
     {section:"PIPELINE",items:[{key:"contacts",label:"LinkedIn Pipeline"},{key:"freelance",label:"Freelance Pipeline"},{key:"coldcalling",label:"Cold Calling"},{key:"emailcampaign",label:"Email Campaign"},{key:"paidleads",label:"Paid Leads"}]},
     {section:"DELIVERY",items:[{key:"projects",label:"Projects",soon:true},{key:"tasks",label:"Tasks",soon:true}]},
-    {section:"REVENUE",items:[{key:"proposals",label:"Proposals",soon:true},{key:"invoices",label:"Invoices",soon:true}]},
+    {section:"REVENUE",items:[{key:"clientpayments",label:"Client Payments"},{key:"proposals",label:"Proposals",soon:true},{key:"invoices",label:"Invoices",soon:true}]},
     {section:"DATA",items:[{key:"import",label:"Import",soon:true},{key:"settings",label:"Settings"}]},
   ];
   const titles={dashboard:"Dashboard",allcontacts:"All Contacts",clientpayments:"Client Payments",pipeline:"Hot Pipeline",contacts:"LinkedIn Pipeline",freelance:"Freelance Pipeline",deals:"Deals",clients:"Active Clients",coldcalling:"Cold Calling",emailcampaign:"Email Campaign",paidleads:"Paid Leads",projects:"Projects",tasks:"Tasks",proposals:"Proposals",invoices:"Invoices",import:"Import",settings:"Settings"};

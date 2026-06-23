@@ -3228,7 +3228,7 @@ function EmailCampaignGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
 // ══════════════════════════════════════════════════════════════════════════════
 
 const CP_PAYMENT_SOURCES=["PayPal","Upwork","Fiverr","Wise","Remitly","Stripe","Payoneer","Other"];
-const CP_ENTRY_STATUS_COLOR={Paid:"#36f2af",Hold:"#fb923c",Decline:"#ef4444",Pending:"#f59e0b"};
+const CP_ENTRY_STATUS_COLOR={Paid:"#36f2af",Hold:"#fb923c",Decline:"#ef4444",Pending:"#f59e0b","Balance Lost":"#94a3b8"};
 
 function CPContractEditModal({record,onClose,onSave,saving}){
   const [form,setForm]=useState({paymentSource:record?.paymentSource||"",paymentCondition:record?.paymentCondition||"Before Service",remarks:record?.remarks||""});
@@ -3271,6 +3271,7 @@ function CPEntryModal({entry,contracts,selectedDate,onClose,onSave,onDelete,savi
         <option value="Paid">Paid</option>
         <option value="Hold">Hold</option>
         <option value="Decline">Decline</option>
+        <option value="Balance Lost">Balance Lost</option>
       </Sel>
       <Inp label="Received in (PKR)" type="number" value={form.receivedPkr} onChange={e=>f("receivedPkr",e.target.value)} placeholder="Enter PKR amount manually…"/>
       <Sel label="Received From" value={form.receivedFrom} onChange={e=>f("receivedFrom",e.target.value)}>
@@ -3483,9 +3484,10 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
     const carriedOverTotal=carriedOverEntries.reduce((s,e)=>s+e.amount,0);
     const totalRevenue=contractsTotal+carriedOverTotal;
     const clientPaid=effectiveEntries.filter(e=>e.status==="Paid").reduce((s,e)=>s+e.amount,0);
-    const pendingBalance=Math.max(0,totalRevenue-clientPaid);
+    const balanceLost=effectiveEntries.filter(e=>e.status==="Balance Lost").reduce((s,e)=>s+e.amount,0);
+    const pendingBalance=Math.max(0,totalRevenue-clientPaid-balanceLost);
     const amountReceivedPkr=effectiveEntries.reduce((s,e)=>s+(e.receivedPkr||0),0);
-    return{totalRevenue,clientPaid,pendingBalance,amountReceivedPkr};
+    return{totalRevenue,clientPaid,pendingBalance,balanceLost,amountReceivedPkr};
   },[mergedContracts,effectiveEntries,carriedOverEntries]);
 
   useEffect(()=>{onRevenue({val:stats.totalRevenue,label:"Total Revenue",color:"#36f2af"});},[stats.totalRevenue]);
@@ -3562,6 +3564,10 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
             <div style={{fontSize:22,fontWeight:800,color:"#f59e0b"}}>${stats.pendingBalance.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
             <div style={{fontSize:10,color:"rgba(245,158,11,0.5)",marginTop:2}}>Click to view breakdown →</div>
           </div>
+          <div style={{background:"rgba(148,163,184,0.08)",border:"1px solid rgba(148,163,184,0.25)",borderRadius:12,padding:"12px 20px",minWidth:155}}>
+            <div style={{fontSize:10,color:"rgba(174,220,255,0.45)",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.09em",marginBottom:4}}>Balance Lost ($)</div>
+            <div style={{fontSize:22,fontWeight:800,color:"#94a3b8"}}>${stats.balanceLost.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+          </div>
           <div style={{background:"linear-gradient(135deg,rgba(168,85,247,0.18),rgba(192,132,252,0.08))",border:"2px solid rgba(168,85,247,0.45)",borderRadius:12,padding:"12px 20px",minWidth:190,boxShadow:"0 0 24px rgba(168,85,247,0.18),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
             <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
               <span style={{fontSize:10,color:"rgba(192,132,252,0.85)",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.09em"}}>Amount Received (PKR)</span>
@@ -3625,7 +3631,8 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
               <tbody>
                 {filteredEntries.length===0&&<tr><td colSpan={8} style={{textAlign:"center",padding:"48px 0",color:"rgba(174,220,255,0.25)",fontSize:14}}>No payment entries for {monthLabel(selectedMonth)}.<br/><span style={{fontSize:12,marginTop:4,display:"block"}}>Schedule payments via the Payment Calendar tab.</span></td></tr>}
                 {filteredEntries.map((e,i)=>(
-                  <tr key={`${e.id}_${e.carriedOver?"co":""}` } style={{borderBottom:"1px solid rgba(255,255,255,0.045)",background:e.carriedOver?"rgba(245,158,11,0.06)":i%2===0?"transparent":"rgba(255,255,255,0.018)",transition:"background .12s"}}
+                  <tr key={`${e.id}_${e.carriedOver?"co":""}` } onClick={()=>setEntryModal({mode:"edit",entry:e})}
+                    style={{borderBottom:"1px solid rgba(255,255,255,0.045)",background:e.carriedOver?"rgba(245,158,11,0.06)":i%2===0?"transparent":"rgba(255,255,255,0.018)",transition:"background .12s",cursor:"pointer"}}
                     onMouseEnter={ev=>ev.currentTarget.style.background=e.carriedOver?"rgba(245,158,11,0.12)":"rgba(35,161,221,0.07)"}
                     onMouseLeave={ev=>ev.currentTarget.style.background=e.carriedOver?"rgba(245,158,11,0.06)":i%2===0?"transparent":"rgba(255,255,255,0.018)"}>
                     <TD><span style={{color:"rgba(174,220,255,0.65)",whiteSpace:"nowrap"}}>{e.scheduledDate||"—"}{e.carriedOver&&<span style={{marginLeft:6,fontSize:10,color:"#f59e0b",background:"rgba(245,158,11,0.15)",border:"1px solid rgba(245,158,11,0.3)",borderRadius:10,padding:"1px 6px",fontWeight:600}}>carried</span>}</span></TD>
@@ -3635,7 +3642,7 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
                     <TD><span style={{background:`${CP_ENTRY_STATUS_COLOR[e.status]||"#64748b"}20`,color:CP_ENTRY_STATUS_COLOR[e.status]||"#64748b",borderRadius:20,padding:"3px 11px",fontSize:12,fontWeight:700,border:`1px solid ${CP_ENTRY_STATUS_COLOR[e.status]||"#64748b"}40`}}>{e.status}</span></TD>
                     <TD><span style={{color:"#c084fc",fontWeight:600}}>{e.receivedPkr>0?`₨ ${Number(e.receivedPkr).toLocaleString(undefined,{maximumFractionDigits:0})}`:"—"}</span></TD>
                     <TD>{e.receivedFrom?<span style={{background:"rgba(35,161,221,0.14)",color:"#23a1dd",borderRadius:20,padding:"3px 11px",fontSize:12,fontWeight:600}}>{e.receivedFrom}</span>:<span style={{color:"rgba(174,220,255,0.25)",fontSize:12}}>—</span>}</TD>
-                    <TD><button onClick={()=>setEntryModal({mode:"edit",entry:e})} style={{background:"rgba(35,161,221,0.12)",color:"#23a1dd",border:"1px solid rgba(35,161,221,0.22)",borderRadius:7,padding:"5px 13px",cursor:"pointer",fontSize:12,fontWeight:600}}>Edit</button></TD>
+                    <TD><button onClick={ev=>{ev.stopPropagation();setEntryModal({mode:"edit",entry:e});}} style={{background:"rgba(35,161,221,0.12)",color:"#23a1dd",border:"1px solid rgba(35,161,221,0.22)",borderRadius:7,padding:"5px 13px",cursor:"pointer",fontSize:12,fontWeight:600}}>Edit</button></TD>
                   </tr>
                 ))}
               </tbody>

@@ -3331,34 +3331,70 @@ function CPCalendarUI({entries,contracts,selectedMonth,onAddEntry,onEditEntry}){
   );
 }
 
-function PendingBalanceModal({contracts,effectiveEntries,monthLabel,selectedMonth,onClose}){
-  const items=contracts.map(c=>{
-    const paid=effectiveEntries.filter(e=>e.contractKey===c.key&&e.status==="Paid").reduce((s,e)=>s+e.amount,0);
-    const pending=Math.max(0,c.amountClosed-paid);
-    return{...c,paid,pending};
-  }).filter(c=>c.pending>0);
-  const total=items.reduce((s,c)=>s+c.pending,0);
+function ConfirmPaymentModal({monthEntries,monthLabel,selectedMonth,onClose}){
+  const sorted=[...monthEntries].sort((a,b)=>a.scheduledDate.localeCompare(b.scheduledDate));
+  const total=sorted.reduce((s,e)=>s+e.amount,0);
   return(
-    <Modal title={`Pending Balance — ${monthLabel(selectedMonth)}`} onClose={onClose} wide>
-      {items.length===0
-        ?<div style={{textAlign:"center",padding:"32px 0",color:"rgba(174,220,255,0.35)",fontSize:14}}>No pending balances for this month.</div>
+    <Modal title={`Confirm Payment — ${monthLabel(selectedMonth)}`} onClose={onClose} wide>
+      {sorted.length===0
+        ?<div style={{textAlign:"center",padding:"32px 0",color:"rgba(174,220,255,0.35)",fontSize:14}}>No payments scheduled from calendar this month.</div>
         :<div>
           <table style={{width:"100%",borderCollapse:"collapse",fontSize:13,marginBottom:16}}>
             <thead>
               <tr>
-                {["Client Name","Company Name","Contract Amount","Paid","Pending"].map(h=>(
+                {["Date","Client Name","Company Name","Amount","Status"].map(h=>(
                   <th key={h} style={{textAlign:"left",padding:"9px 12px",color:"rgba(174,220,255,0.45)",fontWeight:700,fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {items.map((c,i)=>(
-                <tr key={c.key} style={{borderBottom:"1px solid rgba(255,255,255,0.04)",background:i%2===0?"transparent":"rgba(255,255,255,0.015)"}}>
-                  <td style={{padding:"9px 12px",color:"#daeeff",fontWeight:600}}>{c.clientName||"—"}</td>
-                  <td style={{padding:"9px 12px",color:"rgba(174,220,255,0.7)"}}>{c.companyName||"—"}</td>
-                  <td style={{padding:"9px 12px",color:"rgba(174,220,255,0.6)"}}>${(c.amountClosed||0).toLocaleString(undefined,{maximumFractionDigits:0})}</td>
-                  <td style={{padding:"9px 12px",color:"#36f2af",fontWeight:600}}>${c.paid.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
-                  <td style={{padding:"9px 12px"}}><span style={{background:"rgba(245,158,11,0.15)",color:"#f59e0b",borderRadius:20,padding:"3px 12px",fontWeight:700,border:"1px solid rgba(245,158,11,0.3)"}}>${c.pending.toLocaleString(undefined,{maximumFractionDigits:0})}</span></td>
+              {sorted.map((e,i)=>(
+                <tr key={e.id} style={{borderBottom:"1px solid rgba(255,255,255,0.04)",background:i%2===0?"transparent":"rgba(255,255,255,0.015)"}}>
+                  <td style={{padding:"9px 12px",color:"rgba(174,220,255,0.65)",whiteSpace:"nowrap"}}>{e.scheduledDate||"—"}</td>
+                  <td style={{padding:"9px 12px",color:"#daeeff",fontWeight:600}}>{e.clientName||"—"}</td>
+                  <td style={{padding:"9px 12px",color:"rgba(174,220,255,0.7)"}}>{e.companyName||"—"}</td>
+                  <td style={{padding:"9px 12px",color:"#36f2af",fontWeight:700}}>${Number(e.amount||0).toLocaleString(undefined,{maximumFractionDigits:0})}</td>
+                  <td style={{padding:"9px 12px"}}><span style={{background:`${CP_ENTRY_STATUS_COLOR[e.status]||"#64748b"}20`,color:CP_ENTRY_STATUS_COLOR[e.status]||"#64748b",borderRadius:20,padding:"3px 11px",fontSize:12,fontWeight:700,border:`1px solid ${CP_ENTRY_STATUS_COLOR[e.status]||"#64748b"}40`}}>{e.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:10,borderTop:"1px solid rgba(255,255,255,0.08)",paddingTop:12}}>
+            <span style={{color:"rgba(174,220,255,0.5)",fontSize:12}}>Total Scheduled:</span>
+            <span style={{fontSize:18,fontWeight:800,color:"#06b6d4"}}>${total.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+          </div>
+        </div>
+      }
+      <div style={{display:"flex",justifyContent:"flex-end",marginTop:12}}>
+        <Btn variant="ghost" onClick={onClose}>Close</Btn>
+      </div>
+    </Modal>
+  );
+}
+
+function PendingBalanceModal({effectiveEntries,monthLabel,selectedMonth,onClose}){
+  const pendingEntries=[...effectiveEntries.filter(e=>e.status==="Pending")].sort((a,b)=>a.scheduledDate.localeCompare(b.scheduledDate));
+  const total=pendingEntries.reduce((s,e)=>s+e.amount,0);
+  return(
+    <Modal title={`Pending Balance — ${monthLabel(selectedMonth)}`} onClose={onClose} wide>
+      {pendingEntries.length===0
+        ?<div style={{textAlign:"center",padding:"32px 0",color:"rgba(174,220,255,0.35)",fontSize:14}}>No pending payments for this month.</div>
+        :<div>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:13,marginBottom:16}}>
+            <thead>
+              <tr>
+                {["Date","Client Name","Company Name","Amount"].map(h=>(
+                  <th key={h} style={{textAlign:"left",padding:"9px 12px",color:"rgba(174,220,255,0.45)",fontWeight:700,fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {pendingEntries.map((e,i)=>(
+                <tr key={`${e.id}_${e.carriedOver?"co":""}`} style={{borderBottom:"1px solid rgba(255,255,255,0.04)",background:i%2===0?"transparent":"rgba(255,255,255,0.015)"}}>
+                  <td style={{padding:"9px 12px",color:"rgba(174,220,255,0.65)",whiteSpace:"nowrap"}}>{e.scheduledDate||"—"}{e.carriedOver&&<span style={{marginLeft:6,fontSize:10,color:"#f59e0b",background:"rgba(245,158,11,0.15)",border:"1px solid rgba(245,158,11,0.3)",borderRadius:10,padding:"1px 6px",fontWeight:600}}>carried</span>}</td>
+                  <td style={{padding:"9px 12px",color:"#daeeff",fontWeight:600}}>{e.clientName||"—"}</td>
+                  <td style={{padding:"9px 12px",color:"rgba(174,220,255,0.7)"}}>{e.companyName||"—"}</td>
+                  <td style={{padding:"9px 12px"}}><span style={{background:"rgba(245,158,11,0.15)",color:"#f59e0b",borderRadius:20,padding:"3px 12px",fontWeight:700,border:"1px solid rgba(245,158,11,0.3)"}}>${Number(e.amount||0).toLocaleString(undefined,{maximumFractionDigits:0})}</span></td>
                 </tr>
               ))}
             </tbody>
@@ -3387,6 +3423,7 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
   const [contractEditModal,setContractEditModal]=useState(null);
   const [entryModal,setEntryModal]=useState(null);
   const [showPendingModal,setShowPendingModal]=useState(false);
+  const [showConfirmPaymentModal,setShowConfirmPaymentModal]=useState(false);
   const [saving,setSaving]=useState(false);
   const currentMonth=useMemo(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;},[]);
   const [selectedMonth,setSelectedMonth]=useState(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;});
@@ -3408,6 +3445,23 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
       setLoading(false);
     }).catch(()=>setLoading(false));
   },[]);
+
+  // Silent refresh when month changes to pick up new data
+  useEffect(()=>{
+    Promise.all([
+      sbGetAll("active_clients"),
+      sbGetAll("active_clients_monthly_status"),
+      sbGetAll("hot_pipeline"),
+      sbGetAll("client_payments").catch(()=>[]),
+      sbGetAll("payment_entries").catch(()=>[])
+    ]).then(([ac,st,hp,cp,pe])=>{
+      if(Array.isArray(ac))setClients(ac.map(rowToAC));
+      if(Array.isArray(st))setStatuses(st.map(rowToStatus));
+      if(Array.isArray(hp))setHpContacts(hp.map(rowToHP));
+      if(Array.isArray(cp))setCpMeta(cp.map(rowToCP));
+      if(Array.isArray(pe))setEntries(pe.map(rowToPE));
+    }).catch(()=>{});
+  },[selectedMonth]);
 
   const allContracts=useMemo(()=>{
     // Show clients added on or before the selected month, unless lost that specific month
@@ -3485,10 +3539,11 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
     const totalRevenue=contractsTotal+carriedOverTotal;
     const clientPaid=effectiveEntries.filter(e=>e.status==="Paid").reduce((s,e)=>s+e.amount,0);
     const balanceLost=effectiveEntries.filter(e=>e.status==="Balance Lost").reduce((s,e)=>s+e.amount,0);
-    const pendingBalance=Math.max(0,totalRevenue-clientPaid-balanceLost);
+    const pendingBalance=effectiveEntries.filter(e=>e.status==="Pending").reduce((s,e)=>s+e.amount,0);
+    const confirmPayment=monthEntries.reduce((s,e)=>s+e.amount,0);
     const amountReceivedPkr=effectiveEntries.reduce((s,e)=>s+(e.receivedPkr||0),0);
-    return{totalRevenue,clientPaid,pendingBalance,balanceLost,amountReceivedPkr};
-  },[mergedContracts,effectiveEntries,carriedOverEntries]);
+    return{totalRevenue,clientPaid,pendingBalance,balanceLost,amountReceivedPkr,confirmPayment};
+  },[mergedContracts,effectiveEntries,carriedOverEntries,monthEntries]);
 
   useEffect(()=>{onRevenue({val:stats.totalRevenue,label:"Total Revenue",color:"#36f2af"});},[stats.totalRevenue]);
 
@@ -3552,6 +3607,13 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
           <div style={{background:"rgba(54,242,175,0.08)",border:"1px solid rgba(54,242,175,0.2)",borderRadius:12,padding:"12px 20px",minWidth:155}}>
             <div style={{fontSize:10,color:"rgba(174,220,255,0.45)",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.09em",marginBottom:4}}>Total Revenue ($)</div>
             <div style={{fontSize:22,fontWeight:800,color:"#36f2af"}}>${stats.totalRevenue.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+          </div>
+          <div onClick={()=>setShowConfirmPaymentModal(true)} style={{background:"rgba(6,182,212,0.08)",border:"1px solid rgba(6,182,212,0.2)",borderRadius:12,padding:"12px 20px",minWidth:155,cursor:"pointer",transition:"all .15s"}}
+            onMouseEnter={e=>{e.currentTarget.style.background="rgba(6,182,212,0.15)";e.currentTarget.style.borderColor="rgba(6,182,212,0.45)";}}
+            onMouseLeave={e=>{e.currentTarget.style.background="rgba(6,182,212,0.08)";e.currentTarget.style.borderColor="rgba(6,182,212,0.2)";}}>
+            <div style={{fontSize:10,color:"rgba(174,220,255,0.45)",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.09em",marginBottom:4}}>Confirm Payment ($)</div>
+            <div style={{fontSize:22,fontWeight:800,color:"#06b6d4"}}>${stats.confirmPayment.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+            <div style={{fontSize:10,color:"rgba(6,182,212,0.5)",marginTop:2}}>Click to view entries →</div>
           </div>
           <div style={{background:"rgba(35,161,221,0.08)",border:"1px solid rgba(35,161,221,0.2)",borderRadius:12,padding:"12px 20px",minWidth:155}}>
             <div style={{fontSize:10,color:"rgba(174,220,255,0.45)",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.09em",marginBottom:4}}>Client Paid ($)</div>
@@ -3666,7 +3728,8 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
 
       </div>
 
-      {showPendingModal&&<PendingBalanceModal contracts={allContracts} effectiveEntries={effectiveEntries} monthLabel={monthLabel} selectedMonth={selectedMonth} onClose={()=>setShowPendingModal(false)}/>}
+      {showConfirmPaymentModal&&<ConfirmPaymentModal monthEntries={monthEntries} monthLabel={monthLabel} selectedMonth={selectedMonth} onClose={()=>setShowConfirmPaymentModal(false)}/>}
+      {showPendingModal&&<PendingBalanceModal effectiveEntries={effectiveEntries} monthLabel={monthLabel} selectedMonth={selectedMonth} onClose={()=>setShowPendingModal(false)}/>}
       {contractEditModal&&<CPContractEditModal record={contractEditModal} onClose={()=>setContractEditModal(null)} onSave={form=>saveContractMeta(contractEditModal,form)} saving={saving}/>}
       {entryModal&&<CPEntryModal
         entry={entryModal.mode==="edit"?entryModal.entry:null}

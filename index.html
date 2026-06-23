@@ -131,6 +131,12 @@ function rowToAC(r){ return { id:r.id, firstName:r.first_name||"", lastName:r.la
 function acToRow(c){ return { first_name:c.firstName||"", last_name:c.lastName||"", company:c.company||"", email:c.email||"", phone:c.phone||"", contract_terms:c.contractTerms||"", revenue:parseFloat(c.revenue)||0, source:c.source||"manual", hot_pipeline_id:c.hotPipelineId||null }; }
 function rowToStatus(r){ return { id:r.id, clientId:r.client_id, month:r.month, status:r.status, reason:r.reason||null, createdAt:r.created_at||null }; }
 
+// ── Client Payments mappers ───────────────────────────────────────────────────
+function rowToCP(r){ return { id:r.id, sourceType:r.source_type||"active", sourceId:r.source_id||null, clientName:r.client_name||"", companyName:r.company_name||"", paymentSource:r.payment_source||"", paymentCondition:r.payment_condition||"Before Service", contractDate:r.contract_date||"", amountClosed:parseFloat(r.amount_closed)||0, remarks:r.remarks||"", createdAt:r.created_at||null }; }
+function cpToRow(p){ return { source_type:p.sourceType||"active", source_id:p.sourceId||null, client_name:p.clientName||"", company_name:p.companyName||"", payment_source:p.paymentSource||"", payment_condition:p.paymentCondition||"Before Service", contract_date:p.contractDate||null, amount_closed:parseFloat(p.amountClosed)||0, remarks:p.remarks||"" }; }
+function rowToPE(r){ return { id:r.id, contractKey:r.contract_key||"", clientName:r.client_name||"", companyName:r.company_name||"", scheduledDate:r.scheduled_date||"", amount:parseFloat(r.amount)||0, status:r.status||"Pending", receivedPkr:parseFloat(r.received_pkr)||0, receivedFrom:r.received_from||"", month:r.month||"", createdAt:r.created_at||null }; }
+function peToRow(e){ return { contract_key:e.contractKey||"", client_name:e.clientName||"", company_name:e.companyName||"", scheduled_date:e.scheduledDate||null, amount:parseFloat(e.amount)||0, status:e.status||"Pending", received_pkr:parseFloat(e.receivedPkr)||0, received_from:e.receivedFrom||"", month:e.month||"" }; }
+
 // ── Freelance Pipeline mappers ────────────────────────────────────────────────
 function rowToFP(r){ return {id:r.id,firstName:r.first_name||"",lastName:r.last_name||"",companyName:r.company_name||"",email:r.email||"",website:r.website||"",phone:r.phone||"",linkedinUrl:r.linkedin_url||"",clientFreelanceName:r.client_freelance_name||"",jobLink:r.job_link||"",projectType:r.project_type||"",clientBudget:r.client_budget||"",freelanceAccountName:r.freelance_account_name||"",remarks:r.remarks||"",stage:r.stage||"Fiverr",source:r.source||"",tags:r.tags||[],followUp:r.follow_up||null,deal:r.deal||null,followUpHistory:r.follow_up_history||[],wonAt:r.won_at||null,createdAt:r.created_at||null}; }
 function fpToRow(c){ return {first_name:c.firstName||"",last_name:c.lastName||"",company_name:c.companyName||"",email:c.email||"",website:c.website||"",phone:c.phone||"",linkedin_url:c.linkedinUrl||"",client_freelance_name:c.clientFreelanceName||"",job_link:c.jobLink||"",project_type:c.projectType||"",client_budget:c.clientBudget||"",freelance_account_name:c.freelanceAccountName||"",remarks:c.remarks||"",stage:c.stage||"Fiverr",source:c.source||"",tags:c.tags||[],follow_up:c.followUp||null,deal:c.deal||null,follow_up_history:c.followUpHistory||[]}; }
@@ -2325,6 +2331,7 @@ function NavIcon({name,active}){
     coldcalling:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.95a16 16 0 0 0 5.55 5.55l.88-.88a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21 16c0 .32.01.62.01.92z"/></svg>,
     emailcampaign:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
     paidleads:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>,
+    clientpayments:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/><line x1="6" y1="15" x2="9" y2="15"/><line x1="12" y1="15" x2="16" y2="15"/></svg>,
     settings:<svg width="15" height="15" viewBox="0 0 24 24" {...s}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
   };
   return icons[name]||null;
@@ -3216,6 +3223,457 @@ function EmailCampaignGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
   );
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// ── CLIENT PAYMENTS ───────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+const CP_PAYMENT_SOURCES=["PayPal","Upwork","Fiverr","Wise","Remitly","Stripe","Payoneer","Other"];
+const CP_ENTRY_STATUS_COLOR={Paid:"#36f2af",Hold:"#fb923c",Decline:"#ef4444",Pending:"#f59e0b"};
+
+function CPContractEditModal({record,onClose,onSave,saving}){
+  const [form,setForm]=useState({paymentSource:record?.paymentSource||"",paymentCondition:record?.paymentCondition||"Before Service",remarks:record?.remarks||""});
+  const f=(k,v)=>setForm(p=>({...p,[k]:v}));
+  return(
+    <Modal title={`Edit Contract — ${record?.clientName||""}`} onClose={onClose}>
+      <Sel label="Payment Source" value={form.paymentSource} onChange={e=>f("paymentSource",e.target.value)}>
+        <option value="">— Select Source —</option>
+        {CP_PAYMENT_SOURCES.map(s=><option key={s} value={s}>{s}</option>)}
+      </Sel>
+      <Sel label="Payment Condition" value={form.paymentCondition} onChange={e=>f("paymentCondition",e.target.value)}>
+        <option value="Before Service">Before Service</option>
+        <option value="After Service">After Service</option>
+      </Sel>
+      <Tex label="Remarks (if any)" value={form.remarks} onChange={e=>f("remarks",e.target.value)} style={{minHeight:60}}/>
+      <div style={{display:"flex",gap:8,marginTop:12,justifyContent:"flex-end"}}>
+        <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
+        <Btn onClick={()=>onSave(form)} disabled={saving}>{saving?"Saving…":"Save"}</Btn>
+      </div>
+    </Modal>
+  );
+}
+
+function CPEntryModal({entry,contracts,selectedDate,onClose,onSave,onDelete,saving}){
+  const [form,setForm]=useState({contractKey:entry?.contractKey||"",scheduledDate:entry?.scheduledDate||selectedDate||"",amount:entry?.amount||"",status:entry?.status||"Pending",receivedPkr:entry?.receivedPkr||"",receivedFrom:entry?.receivedFrom||""});
+  const f=(k,v)=>setForm(p=>({...p,[k]:v}));
+  const sel=contracts.find(c=>c.key===form.contractKey);
+  const isEdit=!!(entry?.id);
+  return(
+    <Modal title={isEdit?"Edit Payment Entry":"Schedule Payment"} onClose={onClose}>
+      <Sel label="Client *" value={form.contractKey} onChange={e=>f("contractKey",e.target.value)}>
+        <option value="">— Select Client —</option>
+        {contracts.map(c=><option key={c.key} value={c.key}>{c.clientName}{c.companyName?` — ${c.companyName}`:""}</option>)}
+      </Sel>
+      {sel&&<div style={{background:"rgba(35,161,221,0.08)",border:"1px solid rgba(35,161,221,0.14)",borderRadius:8,padding:"7px 12px",fontSize:12,color:"rgba(174,220,255,0.65)",marginBottom:8}}>Contract total: <strong style={{color:"#36f2af"}}>${sel.amountClosed.toLocaleString()}</strong></div>}
+      <Inp label="Date *" type="date" value={form.scheduledDate} onChange={e=>f("scheduledDate",e.target.value)}/>
+      <Inp label="Amount ($) *" type="number" value={form.amount} onChange={e=>f("amount",e.target.value)} placeholder="Enter payment amount…"/>
+      <Sel label="Status" value={form.status} onChange={e=>f("status",e.target.value)}>
+        <option value="Pending">Pending</option>
+        <option value="Paid">Paid</option>
+        <option value="Hold">Hold</option>
+        <option value="Decline">Decline</option>
+      </Sel>
+      <Inp label="Received in (PKR)" type="number" value={form.receivedPkr} onChange={e=>f("receivedPkr",e.target.value)} placeholder="Enter PKR amount manually…"/>
+      <Sel label="Received From" value={form.receivedFrom} onChange={e=>f("receivedFrom",e.target.value)}>
+        <option value="">— Select Source —</option>
+        {CP_PAYMENT_SOURCES.map(s=><option key={s} value={s}>{s}</option>)}
+      </Sel>
+      <div style={{display:"flex",gap:8,marginTop:14,justifyContent:"space-between",alignItems:"center"}}>
+        <div>{isEdit&&<Btn variant="danger" onClick={()=>onDelete(entry.id)} disabled={saving}>Delete</Btn>}</div>
+        <div style={{display:"flex",gap:8}}>
+          <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
+          <Btn onClick={()=>onSave(form)} disabled={saving||!form.contractKey||!form.scheduledDate||!form.amount}>{saving?"Saving…":"Save"}</Btn>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function CPCalendarUI({entries,contracts,selectedMonth,onAddEntry,onEditEntry}){
+  const [y,m]=selectedMonth.split('-').map(Number);
+  const firstDay=new Date(y,m-1,1).getDay();
+  const daysInMonth=new Date(y,m,0).getDate();
+  const today=new Date().toISOString().slice(0,10);
+  const cells=[];
+  for(let i=0;i<firstDay;i++)cells.push(null);
+  for(let d=1;d<=daysInMonth;d++)cells.push(d);
+  const DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  return(
+    <div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,marginBottom:3}}>
+        {DAYS.map(d=><div key={d} style={{textAlign:"center",fontSize:10,fontWeight:700,color:"rgba(174,220,255,0.32)",padding:"6px 0",textTransform:"uppercase",letterSpacing:"0.07em"}}>{d}</div>)}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3}}>
+        {cells.map((d,i)=>{
+          if(!d)return <div key={`e${i}`}/>;
+          const ds=`${selectedMonth}-${String(d).padStart(2,'0')}`;
+          const de=entries.filter(e=>e.scheduledDate===ds);
+          const isToday=ds===today;
+          return(
+            <div key={d} onClick={()=>onAddEntry(ds)}
+              style={{minHeight:76,background:isToday?"rgba(35,161,221,0.1)":"rgba(255,255,255,0.025)",border:`1px solid ${isToday?"rgba(35,161,221,0.38)":"rgba(255,255,255,0.065)"}`,borderRadius:8,padding:"6px 7px",cursor:"pointer",transition:"all .13s"}}
+              onMouseEnter={e=>{e.currentTarget.style.background="rgba(35,161,221,0.07)";e.currentTarget.style.borderColor="rgba(35,161,221,0.22)";}}
+              onMouseLeave={e=>{e.currentTarget.style.background=isToday?"rgba(35,161,221,0.1)":"rgba(255,255,255,0.025)";e.currentTarget.style.borderColor=isToday?"rgba(35,161,221,0.38)":"rgba(255,255,255,0.065)";}}>
+              <div style={{fontSize:12,fontWeight:isToday?700:500,color:isToday?"#23a1dd":"rgba(174,220,255,0.55)",marginBottom:3}}>{d}</div>
+              {de.slice(0,3).map(e=>(
+                <div key={e.id} onClick={ev=>{ev.stopPropagation();onEditEntry(e);}}
+                  style={{fontSize:10,background:`${CP_ENTRY_STATUS_COLOR[e.status]||"#64748b"}1a`,borderLeft:`2px solid ${CP_ENTRY_STATUS_COLOR[e.status]||"#64748b"}`,borderRadius:"0 4px 4px 0",padding:"2px 5px",marginBottom:2,color:CP_ENTRY_STATUS_COLOR[e.status]||"rgba(174,220,255,0.45)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",cursor:"pointer"}}
+                  title={`${e.clientName} — $${e.amount}`}>
+                  {e.clientName.split(" ")[0]} ${Number(e.amount).toLocaleString()}
+                </div>
+              ))}
+              {de.length>3&&<div style={{fontSize:9,color:"rgba(174,220,255,0.35)",marginTop:1}}>+{de.length-3} more</div>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function PendingBalanceModal({contracts,effectiveEntries,monthLabel,selectedMonth,onClose}){
+  const items=contracts.map(c=>{
+    const paid=effectiveEntries.filter(e=>e.contractKey===c.key&&e.status==="Paid").reduce((s,e)=>s+e.amount,0);
+    const pending=Math.max(0,c.amountClosed-paid);
+    return{...c,paid,pending};
+  }).filter(c=>c.pending>0);
+  const total=items.reduce((s,c)=>s+c.pending,0);
+  return(
+    <Modal title={`Pending Balance — ${monthLabel(selectedMonth)}`} onClose={onClose} wide>
+      {items.length===0
+        ?<div style={{textAlign:"center",padding:"32px 0",color:"rgba(174,220,255,0.35)",fontSize:14}}>No pending balances for this month.</div>
+        :<div>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:13,marginBottom:16}}>
+            <thead>
+              <tr>
+                {["Client Name","Company Name","Contract Amount","Paid","Pending"].map(h=>(
+                  <th key={h} style={{textAlign:"left",padding:"9px 12px",color:"rgba(174,220,255,0.45)",fontWeight:700,fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((c,i)=>(
+                <tr key={c.key} style={{borderBottom:"1px solid rgba(255,255,255,0.04)",background:i%2===0?"transparent":"rgba(255,255,255,0.015)"}}>
+                  <td style={{padding:"9px 12px",color:"#daeeff",fontWeight:600}}>{c.clientName||"—"}</td>
+                  <td style={{padding:"9px 12px",color:"rgba(174,220,255,0.7)"}}>{c.companyName||"—"}</td>
+                  <td style={{padding:"9px 12px",color:"rgba(174,220,255,0.6)"}}>${(c.amountClosed||0).toLocaleString(undefined,{maximumFractionDigits:0})}</td>
+                  <td style={{padding:"9px 12px",color:"#36f2af",fontWeight:600}}>${c.paid.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
+                  <td style={{padding:"9px 12px"}}><span style={{background:"rgba(245,158,11,0.15)",color:"#f59e0b",borderRadius:20,padding:"3px 12px",fontWeight:700,border:"1px solid rgba(245,158,11,0.3)"}}>${c.pending.toLocaleString(undefined,{maximumFractionDigits:0})}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:10,borderTop:"1px solid rgba(255,255,255,0.08)",paddingTop:12}}>
+            <span style={{color:"rgba(174,220,255,0.5)",fontSize:12}}>Total Pending:</span>
+            <span style={{fontSize:18,fontWeight:800,color:"#f59e0b"}}>${total.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+          </div>
+        </div>
+      }
+      <div style={{display:"flex",justifyContent:"flex-end",marginTop:12}}>
+        <Btn variant="ghost" onClick={onClose}>Close</Btn>
+      </div>
+    </Modal>
+  );
+}
+
+function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
+  const [clients,setClients]=useState([]);
+  const [statuses,setStatuses]=useState([]);
+  const [hpContacts,setHpContacts]=useState([]);
+  const [cpMeta,setCpMeta]=useState([]);
+  const [entries,setEntries]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [activeTab,setActiveTab]=useState("contracts");
+  const [contractEditModal,setContractEditModal]=useState(null);
+  const [entryModal,setEntryModal]=useState(null);
+  const [showPendingModal,setShowPendingModal]=useState(false);
+  const [saving,setSaving]=useState(false);
+  const currentMonth=useMemo(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;},[]);
+  const [selectedMonth,setSelectedMonth]=useState(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;});
+
+  useEffect(()=>{
+    setLoading(true);
+    Promise.all([
+      sbGetAll("active_clients"),
+      sbGetAll("active_clients_monthly_status"),
+      sbGetAll("hot_pipeline"),
+      sbGetAll("client_payments").catch(()=>[]),
+      sbGetAll("payment_entries").catch(()=>[])
+    ]).then(([ac,st,hp,cp,pe])=>{
+      if(Array.isArray(ac))setClients(ac.map(rowToAC));
+      if(Array.isArray(st))setStatuses(st.map(rowToStatus));
+      if(Array.isArray(hp))setHpContacts(hp.map(rowToHP));
+      if(Array.isArray(cp))setCpMeta(cp.map(rowToCP));
+      if(Array.isArray(pe))setEntries(pe.map(rowToPE));
+      setLoading(false);
+    }).catch(()=>setLoading(false));
+  },[]);
+
+  const allContracts=useMemo(()=>{
+    // Show clients added on or before the selected month, unless lost that specific month
+    const lostThisMonth=new Set(statuses.filter(s=>s.month===selectedMonth&&s.status==="lost").map(s=>s.clientId));
+    const activeList=clients
+      .filter(c=>{
+        const addedMonth=(c.createdAt||"").slice(0,7);
+        return addedMonth&&addedMonth<=selectedMonth&&!lostThisMonth.has(c.id);
+      })
+      .map(c=>({
+        key:`ac_${c.id}`,sourceType:"active",sourceId:c.id,
+        clientName:`${c.firstName} ${c.lastName}`.trim(),
+        companyName:c.company||"",
+        contractDate:c.createdAt?c.createdAt.slice(0,10):"",
+        amountClosed:c.revenue||0
+      }));
+    // HP "Won" contacts won on or before the selected month, not yet converted to active_clients
+    const acHpIds=new Set(clients.map(c=>c.hotPipelineId).filter(Boolean).map(String));
+    const winningList=hpContacts
+      .filter(c=>c.stage==="Won"&&!acHpIds.has(String(c.id))&&(c.wonAt||c.createdAt||"").slice(0,7)<=selectedMonth)
+      .map(c=>({
+        key:`hp_${c.id}`,sourceType:"winning",sourceId:c.id,
+        clientName:`${c.firstName} ${c.lastName}`.trim(),
+        companyName:c.accountName||"",
+        contractDate:c.wonAt?c.wonAt.slice(0,10):(c.createdAt?c.createdAt.slice(0,10):""),
+        amountClosed:c.saleValue||0
+      }));
+    return [...activeList,...winningList];
+  },[clients,statuses,hpContacts,selectedMonth]);
+
+  const monthEntries=useMemo(()=>entries.filter(e=>e.month===selectedMonth),[entries,selectedMonth]);
+
+  // Previous month pending entries carried forward into this month
+  const prevMonthStr=useMemo(()=>{
+    const[y,m]=selectedMonth.split('-').map(Number);
+    const pm=m===1?12:m-1; const py=m===1?y-1:y;
+    return `${py}-${String(pm).padStart(2,'0')}`;
+  },[selectedMonth]);
+  const carriedOverEntries=useMemo(()=>
+    entries.filter(e=>e.month===prevMonthStr&&e.status==="Pending").map(e=>({...e,carriedOver:true}))
+  ,[entries,prevMonthStr]);
+  const effectiveEntries=useMemo(()=>[...monthEntries,...carriedOverEntries],[monthEntries,carriedOverEntries]);
+
+  const mergedContracts=useMemo(()=>allContracts.map(c=>{
+    const meta=cpMeta.find(m=>m.sourceType===c.sourceType&&String(m.sourceId)===String(c.sourceId));
+    return{...c,paymentSource:meta?.paymentSource||"",paymentCondition:meta?.paymentCondition||"Before Service",remarks:meta?.remarks||"",metaId:meta?.id||null};
+  }),[allContracts,cpMeta]);
+
+  const availableMonths=useMemo(()=>{
+    const s=new Set([
+      ...entries.map(e=>e.month).filter(Boolean),
+      ...statuses.map(s=>s.month).filter(Boolean),
+      ...hpContacts.filter(c=>c.stage==="Won").map(c=>(c.wonAt||c.createdAt||"").slice(0,7)).filter(Boolean),
+      currentMonth
+    ]);
+    return [...s].sort().reverse();
+  },[entries,statuses,hpContacts,currentMonth]);
+
+  const filteredContracts=useMemo(()=>{
+    if(!search.trim())return mergedContracts;
+    const q=search.toLowerCase();
+    return mergedContracts.filter(c=>[c.clientName,c.companyName,c.paymentSource].some(f=>f&&f.toLowerCase().includes(q)));
+  },[mergedContracts,search]);
+
+  const filteredEntries=useMemo(()=>{
+    const base=effectiveEntries.slice().sort((a,b)=>a.scheduledDate.localeCompare(b.scheduledDate));
+    if(!search.trim())return base;
+    const q=search.toLowerCase();
+    return base.filter(e=>[e.clientName,e.companyName,e.receivedFrom,e.status].some(f=>f&&f.toLowerCase().includes(q)));
+  },[effectiveEntries,search]);
+
+  const stats=useMemo(()=>{
+    const contractsTotal=mergedContracts.reduce((s,c)=>s+c.amountClosed,0);
+    const carriedOverTotal=carriedOverEntries.reduce((s,e)=>s+e.amount,0);
+    const totalRevenue=contractsTotal+carriedOverTotal;
+    const clientPaid=effectiveEntries.filter(e=>e.status==="Paid").reduce((s,e)=>s+e.amount,0);
+    const pendingBalance=Math.max(0,totalRevenue-clientPaid);
+    const amountReceivedPkr=effectiveEntries.reduce((s,e)=>s+(e.receivedPkr||0),0);
+    return{totalRevenue,clientPaid,pendingBalance,amountReceivedPkr};
+  },[mergedContracts,effectiveEntries,carriedOverEntries]);
+
+  useEffect(()=>{onRevenue({val:stats.totalRevenue,label:"Total Revenue",color:"#36f2af"});},[stats.totalRevenue]);
+
+  async function saveContractMeta(record,form){
+    setSaving(true);
+    const data=cpToRow({...record,...form});
+    if(record.metaId){
+      const res=await sbUpdate("client_payments",record.metaId,data);
+      if(Array.isArray(res)&&res[0])setCpMeta(p=>p.map(x=>x.id===record.metaId?rowToCP(res[0]):x));
+      else alert("Save failed:\n"+(res?.message||JSON.stringify(res)));
+    }else{
+      const res=await sbInsert("client_payments",data);
+      if(Array.isArray(res)&&res[0])setCpMeta(p=>[...p,rowToCP(res[0])]);
+      else alert("Save failed:\n"+(res?.message||JSON.stringify(res)));
+    }
+    setSaving(false);setContractEditModal(null);
+  }
+
+  async function saveEntry(form){
+    setSaving(true);
+    const contract=allContracts.find(c=>c.key===form.contractKey);
+    const month=(form.scheduledDate||"").slice(0,7)||selectedMonth;
+    const data=peToRow({...form,clientName:contract?.clientName||"",companyName:contract?.companyName||"",month});
+    if(entryModal?.entry?.id){
+      const res=await sbUpdate("payment_entries",entryModal.entry.id,data);
+      if(Array.isArray(res)&&res[0])setEntries(p=>p.map(x=>x.id===entryModal.entry.id?rowToPE(res[0]):x));
+      else alert("Save failed:\n"+(res?.message||JSON.stringify(res)));
+    }else{
+      const res=await sbInsert("payment_entries",data);
+      if(Array.isArray(res)&&res[0])setEntries(p=>[...p,rowToPE(res[0])]);
+      else alert("Save failed:\n"+(res?.message||JSON.stringify(res)));
+    }
+    setSaving(false);setEntryModal(null);
+  }
+
+  async function deleteEntry(id){
+    await sbDelete("payment_entries",id);
+    setEntries(p=>p.filter(e=>e.id!==id));
+    setEntryModal(null);
+  }
+
+  if(loading)return <Spinner text="Loading Client Payments…"/>;
+
+  const TH=({children})=><th style={{textAlign:"left",padding:"10px 12px",color:"rgba(174,220,255,0.45)",fontWeight:700,fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",whiteSpace:"nowrap",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>{children}</th>;
+  const TD=({children,style={}})=><td style={{padding:"10px 12px",verticalAlign:"middle",...style}}>{children}</td>;
+  const monthLabel=mo=>{const[y,m]=mo.split('-').map(Number);return new Date(y,m-1,1).toLocaleString('default',{month:'long',year:'numeric'});};
+
+  return(
+    <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+
+      {/* Header: month picker + 4 stat boxes */}
+      <div style={{background:"rgba(255,255,255,0.03)",borderBottom:"1px solid rgba(255,255,255,0.07)",padding:"12px 20px"}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,flexWrap:"wrap"}}>
+          <MonthPicker selectedMonth={selectedMonth} currentMonth={currentMonth} availableMonths={availableMonths} onChange={setSelectedMonth}/>
+          {selectedMonth!==currentMonth&&<>
+            <span style={{background:"rgba(35,161,221,0.12)",color:"#23a1dd",border:"1px solid rgba(35,161,221,0.2)",borderRadius:8,padding:"4px 10px",fontSize:11,fontWeight:600}}>📅 {monthLabel(selectedMonth)}</span>
+            <button onClick={()=>setSelectedMonth(currentMonth)} style={{background:"rgba(54,242,175,0.08)",color:"#36f2af",border:"1px solid rgba(54,242,175,0.2)",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontSize:11,fontWeight:600}}>↩ Current Month</button>
+          </>}
+        </div>
+        <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+          <div style={{background:"rgba(54,242,175,0.08)",border:"1px solid rgba(54,242,175,0.2)",borderRadius:12,padding:"12px 20px",minWidth:155}}>
+            <div style={{fontSize:10,color:"rgba(174,220,255,0.45)",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.09em",marginBottom:4}}>Total Revenue ($)</div>
+            <div style={{fontSize:22,fontWeight:800,color:"#36f2af"}}>${stats.totalRevenue.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+          </div>
+          <div style={{background:"rgba(35,161,221,0.08)",border:"1px solid rgba(35,161,221,0.2)",borderRadius:12,padding:"12px 20px",minWidth:155}}>
+            <div style={{fontSize:10,color:"rgba(174,220,255,0.45)",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.09em",marginBottom:4}}>Client Paid ($)</div>
+            <div style={{fontSize:22,fontWeight:800,color:"#23a1dd"}}>${stats.clientPaid.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+          </div>
+          <div onClick={()=>setShowPendingModal(true)} style={{background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:12,padding:"12px 20px",minWidth:155,cursor:"pointer",transition:"all .15s"}}
+            onMouseEnter={e=>{e.currentTarget.style.background="rgba(245,158,11,0.15)";e.currentTarget.style.borderColor="rgba(245,158,11,0.45)";}}
+            onMouseLeave={e=>{e.currentTarget.style.background="rgba(245,158,11,0.08)";e.currentTarget.style.borderColor="rgba(245,158,11,0.2)";}}>
+            <div style={{fontSize:10,color:"rgba(174,220,255,0.45)",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.09em",marginBottom:4}}>Pending Balance ($)</div>
+            <div style={{fontSize:22,fontWeight:800,color:"#f59e0b"}}>${stats.pendingBalance.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+            <div style={{fontSize:10,color:"rgba(245,158,11,0.5)",marginTop:2}}>Click to view breakdown →</div>
+          </div>
+          <div style={{background:"linear-gradient(135deg,rgba(168,85,247,0.18),rgba(192,132,252,0.08))",border:"2px solid rgba(168,85,247,0.45)",borderRadius:12,padding:"12px 20px",minWidth:190,boxShadow:"0 0 24px rgba(168,85,247,0.18),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
+            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+              <span style={{fontSize:10,color:"rgba(192,132,252,0.85)",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.09em"}}>Amount Received (PKR)</span>
+              <span style={{background:"rgba(168,85,247,0.35)",color:"#c084fc",borderRadius:20,padding:"1px 7px",fontSize:9,fontWeight:700}}>★</span>
+            </div>
+            <div style={{fontSize:22,fontWeight:800,color:"#c084fc"}}>₨ {stats.amountReceivedPkr.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Sub-tabs */}
+      <div style={{background:"rgba(255,255,255,0.02)",borderBottom:"1px solid rgba(255,255,255,0.07)",padding:"0 20px",display:"flex",alignItems:"center",flexShrink:0}}>
+        {[{key:"contracts",label:"Client Contracts"},{key:"payment_status",label:"Payment Status"},{key:"calendar",label:"Payment Calendar"}].map(t=>(
+          <button key={t.key} onClick={()=>setActiveTab(t.key)}
+            style={{padding:"11px 18px",background:"transparent",border:"none",borderBottom:`2px solid ${activeTab===t.key?"#23a1dd":"transparent"}`,color:activeTab===t.key?"#23a1dd":"rgba(174,220,255,0.42)",cursor:"pointer",fontSize:13,fontWeight:activeTab===t.key?700:500,transition:"all .15s",marginBottom:-1}}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      <div style={{flex:1,overflow:"auto",padding:"14px 16px"}}>
+
+        {/* ── Client Contracts ── */}
+        {activeTab==="contracts"&&(
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+            <thead>
+              <tr><TH>Client Name</TH><TH>Company Name</TH><TH>Payment Source</TH><TH>Payment Condition</TH><TH>Date of Contract</TH><TH>Amount Closed</TH><TH>Remarks</TH><TH></TH></tr>
+            </thead>
+            <tbody>
+              {filteredContracts.length===0&&<tr><td colSpan={8} style={{textAlign:"center",padding:"48px 0",color:"rgba(174,220,255,0.25)",fontSize:14}}>No contracts found.</td></tr>}
+              {filteredContracts.map((c,i)=>(
+                <tr key={c.key} style={{borderBottom:"1px solid rgba(255,255,255,0.045)",background:i%2===0?"transparent":"rgba(255,255,255,0.018)",transition:"background .12s"}}
+                  onMouseEnter={e=>e.currentTarget.style.background="rgba(35,161,221,0.07)"}
+                  onMouseLeave={e=>e.currentTarget.style.background=i%2===0?"transparent":"rgba(255,255,255,0.018)"}>
+                  <TD><span style={{color:"#daeeff",fontWeight:600}}>{c.clientName||"—"}</span></TD>
+                  <TD><span style={{color:"rgba(174,220,255,0.75)"}}>{c.companyName||"—"}</span></TD>
+                  <TD>{c.paymentSource?<span style={{background:"rgba(35,161,221,0.14)",color:"#23a1dd",borderRadius:20,padding:"3px 11px",fontSize:12,fontWeight:600}}>{c.paymentSource}</span>:<span style={{color:"rgba(174,220,255,0.25)",fontSize:12}}>Not set</span>}</TD>
+                  <TD><span style={{background:c.paymentCondition==="Before Service"?"rgba(54,242,175,0.1)":"rgba(245,158,11,0.1)",color:c.paymentCondition==="Before Service"?"#36f2af":"#f59e0b",borderRadius:20,padding:"3px 11px",fontSize:12,fontWeight:600}}>{c.paymentCondition}</span></TD>
+                  <TD><span style={{color:"rgba(174,220,255,0.65)",whiteSpace:"nowrap"}}>{c.contractDate||"—"}</span></TD>
+                  <TD><span style={{color:"#36f2af",fontWeight:700}}>${(c.amountClosed||0).toLocaleString(undefined,{maximumFractionDigits:0})}</span></TD>
+                  <TD style={{maxWidth:160}}><span style={{color:"rgba(174,220,255,0.5)",display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:160}}>{c.remarks||"—"}</span></TD>
+                  <TD><button onClick={()=>setContractEditModal(c)} style={{background:"rgba(35,161,221,0.12)",color:"#23a1dd",border:"1px solid rgba(35,161,221,0.22)",borderRadius:7,padding:"5px 13px",cursor:"pointer",fontSize:12,fontWeight:600}}>Edit</button></TD>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        {/* ── Payment Status ── */}
+        {activeTab==="payment_status"&&(
+          <div>
+            <div style={{display:"flex",justifyContent:"flex-end",marginBottom:10}}>
+              <button onClick={()=>setEntryModal({mode:"add",date:new Date().toISOString().slice(0,10)})}
+                style={{background:"#36f2af",color:"#082018",border:"none",borderRadius:8,padding:"7px 16px",cursor:"pointer",fontSize:12,fontWeight:700}}>+ Add Payment</button>
+            </div>
+            <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+              <thead>
+                <tr><TH>Date</TH><TH>Client Name</TH><TH>Company Name</TH><TH>Amount ($)</TH><TH>Status</TH><TH>Received in (PKR)</TH><TH>Received From</TH><TH></TH></tr>
+              </thead>
+              <tbody>
+                {filteredEntries.length===0&&<tr><td colSpan={8} style={{textAlign:"center",padding:"48px 0",color:"rgba(174,220,255,0.25)",fontSize:14}}>No payment entries for {monthLabel(selectedMonth)}.<br/><span style={{fontSize:12,marginTop:4,display:"block"}}>Schedule payments via the Payment Calendar tab.</span></td></tr>}
+                {filteredEntries.map((e,i)=>(
+                  <tr key={`${e.id}_${e.carriedOver?"co":""}` } style={{borderBottom:"1px solid rgba(255,255,255,0.045)",background:e.carriedOver?"rgba(245,158,11,0.06)":i%2===0?"transparent":"rgba(255,255,255,0.018)",transition:"background .12s"}}
+                    onMouseEnter={ev=>ev.currentTarget.style.background=e.carriedOver?"rgba(245,158,11,0.12)":"rgba(35,161,221,0.07)"}
+                    onMouseLeave={ev=>ev.currentTarget.style.background=e.carriedOver?"rgba(245,158,11,0.06)":i%2===0?"transparent":"rgba(255,255,255,0.018)"}>
+                    <TD><span style={{color:"rgba(174,220,255,0.65)",whiteSpace:"nowrap"}}>{e.scheduledDate||"—"}{e.carriedOver&&<span style={{marginLeft:6,fontSize:10,color:"#f59e0b",background:"rgba(245,158,11,0.15)",border:"1px solid rgba(245,158,11,0.3)",borderRadius:10,padding:"1px 6px",fontWeight:600}}>carried</span>}</span></TD>
+                    <TD><span style={{color:"#daeeff",fontWeight:600}}>{e.clientName||"—"}</span></TD>
+                    <TD><span style={{color:"rgba(174,220,255,0.75)"}}>{e.companyName||"—"}</span></TD>
+                    <TD><span style={{color:"#36f2af",fontWeight:700}}>${Number(e.amount||0).toLocaleString(undefined,{maximumFractionDigits:0})}</span></TD>
+                    <TD><span style={{background:`${CP_ENTRY_STATUS_COLOR[e.status]||"#64748b"}20`,color:CP_ENTRY_STATUS_COLOR[e.status]||"#64748b",borderRadius:20,padding:"3px 11px",fontSize:12,fontWeight:700,border:`1px solid ${CP_ENTRY_STATUS_COLOR[e.status]||"#64748b"}40`}}>{e.status}</span></TD>
+                    <TD><span style={{color:"#c084fc",fontWeight:600}}>{e.receivedPkr>0?`₨ ${Number(e.receivedPkr).toLocaleString(undefined,{maximumFractionDigits:0})}`:"—"}</span></TD>
+                    <TD>{e.receivedFrom?<span style={{background:"rgba(35,161,221,0.14)",color:"#23a1dd",borderRadius:20,padding:"3px 11px",fontSize:12,fontWeight:600}}>{e.receivedFrom}</span>:<span style={{color:"rgba(174,220,255,0.25)",fontSize:12}}>—</span>}</TD>
+                    <TD><button onClick={()=>setEntryModal({mode:"edit",entry:e})} style={{background:"rgba(35,161,221,0.12)",color:"#23a1dd",border:"1px solid rgba(35,161,221,0.22)",borderRadius:7,padding:"5px 13px",cursor:"pointer",fontSize:12,fontWeight:600}}>Edit</button></TD>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* ── Payment Calendar ── */}
+        {activeTab==="calendar"&&(
+          <div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+              <span style={{fontSize:15,fontWeight:700,color:"#daeeff"}}>{monthLabel(selectedMonth)}</span>
+              <button onClick={()=>setEntryModal({mode:"add",date:new Date().toISOString().slice(0,10)})}
+                style={{background:"#36f2af",color:"#082018",border:"none",borderRadius:8,padding:"7px 16px",cursor:"pointer",fontSize:12,fontWeight:700}}>+ Schedule Payment</button>
+            </div>
+            <CPCalendarUI entries={monthEntries} contracts={allContracts} selectedMonth={selectedMonth}
+              onAddEntry={date=>setEntryModal({mode:"add",date})}
+              onEditEntry={entry=>setEntryModal({mode:"edit",entry})}/>
+          </div>
+        )}
+
+      </div>
+
+      {showPendingModal&&<PendingBalanceModal contracts={allContracts} effectiveEntries={effectiveEntries} monthLabel={monthLabel} selectedMonth={selectedMonth} onClose={()=>setShowPendingModal(false)}/>}
+      {contractEditModal&&<CPContractEditModal record={contractEditModal} onClose={()=>setContractEditModal(null)} onSave={form=>saveContractMeta(contractEditModal,form)} saving={saving}/>}
+      {entryModal&&<CPEntryModal
+        entry={entryModal.mode==="edit"?entryModal.entry:null}
+        contracts={allContracts}
+        selectedDate={entryModal.mode==="add"?entryModal.date:null}
+        onClose={()=>setEntryModal(null)}
+        onSave={saveEntry}
+        onDelete={deleteEntry}
+        saving={saving}
+      />}
+    </div>
+  );
+}
+
 function ComingSoonView({label}){
   return (
     <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14,color:"rgba(174,220,255,0.38)",padding:60}}>
@@ -3815,13 +4273,13 @@ function App(){
   useEffect(()=>{ setSearch(""); setPipelineRevenue(null); },[gate]);
 
   const NAV=[
-    {section:"OVERVIEW",items:[{key:"dashboard",label:"Dashboard",soon:true},{key:"allcontacts",label:"All Contacts"}]},
-    {section:"PIPELINE",items:[{key:"pipeline",label:"Hot Pipeline"},{key:"contacts",label:"LinkedIn Pipeline"},{key:"freelance",label:"Freelance Pipeline"},{key:"clients",label:"Active Clients"},{key:"coldcalling",label:"Cold Calling"},{key:"emailcampaign",label:"Email Campaign"},{key:"paidleads",label:"Paid Leads"}]},
+    {section:"OVERVIEW",items:[{key:"dashboard",label:"Dashboard",soon:true},{key:"allcontacts",label:"All Contacts"},{key:"pipeline",label:"Hot Pipeline"},{key:"clients",label:"Active Clients"},{key:"clientpayments",label:"Client Payments"}]},
+    {section:"PIPELINE",items:[{key:"contacts",label:"LinkedIn Pipeline"},{key:"freelance",label:"Freelance Pipeline"},{key:"coldcalling",label:"Cold Calling"},{key:"emailcampaign",label:"Email Campaign"},{key:"paidleads",label:"Paid Leads"}]},
     {section:"DELIVERY",items:[{key:"projects",label:"Projects",soon:true},{key:"tasks",label:"Tasks",soon:true}]},
     {section:"REVENUE",items:[{key:"proposals",label:"Proposals",soon:true},{key:"invoices",label:"Invoices",soon:true}]},
     {section:"DATA",items:[{key:"import",label:"Import",soon:true},{key:"settings",label:"Settings"}]},
   ];
-  const titles={dashboard:"Dashboard",allcontacts:"All Contacts",pipeline:"Hot Pipeline",contacts:"LinkedIn Pipeline",freelance:"Freelance Pipeline",deals:"Deals",clients:"Active Clients",coldcalling:"Cold Calling",emailcampaign:"Email Campaign",paidleads:"Paid Leads",projects:"Projects",tasks:"Tasks",proposals:"Proposals",invoices:"Invoices",import:"Import",settings:"Settings"};
+  const titles={dashboard:"Dashboard",allcontacts:"All Contacts",clientpayments:"Client Payments",pipeline:"Hot Pipeline",contacts:"LinkedIn Pipeline",freelance:"Freelance Pipeline",deals:"Deals",clients:"Active Clients",coldcalling:"Cold Calling",emailcampaign:"Email Campaign",paidleads:"Paid Leads",projects:"Projects",tasks:"Tasks",proposals:"Proposals",invoices:"Invoices",import:"Import",settings:"Settings"};
 
   return (
     <div style={{display:"flex",height:"100vh",overflow:"hidden"}}>
@@ -3881,7 +4339,7 @@ function App(){
         </div>
         {/* Content */}
         <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-          {gate==="pipeline"?<HotPipelineGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="contacts"?<LinkedInGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="freelance"?<FreelancePipelineGate search={search} onRevenue={setPipelineRevenue}/>:gate==="clients"?<ActiveClientsGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="allcontacts"?<AllContactsView search={search} setSearch={setSearch}/>:gate==="coldcalling"?<ColdCallingGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="emailcampaign"?<EmailCampaignGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="paidleads"?<PaidLeadsPipelineGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:<ComingSoonView label={titles[gate]||gate}/>}
+          {gate==="pipeline"?<HotPipelineGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="contacts"?<LinkedInGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="freelance"?<FreelancePipelineGate search={search} onRevenue={setPipelineRevenue}/>:gate==="clients"?<ActiveClientsGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="allcontacts"?<AllContactsView search={search} setSearch={setSearch}/>:gate==="clientpayments"?<ClientPaymentsGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="coldcalling"?<ColdCallingGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="emailcampaign"?<EmailCampaignGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="paidleads"?<PaidLeadsPipelineGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:<ComingSoonView label={titles[gate]||gate}/>}
         </div>
       </div>
       {showSettings&&<SettingsModal darkMode={darkMode} onToggleDark={()=>setDarkMode(v=>!v)} onClose={()=>setShowSettings(false)}/>}

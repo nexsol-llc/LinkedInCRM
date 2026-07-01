@@ -3459,18 +3459,9 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
   },[selectedMonth]);
 
   const allContracts=useMemo(()=>{
-    // Build most-recent status per client up to selectedMonth
-    const latestStatus={};
-    statuses.filter(s=>s.month<=selectedMonth).forEach(s=>{
-      if(!latestStatus[s.clientId]||s.month>latestStatus[s.clientId].month)latestStatus[s.clientId]=s;
-    });
+    // Active: client has an explicit "active" status record for the selected month
     const activeList=clients
-      .filter(c=>{
-        const addedMonth=(c.createdAt||"").slice(0,7);
-        if(!addedMonth||addedMonth>selectedMonth)return false;
-        // Exclude if their most recent status (up to this month) is "lost"
-        return latestStatus[c.id]?.status!=="lost";
-      })
+      .filter(c=>statuses.some(s=>s.clientId===c.id&&s.month===selectedMonth&&s.status==="active"))
       .map(c=>({
         key:`ac_${c.id}`,sourceType:"active",sourceId:c.id,
         clientName:`${c.firstName} ${c.lastName}`.trim(),
@@ -3478,10 +3469,10 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
         contractDate:c.createdAt?c.createdAt.slice(0,10):"",
         amountClosed:c.revenue||0
       }));
-    // HP "Won" contacts won on or before the selected month, not yet converted to active_clients
+    // Winning: HP "Won" contacts won in the exact selected month, not yet in active_clients
     const acHpIds=new Set(clients.map(c=>c.hotPipelineId).filter(Boolean).map(String));
     const winningList=hpContacts
-      .filter(c=>c.stage==="Won"&&!acHpIds.has(String(c.id))&&(c.wonAt||c.createdAt||"").slice(0,7)<=selectedMonth)
+      .filter(c=>c.stage==="Won"&&!acHpIds.has(String(c.id))&&(c.wonAt||c.createdAt||"").slice(0,7)===selectedMonth)
       .map(c=>({
         key:`hp_${c.id}`,sourceType:"winning",sourceId:c.id,
         clientName:`${c.firstName} ${c.lastName}`.trim(),

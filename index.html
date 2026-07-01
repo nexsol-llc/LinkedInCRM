@@ -725,7 +725,7 @@ function HPKanbanCol({stage,contacts,onDragStart,onDrop,onDragOver,onDragLeave,o
   );
 }
 
-function MonthPicker({selectedMonth,currentMonth,availableMonths,onChange}){
+function MonthPicker({selectedMonth,currentMonth,availableMonths,onChange,allowFuture=false}){
   const [open,setOpen]=useState(false);
   const [viewYear,setViewYear]=useState(()=>parseInt(selectedMonth.split('-')[0]));
   const ref=useRef();
@@ -739,6 +739,7 @@ function MonthPicker({selectedMonth,currentMonth,availableMonths,onChange}){
   function isCur(m){return viewYear===curY&&m===curM;}
   function hasData(m){return availableMonths.includes(ym(m));}
   function fmtLabel(s){const[y,m]=s.split('-');return new Date(parseInt(y),parseInt(m)-1,1).toLocaleString('default',{month:'long',year:'numeric'});}
+  const canGoForward=allowFuture||(viewYear<curY);
   return (
     <div ref={ref} style={{position:'relative',display:'inline-block'}}>
       <button onClick={()=>setOpen(v=>!v)}
@@ -750,15 +751,15 @@ function MonthPicker({selectedMonth,currentMonth,availableMonths,onChange}){
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
             <button onClick={()=>setViewYear(v=>v-1)} style={{background:'rgba(255,255,255,0.07)',color:'#daeeff',border:'none',borderRadius:7,width:28,height:28,cursor:'pointer',fontSize:15,fontWeight:700}}>‹</button>
             <span style={{fontWeight:700,color:'#daeeff',fontSize:15}}>{viewYear}</span>
-            <button onClick={()=>setViewYear(v=>v+1)} disabled={viewYear>=curY}
-              style={{background:'rgba(255,255,255,0.07)',color:viewYear>=curY?'rgba(174,220,255,0.2)':'#daeeff',border:'none',borderRadius:7,width:28,height:28,cursor:viewYear>=curY?'default':'pointer',fontSize:15,fontWeight:700}}>›</button>
+            <button onClick={()=>{if(canGoForward)setViewYear(v=>v+1);}} disabled={!canGoForward}
+              style={{background:'rgba(255,255,255,0.07)',color:canGoForward?'#daeeff':'rgba(174,220,255,0.2)',border:'none',borderRadius:7,width:28,height:28,cursor:canGoForward?'pointer':'default',fontSize:15,fontWeight:700}}>›</button>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:5}}>
             {MONTHS.map((name,i)=>{
-              const m=i+1; const future=isFuture(m); const sel=isSel(m); const cur=isCur(m); const data=hasData(m);
+              const m=i+1; const future=isFuture(m); const blocked=future&&!allowFuture; const sel=isSel(m); const cur=isCur(m); const data=hasData(m);
               return (
-                <button key={m} onClick={()=>{if(!future){onChange(ym(m));setOpen(false);}}} disabled={future}
-                  style={{position:'relative',background:sel?'rgba(245,158,11,0.15)':cur?'rgba(54,242,175,0.1)':data?'rgba(35,161,221,0.1)':'rgba(255,255,255,0.04)',color:sel?'#f59e0b':cur?'#36f2af':future?'rgba(174,220,255,0.2)':data?'#daeeff':'rgba(174,220,255,0.5)',border:`1px solid ${sel?'rgba(245,158,11,0.3)':cur?'rgba(54,242,175,0.25)':data?'rgba(35,161,221,0.2)':'rgba(255,255,255,0.08)'}`,borderRadius:8,padding:'9px 4px',cursor:future?'default':'pointer',fontSize:12,fontWeight:600,transition:'all .1s'}}>
+                <button key={m} onClick={()=>{if(!blocked){onChange(ym(m));setOpen(false);}}} disabled={blocked}
+                  style={{position:'relative',background:sel?'rgba(245,158,11,0.15)':cur?'rgba(54,242,175,0.1)':future&&allowFuture?'rgba(255,255,255,0.02)':data?'rgba(35,161,221,0.1)':'rgba(255,255,255,0.04)',color:sel?'#f59e0b':cur?'#36f2af':blocked?'rgba(174,220,255,0.2)':future?'rgba(174,220,255,0.4)':data?'#daeeff':'rgba(174,220,255,0.5)',border:`1px solid ${sel?'rgba(245,158,11,0.3)':cur?'rgba(54,242,175,0.25)':future&&allowFuture?'rgba(255,255,255,0.06)':data?'rgba(35,161,221,0.2)':'rgba(255,255,255,0.08)'}`,borderRadius:8,padding:'9px 4px',cursor:blocked?'default':'pointer',fontSize:12,fontWeight:600,transition:'all .1s'}}>
                   {name}
                   {cur&&<span style={{position:'absolute',top:3,right:4,width:5,height:5,background:'#36f2af',borderRadius:'50%',display:'block',boxShadow:'0 0 4px rgba(54,242,175,0.6)'}}/>}
                   {data&&!sel&&!cur&&<span style={{position:'absolute',bottom:3,left:'50%',transform:'translateX(-50%)',width:3,height:3,background:'#23a1dd',borderRadius:'50%',display:'block'}}/>}
@@ -3385,8 +3386,8 @@ function PendingBalanceModal({effectiveEntries,monthLabel,selectedMonth,onClose}
             </thead>
             <tbody>
               {pendingEntries.map((e,i)=>(
-                <tr key={`${e.id}_${e.carriedOver?"co":""}`} style={{borderBottom:"1px solid rgba(255,255,255,0.04)",background:i%2===0?"transparent":"rgba(255,255,255,0.015)"}}>
-                  <td style={{padding:"9px 12px",color:"rgba(174,220,255,0.65)",whiteSpace:"nowrap"}}>{e.scheduledDate||"—"}{e.carriedOver&&<span style={{marginLeft:6,fontSize:10,color:"#f59e0b",background:"rgba(245,158,11,0.15)",border:"1px solid rgba(245,158,11,0.3)",borderRadius:10,padding:"1px 6px",fontWeight:600}}>carried</span>}</td>
+                <tr key={e.id} style={{borderBottom:"1px solid rgba(255,255,255,0.04)",background:i%2===0?"transparent":"rgba(255,255,255,0.015)"}}>
+                  <td style={{padding:"9px 12px",color:"rgba(174,220,255,0.65)",whiteSpace:"nowrap"}}>{e.scheduledDate||"—"}</td>
                   <td style={{padding:"9px 12px",color:"#daeeff",fontWeight:600}}>{e.clientName||"—"}</td>
                   <td style={{padding:"9px 12px",color:"rgba(174,220,255,0.7)"}}>{e.companyName||"—"}</td>
                   <td style={{padding:"9px 12px"}}><span style={{background:"rgba(245,158,11,0.15)",color:"#f59e0b",borderRadius:20,padding:"3px 12px",fontWeight:700,border:"1px solid rgba(245,158,11,0.3)"}}>${Number(e.amount||0).toLocaleString(undefined,{maximumFractionDigits:0})}</span></td>
@@ -3458,6 +3459,28 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
     }).catch(()=>{});
   },[selectedMonth]);
 
+  // Auto-roll: move Pending entries from previous month into current month when month cycles
+  const paymentRolled=useRef(false);
+  useEffect(()=>{
+    if(loading||paymentRolled.current)return;
+    paymentRolled.current=true;
+    const[cy,cm]=currentMonth.split('-').map(Number);
+    const pm=cm===1?12:cm-1; const py=cm===1?cy-1:cy;
+    const prevMonthStr=`${py}-${String(pm).padStart(2,'0')}`;
+    const pendingFromPrev=entries.filter(e=>e.month===prevMonthStr&&e.status==="Pending");
+    if(pendingFromPrev.length===0)return;
+    (async()=>{
+      const updated=[];
+      for(const e of pendingFromPrev){
+        const res=await sbUpdate("payment_entries",e.id,{...peToRow(e),month:currentMonth});
+        if(Array.isArray(res)&&res[0])updated.push(rowToPE(res[0]));
+      }
+      if(updated.length){
+        setEntries(p=>p.map(e=>{const u=updated.find(x=>x.id===e.id);return u||e;}));
+      }
+    })();
+  },[loading]);
+
   const allContracts=useMemo(()=>{
     // Active: client has an explicit "active" status record for the selected month
     const activeList=clients
@@ -3484,17 +3507,7 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
   },[clients,statuses,hpContacts,selectedMonth]);
 
   const monthEntries=useMemo(()=>entries.filter(e=>e.month===selectedMonth),[entries,selectedMonth]);
-
-  // Previous month pending entries carried forward into this month
-  const prevMonthStr=useMemo(()=>{
-    const[y,m]=selectedMonth.split('-').map(Number);
-    const pm=m===1?12:m-1; const py=m===1?y-1:y;
-    return `${py}-${String(pm).padStart(2,'0')}`;
-  },[selectedMonth]);
-  const carriedOverEntries=useMemo(()=>
-    entries.filter(e=>e.month===prevMonthStr&&e.status==="Pending").map(e=>({...e,carriedOver:true}))
-  ,[entries,prevMonthStr]);
-  const effectiveEntries=useMemo(()=>[...monthEntries,...carriedOverEntries],[monthEntries,carriedOverEntries]);
+  const effectiveEntries=useMemo(()=>monthEntries,[monthEntries]);
 
   const mergedContracts=useMemo(()=>allContracts.map(c=>{
     const meta=cpMeta.find(m=>m.sourceType===c.sourceType&&String(m.sourceId)===String(c.sourceId));
@@ -3526,15 +3539,13 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
 
   const stats=useMemo(()=>{
     const contractsTotal=mergedContracts.reduce((s,c)=>s+c.amountClosed,0);
-    const carriedOverTotal=carriedOverEntries.reduce((s,e)=>s+e.amount,0);
-    const totalRevenue=contractsTotal+carriedOverTotal;
+    const totalRevenue=contractsTotal;
     const clientPaid=effectiveEntries.filter(e=>e.status==="Paid").reduce((s,e)=>s+e.amount,0);
     const balanceLost=effectiveEntries.filter(e=>e.status==="Balance Lost").reduce((s,e)=>s+e.amount,0);
     const pendingBalance=effectiveEntries.filter(e=>e.status==="Pending").reduce((s,e)=>s+e.amount,0);
-    const confirmPayment=monthEntries.reduce((s,e)=>s+e.amount,0);
     const amountReceivedPkr=effectiveEntries.reduce((s,e)=>s+(e.receivedPkr||0),0);
-    return{totalRevenue,clientPaid,pendingBalance,balanceLost,amountReceivedPkr,confirmPayment};
-  },[mergedContracts,effectiveEntries,carriedOverEntries,monthEntries]);
+    return{totalRevenue,clientPaid,pendingBalance,balanceLost,amountReceivedPkr};
+  },[mergedContracts,effectiveEntries]);
 
   useEffect(()=>{onRevenue({val:stats.totalRevenue,label:"Total Revenue",color:"#36f2af"});},[stats.totalRevenue]);
 
@@ -3588,7 +3599,7 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
       {/* Header: month picker + 4 stat boxes */}
       <div style={{background:"rgba(255,255,255,0.03)",borderBottom:"1px solid rgba(255,255,255,0.07)",padding:"12px 20px"}}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,flexWrap:"wrap"}}>
-          <MonthPicker selectedMonth={selectedMonth} currentMonth={currentMonth} availableMonths={availableMonths} onChange={setSelectedMonth}/>
+          <MonthPicker selectedMonth={selectedMonth} currentMonth={currentMonth} availableMonths={availableMonths} onChange={setSelectedMonth} allowFuture={true}/>
           {selectedMonth!==currentMonth&&<>
             <span style={{background:"rgba(35,161,221,0.12)",color:"#23a1dd",border:"1px solid rgba(35,161,221,0.2)",borderRadius:8,padding:"4px 10px",fontSize:11,fontWeight:600}}>📅 {monthLabel(selectedMonth)}</span>
             <button onClick={()=>setSelectedMonth(currentMonth)} style={{background:"rgba(54,242,175,0.08)",color:"#36f2af",border:"1px solid rgba(54,242,175,0.2)",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontSize:11,fontWeight:600}}>↩ Current Month</button>
@@ -3684,11 +3695,11 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
               <tbody>
                 {filteredEntries.length===0&&<tr><td colSpan={8} style={{textAlign:"center",padding:"48px 0",color:"rgba(174,220,255,0.25)",fontSize:14}}>No payment entries for {monthLabel(selectedMonth)}.<br/><span style={{fontSize:12,marginTop:4,display:"block"}}>Schedule payments via the Payment Calendar tab.</span></td></tr>}
                 {filteredEntries.map((e,i)=>(
-                  <tr key={`${e.id}_${e.carriedOver?"co":""}` } onClick={()=>setEntryModal({mode:"edit",entry:e})}
-                    style={{borderBottom:"1px solid rgba(255,255,255,0.045)",background:e.carriedOver?"rgba(245,158,11,0.06)":i%2===0?"transparent":"rgba(255,255,255,0.018)",transition:"background .12s",cursor:"pointer"}}
-                    onMouseEnter={ev=>ev.currentTarget.style.background=e.carriedOver?"rgba(245,158,11,0.12)":"rgba(35,161,221,0.07)"}
-                    onMouseLeave={ev=>ev.currentTarget.style.background=e.carriedOver?"rgba(245,158,11,0.06)":i%2===0?"transparent":"rgba(255,255,255,0.018)"}>
-                    <TD><span style={{color:"rgba(174,220,255,0.65)",whiteSpace:"nowrap"}}>{e.scheduledDate||"—"}{e.carriedOver&&<span style={{marginLeft:6,fontSize:10,color:"#f59e0b",background:"rgba(245,158,11,0.15)",border:"1px solid rgba(245,158,11,0.3)",borderRadius:10,padding:"1px 6px",fontWeight:600}}>carried</span>}</span></TD>
+                  <tr key={e.id} onClick={()=>setEntryModal({mode:"edit",entry:e})}
+                    style={{borderBottom:"1px solid rgba(255,255,255,0.045)",background:i%2===0?"transparent":"rgba(255,255,255,0.018)",transition:"background .12s",cursor:"pointer"}}
+                    onMouseEnter={ev=>ev.currentTarget.style.background="rgba(35,161,221,0.07)"}
+                    onMouseLeave={ev=>ev.currentTarget.style.background=i%2===0?"transparent":"rgba(255,255,255,0.018)"}>
+                    <TD><span style={{color:"rgba(174,220,255,0.65)",whiteSpace:"nowrap"}}>{e.scheduledDate||"—"}</span></TD>
                     <TD><span style={{color:"#daeeff",fontWeight:600}}>{e.clientName||"—"}</span></TD>
                     <TD><span style={{color:"rgba(174,220,255,0.75)"}}>{e.companyName||"—"}</span></TD>
                     <TD><span style={{color:"#36f2af",fontWeight:700}}>${Number(e.amount||0).toLocaleString(undefined,{maximumFractionDigits:0})}</span></TD>

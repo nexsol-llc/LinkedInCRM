@@ -992,8 +992,8 @@ function HotPipelineGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
   useEffect(()=>{ onRevenue({val:stats.won||0,label:"Revenue Won",color:"#36f2af"}); },[stats.won]);
 
   const lastMonth=useMemo(()=>{const[y,m]=selectedMonth.split('-').map(Number);const lm=m===1?12:m-1;const ly=m===1?y-1:y;return `${ly}-${String(lm).padStart(2,'0')}`;},[selectedMonth]);
-  const lastMonthTotal=useMemo(()=>contacts.filter(c=>c.stage==="Won"&&(c.wonAt?c.wonAt.slice(0,7):currentMonth)===lastMonth).reduce((s,c)=>s+(c.saleValue||0),0),[contacts,lastMonth,currentMonth]);
-  const thisMonthTotal=useMemo(()=>contacts.filter(c=>c.stage==="Won"&&(c.wonAt?c.wonAt.slice(0,7):currentMonth)===selectedMonth).reduce((s,c)=>s+(c.saleValue||0),0),[contacts,selectedMonth,currentMonth]);
+  const lastMonthTotal=useMemo(()=>contacts.filter(c=>(c.createdAt?c.createdAt.slice(0,7):currentMonth)===lastMonth).reduce((s,c)=>s+(c.saleValue||0),0),[contacts,lastMonth,currentMonth]);
+  const thisMonthTotal=useMemo(()=>contacts.filter(c=>(c.createdAt?c.createdAt.slice(0,7):currentMonth)===selectedMonth).reduce((s,c)=>s+(c.saleValue||0),0),[contacts,selectedMonth,currentMonth]);
 
   const onDragStart=useCallback((e,id)=>{setDragId(id);e.dataTransfer.effectAllowed="move";},[]);
   const onDragOver=useCallback(stage=>setDragOver(stage),[]);

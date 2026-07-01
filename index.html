@@ -1534,20 +1534,15 @@ function ActiveClientsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
   const yoyStart=useMemo(()=>`${new Date().getFullYear()}-01`,[]);
 
   const activeProjects=useMemo(()=>{
-    const yoySt=statuses.filter(s=>s.status==="active"&&s.month>=yoyStart&&s.month<=currentMonth);
-    const ids=new Set(yoySt.map(s=>s.clientId));
-    const fromDB=clients.filter(c=>ids.has(c.id)).map(c=>{
-      const months=yoySt.filter(s=>s.clientId===c.id).map(s=>s.month).sort();
-      return{...c,activeSince:months[0],activeMonths:months.length};
-    });
-    // Only skip HP contacts already covered by fromDB — don't exclude by clients alone
-    // (an HP contact may exist in clients but lack an active status record for this year)
-    const coveredHpIds=new Set(fromDB.map(c=>c.hotPipelineId).filter(Boolean).map(String));
+    const fromDB=clients
+      .filter(c=>statuses.some(s=>s.clientId===c.id&&s.month===selectedMonth&&s.status==="active"))
+      .map(c=>({...c,activeSince:(c.createdAt||"").slice(0,7),activeMonths:1}));
+    const coveredHpIds=new Set(clients.map(c=>c.hotPipelineId).filter(Boolean).map(String));
     const fromHP=hpContacts
-      .filter(c=>c.stage==="Won"&&winMonth(c)>=yoyStart&&winMonth(c)<=currentMonth&&!coveredHpIds.has(String(c.id)))
+      .filter(c=>c.stage==="Won"&&winMonth(c)===selectedMonth&&!coveredHpIds.has(String(c.id)))
       .map(hp=>({id:hp.id,firstName:hp.firstName,lastName:hp.lastName,company:hp.accountName||"",email:hp.email||"",revenue:hp.saleValue||0,source:hp.source||"",activeSince:winMonth(hp),activeMonths:1}));
     return[...fromDB,...fromHP].sort((a,b)=>(a.activeSince||"").localeCompare(b.activeSince||""));
-  },[clients,statuses,hpContacts,currentMonth,yoyStart,winMonth]);
+  },[clients,statuses,hpContacts,selectedMonth,winMonth]);
 
   const lostProjects=useMemo(()=>{
     const yoySt=statuses.filter(s=>s.status==="lost"&&s.month>=yoyStart&&s.month<=currentMonth);

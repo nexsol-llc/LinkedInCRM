@@ -3543,8 +3543,9 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
     const clientPaid=effectiveEntries.filter(e=>e.status==="Paid").reduce((s,e)=>s+e.amount,0);
     const balanceLost=effectiveEntries.filter(e=>e.status==="Balance Lost").reduce((s,e)=>s+e.amount,0);
     const pendingBalance=effectiveEntries.filter(e=>e.status==="Pending").reduce((s,e)=>s+e.amount,0);
+    const confirmPayment=effectiveEntries.reduce((s,e)=>s+e.amount,0);
     const amountReceivedPkr=effectiveEntries.reduce((s,e)=>s+(e.receivedPkr||0),0);
-    return{totalRevenue,clientPaid,pendingBalance,balanceLost,amountReceivedPkr};
+    return{totalRevenue,clientPaid,pendingBalance,balanceLost,confirmPayment,amountReceivedPkr};
   },[mergedContracts,effectiveEntries]);
 
   useEffect(()=>{onRevenue({val:stats.totalRevenue,label:"Total Revenue",color:"#36f2af"});},[stats.totalRevenue]);

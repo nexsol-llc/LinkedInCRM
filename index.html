@@ -3459,12 +3459,17 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
   },[selectedMonth]);
 
   const allContracts=useMemo(()=>{
-    // Show clients added on or before the selected month, unless lost that specific month
-    const lostThisMonth=new Set(statuses.filter(s=>s.month===selectedMonth&&s.status==="lost").map(s=>s.clientId));
+    // Build most-recent status per client up to selectedMonth
+    const latestStatus={};
+    statuses.filter(s=>s.month<=selectedMonth).forEach(s=>{
+      if(!latestStatus[s.clientId]||s.month>latestStatus[s.clientId].month)latestStatus[s.clientId]=s;
+    });
     const activeList=clients
       .filter(c=>{
         const addedMonth=(c.createdAt||"").slice(0,7);
-        return addedMonth&&addedMonth<=selectedMonth&&!lostThisMonth.has(c.id);
+        if(!addedMonth||addedMonth>selectedMonth)return false;
+        // Exclude if their most recent status (up to this month) is "lost"
+        return latestStatus[c.id]?.status!=="lost";
       })
       .map(c=>({
         key:`ac_${c.id}`,sourceType:"active",sourceId:c.id,

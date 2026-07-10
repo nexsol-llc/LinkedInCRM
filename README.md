@@ -368,12 +368,12 @@ CREATE TABLE payment_entries (
 );
 ```
 
-#### `expense_sheets` — Expense spreadsheets (one row per month)
+#### `expense_sheets` — Expense spreadsheets (one or more sheets per month)
 ```sql
 CREATE TABLE expense_sheets (
   id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  month text NOT NULL UNIQUE,        -- format: 'YYYY-MM'
-  name text,                         -- sheet display name, e.g. 'July 2026'
+  month text NOT NULL,               -- format: 'YYYY-MM' — not unique; a month can have multiple sheets
+  name text,                         -- sheet display name, e.g. 'July 2026', 'Sheet 2', 'Travel'
   cells jsonb DEFAULT '{}'::jsonb,   -- { "A1": "raw value or =formula", "B2": "250", ... }
   boxes jsonb DEFAULT '[]'::jsonb,   -- [{ "id": "...", "label": "Total Spend", "formula": "=SUM(B1:B30)" }]
   styles jsonb DEFAULT '{}'::jsonb,  -- { "A1": { "bold": true, "color": "#fff", "bg": "#222" } }
@@ -642,15 +642,15 @@ Contract and installment tracker for revenue already closed in Active Clients an
 
 ### 🧾 Expenses
 
-An in-app spreadsheet for tracking monthly expenses — Excel/Google Sheets-style, one sheet per month.
+An in-app spreadsheet for tracking expenses — Excel/Google Sheets-style, organized like a workbook per month: each month can hold one or more sheets (tabs).
 
 #### Layout
 - Column headers `A`–`Z` and row numbers, sticky while scrolling — every cell is directly editable
-- **Calendar dropdown** at the top switches between months; picking a month with no sheet yet creates it immediately (no prompts)
+- **Calendar dropdown** at the top switches between months; picking a month with no sheet yet creates its first sheet immediately (no prompts)
 - **Formula bar** shows the selected cell's address and raw content (value or formula)
 - **Summary boxes** — click **+ Add Box** to create a custom box with a name and a formula (e.g. `=SUM(B2:B30)`); click an existing box to edit or delete it
 - **Formatting toolbar** — select a single cell or click-and-drag a range, then apply **Bold**, text color, background color, **Merge**/**Unmerge**, or set a **Dropdown** (comma-separated options, turning those cells into a `<select>`)
-- **Sheet tabs** at the bottom — **+ Add Sheet** creates the next sequential month instantly (no modal); double-click a tab to rename it, click **×** to delete it
+- **Sheet tabs** at the bottom are scoped to the currently active month (like tabs within one Excel workbook) — **+ Add Sheet** adds another sheet *within that same month* (auto-named "Sheet 2", "Sheet 3", …); double-click a tab to rename it (e.g. "Rent", "Travel"), click **×** to delete it. To start a *different* month, use the calendar dropdown, not "+ Add Sheet"
 - **+ 15 Rows** button expands the grid (up to 200 rows) if a sheet needs more line items
 - Keyboard: **Enter** or **Tab** commits the cell and moves the cursor to the next cell on the right (Shift+Tab moves left), wrapping to the next/previous row at the sheet edges
 

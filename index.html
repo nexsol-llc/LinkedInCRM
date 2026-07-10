@@ -4077,7 +4077,7 @@ function ExpensesGate(){
   useEffect(()=>{
     setLoading(true);
     sbGetAll("expense_sheets").then(rows=>{
-      const list=(Array.isArray(rows)?rows:[]).map(rowToES).sort((a,b)=>a.month.localeCompare(b.month));
+      const list=(Array.isArray(rows)?rows:[]).map(rowToES).sort((a,b)=>a.month.localeCompare(b.month)||a.id-b.id);
       setSheets(list);
       const cur=list.find(s=>s.month===currentMonth);
       setActiveId(cur?cur.id:(list.length?list[list.length-1].id:null));
@@ -4165,34 +4165,36 @@ function ExpensesGate(){
   }
 
   function monthLabel(mo){ const[y,m]=mo.split('-').map(Number); return new Date(y,m-1,1).toLocaleString('default',{month:'long',year:'numeric'}); }
+  function nextSheetName(month){
+    const count=sheets.filter(s=>s.month===month).length;
+    return count===0?monthLabel(month):`Sheet ${count+1}`;
+  }
   async function createSheetForMonth(month){
-    const res=await sbInsert("expense_sheets",esToRow({month,name:monthLabel(month),cells:{},boxes:[],styles:{},merges:[],dropdowns:{},rowCount:EX_DEFAULT_ROWS}));
+    const res=await sbInsert("expense_sheets",esToRow({month,name:nextSheetName(month),cells:{},boxes:[],styles:{},merges:[],dropdowns:{},rowCount:EX_DEFAULT_ROWS}));
     if(Array.isArray(res)&&res[0]){
       const s=rowToES(res[0]);
-      setSheets(prev=>[...prev,s].sort((a,b)=>a.month.localeCompare(b.month)));
+      setSheets(prev=>[...prev,s].sort((a,b)=>a.month.localeCompare(b.month)||a.id-b.id));
       setActiveId(s.id);
       return s;
     }
     return null;
   }
-  function nextSequentialMonth(){
-    const months=sheets.map(s=>s.month).slice().sort();
-    const last=months[months.length-1];
-    let n;
-    if(last){ const[y,m]=last.split('-').map(Number); n=new Date(y,m,1); } else { n=new Date(); }
-    return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
-  }
   async function handleMonthPick(month){
-    const existing=sheets.find(s=>s.month===month);
-    if(existing)setActiveId(existing.id);
+    const inMonth=sheets.filter(s=>s.month===month).sort((a,b)=>a.id-b.id);
+    if(inMonth.length)setActiveId(inMonth[0].id);
     else await createSheetForMonth(month);
   }
   async function deleteSheet(id){
     if(!confirm("Delete this sheet? This cannot be undone."))return;
+    const deleted=sheets.find(s=>s.id===id);
     await sbDelete("expense_sheets",id);
     setSheets(prev=>{
       const next=prev.filter(s=>s.id!==id);
-      if(activeId===id)setActiveId(next.length?next[next.length-1].id:null);
+      if(activeId===id){
+        const sameMonth=deleted?next.filter(s=>s.month===deleted.month):[];
+        const fallback=sameMonth.length?sameMonth[sameMonth.length-1]:(next.length?next[next.length-1]:null);
+        setActiveId(fallback?fallback.id:null);
+      }
       return next;
     });
   }
@@ -4339,9 +4341,10 @@ function ExpensesGate(){
             </table>
           </div>
 
-          {/* Sheet tabs */}
+          {/* Sheet tabs — scoped to the active sheet's month, like tabs within one Excel workbook */}
           <div style={{display:"flex",alignItems:"center",gap:6,borderTop:"1px solid rgba(255,255,255,0.08)",padding:"8px 12px",overflowX:"auto",flexShrink:0,background:"rgba(255,255,255,0.02)"}}>
-            {sheets.map(s=>(
+            <span style={{fontSize:10,color:"rgba(174,220,255,0.32)",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.06em",flexShrink:0,marginRight:2}}>{monthLabel(active.month)}:</span>
+            {sheets.filter(s=>s.month===active.month).map(s=>(
               <div key={s.id} onDoubleClick={()=>setRenamingId(s.id)} onClick={()=>setActiveId(s.id)}
                 style={{display:"flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:8,cursor:"pointer",background:s.id===activeId?"rgba(35,161,221,0.18)":"rgba(255,255,255,0.04)",border:`1px solid ${s.id===activeId?"rgba(35,161,221,0.4)":"rgba(255,255,255,0.08)"}`,whiteSpace:"nowrap",flexShrink:0}}>
                 {renamingId===s.id?
@@ -4350,7 +4353,7 @@ function ExpensesGate(){
                 <span onClick={e=>{e.stopPropagation();deleteSheet(s.id);}} title="Delete sheet" style={{color:"rgba(174,220,255,0.3)",fontSize:13,cursor:"pointer",lineHeight:1}}>×</span>
               </div>
             ))}
-            <button onClick={()=>createSheetForMonth(nextSequentialMonth())} style={{background:"rgba(54,242,175,0.1)",color:"#36f2af",border:"1px solid rgba(54,242,175,0.25)",borderRadius:8,padding:"6px 14px",cursor:"pointer",fontSize:12,fontWeight:700,flexShrink:0}}>+ Add Sheet</button>
+            <button onClick={()=>createSheetForMonth(active.month)} title="Adds another sheet within this month" style={{background:"rgba(54,242,175,0.1)",color:"#36f2af",border:"1px solid rgba(54,242,175,0.25)",borderRadius:8,padding:"6px 14px",cursor:"pointer",fontSize:12,fontWeight:700,flexShrink:0}}>+ Add Sheet</button>
           </div>
         </>
       )}

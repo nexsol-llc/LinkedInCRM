@@ -23,6 +23,7 @@
   - [Paid Leads](#paid-leads)
   - [Active Clients](#active-clients)
   - [Client Payments](#client-payments)
+  - [Expenses](#expenses)
   - [All Contacts](#all-contacts)
 - [Activity Log](#activity-log)
 - [CSV Import & Export](#csv-import--export)
@@ -367,6 +368,19 @@ CREATE TABLE payment_entries (
 );
 ```
 
+#### `expense_sheets` — Expense spreadsheets (one row per month)
+```sql
+CREATE TABLE expense_sheets (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  month text NOT NULL UNIQUE,       -- format: 'YYYY-MM'
+  name text,                        -- sheet display name, e.g. 'July 2026'
+  cells jsonb DEFAULT '{}'::jsonb,  -- { "A1": "raw value or =formula", "B2": "250", ... }
+  boxes jsonb DEFAULT '[]'::jsonb,  -- [{ "id": "...", "label": "Total Spend", "formula": "=SUM(B1:B30)" }]
+  row_count int DEFAULT 30,
+  created_at timestamptz DEFAULT now()
+);
+```
+
 #### `activity_log` — Team daily activity log
 ```sql
 CREATE TABLE activity_log (
@@ -394,6 +408,7 @@ ALTER TABLE active_clients DISABLE ROW LEVEL SECURITY;
 ALTER TABLE active_clients_monthly_status DISABLE ROW LEVEL SECURITY;
 ALTER TABLE client_payments DISABLE ROW LEVEL SECURITY;
 ALTER TABLE payment_entries DISABLE ROW LEVEL SECURITY;
+ALTER TABLE expense_sheets DISABLE ROW LEVEL SECURITY;
 ALTER TABLE activity_log DISABLE ROW LEVEL SECURITY;
 ```
 
@@ -430,7 +445,7 @@ The sidebar is grouped into sections. Items marked **soon** are placeholders not
 | Overview | Dashboard *(soon)*, All Contacts, Hot Pipeline, Active Clients |
 | Pipeline | LinkedIn Pipeline, Freelance Pipeline, Cold Calling, Email Campaign, Paid Leads |
 | Delivery | Projects *(soon)*, Tasks *(soon)* |
-| Revenue | Client Payments, Proposals *(soon)*, Invoices *(soon)* |
+| Revenue | Client Payments, Expenses, Proposals *(soon)*, Invoices *(soon)* |
 | Data | Import *(soon)*, Settings |
 
 ---
@@ -619,6 +634,29 @@ Contract and installment tracker for revenue already closed in Active Clients an
 - **Month Picker** supports selecting future months in addition to past/current
 - **Auto-roll** — unpaid `Pending` installments roll forward into the current month automatically
 - Contracts are read from `active_clients` (status = active for the month) and `hot_pipeline` (`stage = Won`, won in that month) — payment metadata is stored separately in `client_payments` keyed by source
+
+---
+
+### 🧾 Expenses
+
+An in-app spreadsheet for tracking monthly expenses — Excel/Google Sheets-style, one sheet per month.
+
+#### Layout
+- Column headers (`A`, `B`, `C`, …) and row numbers, sticky while scrolling — every cell is directly editable
+- **Formula bar** shows the selected cell's address and raw content (value or formula)
+- **Summary boxes** at the top — click **+ Add Box** to create a custom box with a name and a formula (e.g. `=SUM(B2:B30)`); click an existing box to edit or delete it
+- **Sheet tabs** at the bottom — click **+ Add Sheet** to create the next month's sheet; double-click a tab to rename it, click the **×** to delete it
+- **+ 15 Rows** button expands the grid (up to 200 rows) if a sheet needs more line items
+
+#### Formulas
+Cells starting with `=` are evaluated as formulas:
+- Cell references: `=A1`, `=B2*1.1`
+- Ranges inside functions: `=SUM(B2:B30)`
+- Functions: `SUM`, `AVERAGE` (or `AVG`), `MIN`, `MAX`, `COUNT`
+- Standard arithmetic and parentheses: `=(A1+A2)/2`
+- Circular references resolve to `0` rather than hanging
+
+Each sheet stores its grid as a single JSON object (`cells`) keyed by cell address (e.g. `"B2": "250"` or `"B3": "=B1+B2"`), so there's no fixed schema — use the columns however fits (Date, Category, Vendor, Amount, etc.).
 
 ---
 

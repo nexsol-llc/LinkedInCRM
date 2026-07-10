@@ -3756,65 +3756,197 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
 
 const EX_DEFAULT_ROWS=30;
 const EX_MAX_ROWS=200;
-const EX_COLS=12; // A..L
+const EX_COLS=26; // A..Z
 
-function rowToES(r){ return { id:r.id, month:r.month||"", name:r.name||"", cells:r.cells||{}, boxes:r.boxes||[], rowCount:r.row_count||EX_DEFAULT_ROWS, createdAt:r.created_at||null }; }
-function esToRow(s){ return { month:s.month||"", name:s.name||"", cells:s.cells||{}, boxes:s.boxes||[], row_count:s.rowCount||EX_DEFAULT_ROWS }; }
+function rowToES(r){ return { id:r.id, month:r.month||"", name:r.name||"", cells:r.cells||{}, boxes:r.boxes||[], styles:r.styles||{}, merges:r.merges||[], dropdowns:r.dropdowns||{}, rowCount:r.row_count||EX_DEFAULT_ROWS, createdAt:r.created_at||null }; }
+function esToRow(s){ return { month:s.month||"", name:s.name||"", cells:s.cells||{}, boxes:s.boxes||[], styles:s.styles||{}, merges:s.merges||[], dropdowns:s.dropdowns||{}, row_count:s.rowCount||EX_DEFAULT_ROWS }; }
 
 function exColLetter(col){ let s="",n=col+1; while(n>0){ const rem=(n-1)%26; s=String.fromCharCode(65+rem)+s; n=Math.floor((n-1)/26); } return s; }
 function exLetterToCol(letters){ let n=0; for(let i=0;i<letters.length;i++)n=n*26+(letters.charCodeAt(i)-64); return n-1; }
 function exCellAddr(row,col){ return exColLetter(col)+(row+1); }
 function exParseRef(ref){ const m=/^([A-Za-z]+)(\d+)$/.exec((ref||"").trim()); if(!m)return null; return{col:exLetterToCol(m[1].toUpperCase()),row:parseInt(m[2],10)-1}; }
-
-function exArith(expr){
-  let i=0;
-  function ws(){ while(i<expr.length&&expr[i]===" ")i++; }
-  function pExpr(){ let v=pTerm(); ws(); while(expr[i]==="+"||expr[i]==="-"){ const op=expr[i];i++; const r=pTerm(); v=op==="+"?v+r:v-r; ws(); } return v; }
-  function pTerm(){ let v=pFactor(); ws(); while(expr[i]==="*"||expr[i]==="/"){ const op=expr[i];i++; const r=pFactor(); v=op==="*"?v*r:(r===0?0:v/r); ws(); } return v; }
-  function pFactor(){ ws(); if(expr[i]==="-"){i++;return -pFactor();} if(expr[i]==="+"){i++;return pFactor();} if(expr[i]==="("){i++;const v=pExpr();ws();if(expr[i]===")")i++;return v;} const st=i; while(i<expr.length&&/[0-9.]/.test(expr[i]))i++; const s=expr.slice(st,i); return s?parseFloat(s):0; }
-  ws(); if(!expr)return 0; const v=pExpr(); return isNaN(v)?0:v;
+function exRangeAddrs(startAddr,endAddr){
+  const a=exParseRef(startAddr),b=exParseRef(endAddr);
+  if(!a||!b)return [startAddr];
+  const r1=Math.min(a.row,b.row),r2=Math.max(a.row,b.row),c1=Math.min(a.col,b.col),c2=Math.max(a.col,b.col);
+  const list=[];
+  for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)list.push(exCellAddr(r,c));
+  return list;
 }
-function exResolveArgs(argStr,getVal){
-  const parts=argStr.split(",").map(p=>p.trim()).filter(Boolean);
+function exInRange(addr,startAddr,endAddr){
+  const p=exParseRef(addr),a=exParseRef(startAddr),b=exParseRef(endAddr);
+  if(!p||!a||!b)return false;
+  const r1=Math.min(a.row,b.row),r2=Math.max(a.row,b.row),c1=Math.min(a.col,b.col),c2=Math.max(a.col,b.col);
+  return p.row>=r1&&p.row<=r2&&p.col>=c1&&p.col<=c2;
+}
+
+// ── Formula engine: tokenizer → recursive-descent parser → evaluator ──────────
+function exTokenize(s){
+  const tokens=[]; let i=0;
+  while(i<s.length){
+    const c=s[i];
+    if(c===" "||c==="\t"){i++;continue;}
+    if(c==='"'){ let j=i+1,buf=""; while(j<s.length&&s[j]!=='"'){ if(s[j]==="\\"&&s[j+1]==='"'){buf+='"';j+=2;} else {buf+=s[j];j++;} } tokens.push({t:"STR",v:buf}); i=j+1; continue; }
+    if(/[0-9]/.test(c)||(c==="."&&/[0-9]/.test(s[i+1]||""))){ let j=i; while(j<s.length&&/[0-9.]/.test(s[j]))j++; tokens.push({t:"NUM",v:parseFloat(s.slice(i,j))}); i=j; continue; }
+    if(/[A-Za-z]/.test(c)){ let j=i; while(j<s.length&&/[A-Za-z0-9_]/.test(s[j]))j++; const word=s.slice(i,j); i=j;
+      if(/^[A-Za-z]+[0-9]+$/.test(word))tokens.push({t:"REF",v:word.toUpperCase()});
+      else tokens.push({t:"IDENT",v:word.toUpperCase()});
+      continue;
+    }
+    if(c==="<"&&s[i+1]===">"){ tokens.push({t:"OP",v:"<>"}); i+=2; continue; }
+    if(c==="<"&&s[i+1]==="="){ tokens.push({t:"OP",v:"<="}); i+=2; continue; }
+    if(c===">"&&s[i+1]==="="){ tokens.push({t:"OP",v:">="}); i+=2; continue; }
+    if("+-*/^&=<>(),:".includes(c)){ tokens.push({t:"OP",v:c}); i++; continue; }
+    i++;
+  }
+  return tokens;
+}
+function exParse(tokens){
+  let p=0;
+  function peek(){return tokens[p];}
+  function next(){return tokens[p++];}
+  function expectOp(v){ if(peek()&&peek().t==="OP"&&peek().v===v){p++;return true;} return false; }
+  function parseComparison(){
+    let left=parseConcat();
+    while(peek()&&peek().t==="OP"&&["=","<>","<",">","<=",">="].includes(peek().v)){
+      const op=next().v; const right=parseConcat();
+      left={type:"bin",op,left,right};
+    }
+    return left;
+  }
+  function parseConcat(){
+    let left=parseAdditive();
+    while(peek()&&peek().t==="OP"&&peek().v==="&"){ next(); const right=parseAdditive(); left={type:"bin",op:"&",left,right}; }
+    return left;
+  }
+  function parseAdditive(){
+    let left=parseMultiplicative();
+    while(peek()&&peek().t==="OP"&&(peek().v==="+"||peek().v==="-")){ const op=next().v; const right=parseMultiplicative(); left={type:"bin",op,left,right}; }
+    return left;
+  }
+  function parseMultiplicative(){
+    let left=parsePower();
+    while(peek()&&peek().t==="OP"&&(peek().v==="*"||peek().v==="/")){ const op=next().v; const right=parsePower(); left={type:"bin",op,left,right}; }
+    return left;
+  }
+  function parsePower(){
+    let left=parseUnary();
+    if(peek()&&peek().t==="OP"&&peek().v==="^"){ next(); const right=parsePower(); left={type:"bin",op:"^",left,right}; }
+    return left;
+  }
+  function parseUnary(){
+    if(peek()&&peek().t==="OP"&&(peek().v==="-"||peek().v==="+")){ const op=next().v; const v=parseUnary(); return {type:"unary",op,v}; }
+    return parsePrimary();
+  }
+  function parsePrimary(){
+    const tok=peek();
+    if(!tok)return {type:"num",v:0};
+    if(tok.t==="NUM"){ next(); return {type:"num",v:tok.v}; }
+    if(tok.t==="STR"){ next(); return {type:"str",v:tok.v}; }
+    if(tok.t==="OP"&&tok.v==="("){ next(); const e=parseComparison(); expectOp(")"); return e; }
+    if(tok.t==="REF"){
+      next();
+      if(peek()&&peek().t==="OP"&&peek().v===":"){ next(); const end=next(); return {type:"range",from:tok.v,to:end?end.v:tok.v}; }
+      return {type:"ref",v:tok.v};
+    }
+    if(tok.t==="IDENT"){
+      next();
+      if(tok.v==="TRUE")return {type:"bool",v:true};
+      if(tok.v==="FALSE")return {type:"bool",v:false};
+      if(peek()&&peek().t==="OP"&&peek().v==="("){
+        next();
+        const args=[];
+        if(!(peek()&&peek().t==="OP"&&peek().v===")")){
+          args.push(parseComparison());
+          while(peek()&&peek().t==="OP"&&peek().v===","){ next(); args.push(parseComparison()); }
+        }
+        expectOp(")");
+        return {type:"call",name:tok.v,args};
+      }
+      return {type:"str",v:tok.v};
+    }
+    next();
+    return {type:"num",v:0};
+  }
+  return parseComparison();
+}
+function exToNum(v){ if(typeof v==="number")return v; if(typeof v==="boolean")return v?1:0; const n=parseFloat(v); return isNaN(n)?0:n; }
+function exToStr(v){ if(v==null)return ""; if(typeof v==="boolean")return v?"TRUE":"FALSE"; return String(v); }
+function exCompare(a,b){ if(typeof a==="number"&&typeof b==="number")return a-b; const as=exToStr(a),bs=exToStr(b); return as<bs?-1:as>bs?1:0; }
+function exRangeValues(node,ctx){
+  const ra=exParseRef(node.from),rb=exParseRef(node.to);
   const values=[];
-  parts.forEach(p=>{
-    if(p.includes(":")){
-      const [a,b]=p.split(":"); const ra=exParseRef(a),rb=exParseRef(b);
-      if(ra&&rb){ const r1=Math.min(ra.row,rb.row),r2=Math.max(ra.row,rb.row),c1=Math.min(ra.col,rb.col),c2=Math.max(ra.col,rb.col);
-        for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)values.push(getVal(r,c)); }
-    } else { const ref=exParseRef(p); if(ref)values.push(getVal(ref.row,ref.col)); else { const n=parseFloat(p); values.push(isNaN(n)?0:n); } }
-  });
+  if(ra&&rb){
+    const r1=Math.min(ra.row,rb.row),r2=Math.max(ra.row,rb.row),c1=Math.min(ra.col,rb.col),c2=Math.max(ra.col,rb.col);
+    for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)values.push(ctx.getVal(r,c));
+  }
   return values;
 }
-function exResolveFunctions(expr,getVal){
-  const FUNC_RE=/([A-Z]+)\(([^()]*)\)/;
-  let guard=0;
-  while(FUNC_RE.test(expr)&&guard<80){
-    guard++;
-    expr=expr.replace(FUNC_RE,(m,fn,args)=>{
-      const values=exResolveArgs(args,getVal);
-      let res=0;
-      if(fn==="SUM")res=values.reduce((a,b)=>a+b,0);
-      else if(fn==="AVERAGE"||fn==="AVG")res=values.length?values.reduce((a,b)=>a+b,0)/values.length:0;
-      else if(fn==="MIN")res=values.length?Math.min(...values):0;
-      else if(fn==="MAX")res=values.length?Math.max(...values):0;
-      else if(fn==="COUNT")res=values.length;
-      return String(res);
-    });
+function exArgValues(argNode,ctx){ return argNode.type==="range"?exRangeValues(argNode,ctx):[exEvalNode(argNode,ctx)]; }
+function exRoundTo(n,d){ const f=Math.pow(10,d); return Math.round(n*f)/f; }
+function exRoundDir(n,d,dir){ const f=Math.pow(10,d); const base=n*f; const r=dir==="up"?(base>=0?Math.ceil(base):Math.floor(base)):(base>=0?Math.floor(base):Math.ceil(base)); return r/f; }
+function exCallFn(name,args,ctx){
+  const flat=()=>args.flatMap(a=>exArgValues(a,ctx));
+  switch(name){
+    case "SUM": return flat().reduce((s,v)=>s+exToNum(v),0);
+    case "AVERAGE": case "AVG": { const vals=flat().map(exToNum); return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0; }
+    case "MIN": { const vals=flat().map(exToNum); return vals.length?Math.min(...vals):0; }
+    case "MAX": { const vals=flat().map(exToNum); return vals.length?Math.max(...vals):0; }
+    case "COUNT": return flat().filter(v=>v!==""&&v!=null&&!isNaN(exToNum(v))).length;
+    case "COUNTA": return flat().filter(v=>v!==""&&v!=null).length;
+    case "ABS": return Math.abs(exToNum(exEvalNode(args[0],ctx)));
+    case "ROUND": return exRoundTo(exToNum(exEvalNode(args[0],ctx)),args[1]?exToNum(exEvalNode(args[1],ctx)):0);
+    case "ROUNDUP": return exRoundDir(exToNum(exEvalNode(args[0],ctx)),args[1]?exToNum(exEvalNode(args[1],ctx)):0,"up");
+    case "ROUNDDOWN": return exRoundDir(exToNum(exEvalNode(args[0],ctx)),args[1]?exToNum(exEvalNode(args[1],ctx)):0,"down");
+    case "SQRT": return Math.sqrt(exToNum(exEvalNode(args[0],ctx)));
+    case "POWER": return Math.pow(exToNum(exEvalNode(args[0],ctx)),exToNum(exEvalNode(args[1],ctx)));
+    case "MOD": { const a=exToNum(exEvalNode(args[0],ctx)),b=exToNum(exEvalNode(args[1],ctx)); return b===0?0:a-b*Math.floor(a/b); }
+    case "CEILING": return Math.ceil(exToNum(exEvalNode(args[0],ctx)));
+    case "FLOOR": return Math.floor(exToNum(exEvalNode(args[0],ctx)));
+    case "PRODUCT": return flat().reduce((s,v)=>s*exToNum(v),1);
+    case "IF": { const cond=exEvalNode(args[0],ctx); return cond?(args[1]!==undefined?exEvalNode(args[1],ctx):true):(args[2]!==undefined?exEvalNode(args[2],ctx):false); }
+    case "AND": return args.every(a=>!!exEvalNode(a,ctx));
+    case "OR": return args.some(a=>!!exEvalNode(a,ctx));
+    case "NOT": return !exEvalNode(args[0],ctx);
+    case "IFERROR": { const v=exEvalNode(args[0],ctx); return (typeof v==="number"&&!Number.isFinite(v))?exEvalNode(args[1],ctx):v; }
+    case "CONCAT": case "CONCATENATE": return args.map(a=>exToStr(exEvalNode(a,ctx))).join("");
+    case "LEFT": return exToStr(exEvalNode(args[0],ctx)).slice(0,args[1]?exToNum(exEvalNode(args[1],ctx)):1);
+    case "RIGHT": { const s=exToStr(exEvalNode(args[0],ctx)); const n=args[1]?exToNum(exEvalNode(args[1],ctx)):1; return s.slice(Math.max(0,s.length-n)); }
+    case "MID": { const s=exToStr(exEvalNode(args[0],ctx)); const start=exToNum(exEvalNode(args[1],ctx)); const len=exToNum(exEvalNode(args[2],ctx)); return s.slice(start-1,start-1+len); }
+    case "LEN": return exToStr(exEvalNode(args[0],ctx)).length;
+    case "UPPER": return exToStr(exEvalNode(args[0],ctx)).toUpperCase();
+    case "LOWER": return exToStr(exEvalNode(args[0],ctx)).toLowerCase();
+    case "TRIM": return exToStr(exEvalNode(args[0],ctx)).trim();
+    case "TODAY": return todayStr();
+    case "NOW": return new Date().toISOString();
+    case "YEAR": return new Date(exToStr(exEvalNode(args[0],ctx))).getFullYear();
+    case "MONTH": return new Date(exToStr(exEvalNode(args[0],ctx))).getMonth()+1;
+    case "DAY": return new Date(exToStr(exEvalNode(args[0],ctx))).getDate();
+    default: return 0;
   }
-  return expr;
 }
-function exResolveCellRefs(expr,getVal){
-  const CELL_RE=/\b([A-Z]+)(\d+)\b/;
-  let guard=0;
-  while(CELL_RE.test(expr)&&guard<400){
-    guard++;
-    expr=expr.replace(CELL_RE,(m,letters,digits)=>{
-      const ref=exParseRef(letters+digits);
-      return String(ref?getVal(ref.row,ref.col):0);
-    });
+function exEvalNode(node,ctx){
+  switch(node.type){
+    case "num": return node.v;
+    case "str": return node.v;
+    case "bool": return node.v;
+    case "ref": { const ref=exParseRef(node.v); return ref?ctx.getVal(ref.row,ref.col):0; }
+    case "range": { const vals=exRangeValues(node,ctx); return vals.length?vals[0]:0; }
+    case "unary": { const v=exToNum(exEvalNode(node.v,ctx)); return node.op==="-"?-v:v; }
+    case "bin": {
+      const op=node.op;
+      if(op==="&")return exToStr(exEvalNode(node.left,ctx))+exToStr(exEvalNode(node.right,ctx));
+      if(["=","<>","<",">","<=",">="].includes(op)){
+        const cmp=exCompare(exEvalNode(node.left,ctx),exEvalNode(node.right,ctx));
+        if(op==="=")return cmp===0; if(op==="<>")return cmp!==0; if(op==="<")return cmp<0; if(op===">")return cmp>0; if(op==="<=")return cmp<=0; return cmp>=0;
+      }
+      const l=exToNum(exEvalNode(node.left,ctx)),r=exToNum(exEvalNode(node.right,ctx));
+      if(op==="+")return l+r; if(op==="-")return l-r; if(op==="*")return l*r; if(op==="/")return r===0?0:l/r; if(op==="^")return Math.pow(l,r);
+      return 0;
+    }
+    case "call": return exCallFn(node.name,node.args,ctx);
   }
-  return expr;
+  return 0;
 }
 function exEvalCell(row,col,cells,cache,stack){
   const key=exCellAddr(row,col);
@@ -3824,17 +3956,15 @@ function exEvalCell(row,col,cells,cache,stack){
   if(raw==null||raw===""){ cache.set(key,0); return 0; }
   if(typeof raw==="string"&&raw.trim().startsWith("=")){
     stack.add(key);
-    let expr=raw.trim().slice(1).toUpperCase();
-    const getVal=(r,c)=>exEvalCell(r,c,cells,cache,stack);
-    expr=exResolveFunctions(expr,getVal);
-    expr=exResolveCellRefs(expr,getVal);
-    const val=exArith(expr);
+    let val;
+    try{ const ast=exParse(exTokenize(raw.trim().slice(1))); val=exEvalNode(ast,{getVal:(r,c)=>exEvalCell(r,c,cells,cache,stack)}); }
+    catch(e){ val=NaN; }
     stack.delete(key);
     cache.set(key,val);
     return val;
   }
   const n=parseFloat(raw);
-  const val=isNaN(n)?0:n;
+  const val=isNaN(n)?raw:n;
   cache.set(key,val);
   return val;
 }
@@ -3844,34 +3974,56 @@ function exDisplayValue(row,col,cells,cache,stack){
   if(raw==null||raw==="")return "";
   if(typeof raw==="string"&&raw.trim().startsWith("=")){
     const val=exEvalCell(row,col,cells,cache,stack);
-    if(!Number.isFinite(val))return "#ERR";
-    return Number.isInteger(val)?String(val):val.toFixed(2);
+    if(typeof val==="number"){ if(!Number.isFinite(val))return "#ERR"; return Number.isInteger(val)?String(val):val.toFixed(2); }
+    if(typeof val==="boolean")return val?"TRUE":"FALSE";
+    return String(val);
   }
   return raw;
 }
 function exEvalFormula(formula,cells){
   const cache=new Map(),stack=new Set();
-  const getVal=(r,c)=>exEvalCell(r,c,cells,cache,stack);
-  let expr=(formula||"").trim().replace(/^=/,"").toUpperCase();
+  const expr=(formula||"").trim().replace(/^=/,"");
   if(!expr)return 0;
-  expr=exResolveFunctions(expr,getVal);
-  expr=exResolveCellRefs(expr,getVal);
-  return exArith(expr);
+  let val;
+  try{ const ast=exParse(exTokenize(expr)); val=exEvalNode(ast,{getVal:(r,c)=>exEvalCell(r,c,cells,cache,stack)}); }
+  catch(e){ val=0; }
+  return typeof val==="number"?val:exToNum(val);
 }
 
-function ExCell({addr,raw,display,selected,onCommit,onSelect}){
+function ExCell({addr,raw,display,styleInfo,dropdownOptions,selected,inRange,onCommit,onSelect,onNavigate,onDragStart,onDragEnter}){
   const [local,setLocal]=useState(raw);
   const [editing,setEditing]=useState(false);
   useEffect(()=>{ if(!editing)setLocal(raw); },[raw,editing]);
   const isFormula=typeof raw==="string"&&raw.trim().startsWith("=");
+  const cellBg=selected?"rgba(35,161,221,0.16)":inRange?"rgba(35,161,221,0.08)":(styleInfo.bg||"transparent");
+  const textColor=styleInfo.color||(isFormula?"#36f2af":"#daeeff");
+  const fontWeight=styleInfo.bold?800:400;
+
+  if(dropdownOptions&&dropdownOptions.length){
+    return (
+      <select data-addr={addr} value={raw||""}
+        onMouseDown={()=>onDragStart(addr)} onMouseEnter={()=>onDragEnter(addr)}
+        onFocus={()=>onSelect(addr)}
+        onChange={e=>onCommit(addr,e.target.value)}
+        style={{width:"100%",height:"100%",boxSizing:"border-box",border:"none",outline:"none",background:cellBg,color:textColor,fontWeight,fontSize:12,padding:"4px 4px",fontFamily:"inherit"}}>
+        <option value=""></option>
+        {dropdownOptions.map(o=><option key={o} value={o}>{o}</option>)}
+      </select>
+    );
+  }
   return (
     <input
+      data-addr={addr}
       value={editing?local:display}
+      onMouseDown={()=>onDragStart(addr)} onMouseEnter={()=>onDragEnter(addr)}
       onFocus={()=>{setEditing(true);setLocal(raw);onSelect(addr);}}
       onChange={e=>setLocal(e.target.value)}
       onBlur={()=>{setEditing(false);if(local!==(raw||""))onCommit(addr,local);}}
-      onKeyDown={e=>{if(e.key==="Enter"||e.key==="Tab")e.target.blur();}}
-      style={{width:"100%",height:"100%",boxSizing:"border-box",border:"none",outline:"none",background:selected?"rgba(35,161,221,0.14)":"transparent",color:isFormula?"#36f2af":"#daeeff",fontSize:12,padding:"5px 7px",fontFamily:"inherit"}}
+      onKeyDown={e=>{
+        if(e.key==="Enter"){ e.preventDefault(); e.target.blur(); onNavigate(addr,"right"); }
+        else if(e.key==="Tab"){ e.preventDefault(); e.target.blur(); onNavigate(addr,e.shiftKey?"left":"right"); }
+      }}
+      style={{width:"100%",height:"100%",boxSizing:"border-box",border:"none",outline:"none",background:cellBg,color:textColor,fontWeight,fontSize:12,padding:"5px 7px",fontFamily:"inherit"}}
     />
   );
 }
@@ -3882,8 +4034,8 @@ function ExBoxModal({box,onClose,onSave,onDelete}){
   return (
     <Modal title={box?"Edit Box":"➕ Add Summary Box"} onClose={onClose}>
       <Inp label="Box Name *" value={label} onChange={e=>setLabel(e.target.value)} placeholder="e.g. Total Expenses"/>
-      <Inp label="Formula *" value={formula} onChange={e=>setFormula(e.target.value)} placeholder="=SUM(E2:E31)"/>
-      <div style={{fontSize:11,color:"rgba(174,220,255,0.45)",marginBottom:14}}>Reference cells like <strong>A1</strong>, ranges like <strong>A1:A10</strong>, and functions <strong>SUM / AVERAGE / MIN / MAX / COUNT</strong>.</div>
+      <Inp label="Formula *" value={formula} onChange={e=>setFormula(e.target.value)} placeholder="=SUM(B2:B31)"/>
+      <div style={{fontSize:11,color:"rgba(174,220,255,0.45)",marginBottom:14}}>Supports cell refs (A1), ranges (A1:A10), and functions like SUM, AVERAGE, IF, ROUND, CONCAT.</div>
       <div style={{display:"flex",justifyContent:"space-between",gap:8}}>
         <div>{box&&<Btn variant="danger" onClick={()=>onDelete(box.id)}>Delete</Btn>}</div>
         <div style={{display:"flex",gap:8}}>
@@ -3895,25 +4047,15 @@ function ExBoxModal({box,onClose,onSave,onDelete}){
   );
 }
 
-function ExAddSheetModal({existingMonths,onClose,onSave}){
-  const label=mo=>{const[y,m]=mo.split('-').map(Number);return new Date(y,m-1,1).toLocaleString('default',{month:'long',year:'numeric'});};
-  const suggestNext=()=>{
-    const months=existingMonths.slice().sort();
-    const last=months[months.length-1];
-    let n;
-    if(last){ const[y,m]=last.split('-').map(Number); n=new Date(y,m,1); } else { n=new Date(); }
-    return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
-  };
-  const [month,setMonth]=useState(suggestNext());
-  const [name,setName]=useState(label(suggestNext()));
+function ExDropdownModal({initial,onClose,onSave}){
+  const [text,setText]=useState((initial||[]).join(", "));
   return (
-    <Modal title="➕ Add Sheet" onClose={onClose}>
-      <Inp label="Month *" type="month" value={month} onChange={e=>{setMonth(e.target.value);setName(label(e.target.value));}}/>
-      <Inp label="Sheet Name" value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. January 2026"/>
-      {existingMonths.includes(month)&&<div style={{color:"#ef4444",fontSize:12,marginBottom:10}}>⚠ A sheet for this month already exists.</div>}
-      <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
+    <Modal title="🔽 Set Dropdown Options" onClose={onClose}>
+      <div style={{fontSize:12,color:"rgba(174,220,255,0.5)",marginBottom:10}}>Applies to every cell in the current selection. Save with this field empty to turn the dropdown back into plain text.</div>
+      <Inp label="Options (comma-separated)" value={text} onChange={e=>setText(e.target.value)} placeholder="Food, Transport, Utilities, Rent"/>
+      <div style={{display:"flex",justifyContent:"flex-end",gap:8}}>
         <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
-        <Btn onClick={()=>{if(month&&!existingMonths.includes(month))onSave(month,name.trim()||label(month));}}>Create Sheet</Btn>
+        <Btn onClick={()=>onSave(text.split(",").map(s=>s.trim()).filter(Boolean))}>Save</Btn>
       </div>
     </Modal>
   );
@@ -3924,9 +4066,11 @@ function ExpensesGate(){
   const [loading,setLoading]=useState(true);
   const [activeId,setActiveId]=useState(null);
   const [boxModal,setBoxModal]=useState(null); // null | "new" | box
-  const [addSheetModal,setAddSheetModal]=useState(false);
+  const [dropdownModal,setDropdownModal]=useState(false);
   const [renamingId,setRenamingId]=useState(null);
   const [selectedCell,setSelectedCell]=useState("A1");
+  const [selRange,setSelRange]=useState({start:"A1",end:"A1"});
+  const draggingRef=useRef(false);
   const dirtyRef=useRef(false);
   const currentMonth=useMemo(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;},[]);
 
@@ -3941,8 +4085,28 @@ function ExpensesGate(){
     }).catch(()=>setLoading(false));
   },[]);
 
+  useEffect(()=>{
+    function up(){ draggingRef.current=false; }
+    window.addEventListener("mouseup",up);
+    return ()=>window.removeEventListener("mouseup",up);
+  },[]);
+
   const active=useMemo(()=>sheets.find(s=>s.id===activeId)||null,[sheets,activeId]);
   const evalCtx=useMemo(()=>({cache:new Map(),stack:new Set()}),[active&&active.cells]);
+  const mergeInfo=useMemo(()=>{
+    const map={};
+    const merges=(active&&active.merges)||[];
+    merges.forEach(m=>{
+      const a=exParseRef(m.start),b=exParseRef(m.end);
+      if(!a||!b)return;
+      const addrs=exRangeAddrs(m.start,m.end);
+      addrs.forEach((addr,i)=>{
+        if(i===0)map[addr]={anchor:true,rowSpan:Math.abs(b.row-a.row)+1,colSpan:Math.abs(b.col-a.col)+1};
+        else map[addr]={covered:true};
+      });
+    });
+    return map;
+  },[active&&active.merges]);
 
   // Debounced autosave of cell edits
   useEffect(()=>{
@@ -3962,6 +4126,21 @@ function ExpensesGate(){
     }));
     dirtyRef.current=true;
   },[activeId]);
+
+  const selectCell=useCallback(addr=>{ setSelectedCell(addr); setSelRange({start:addr,end:addr}); },[]);
+  const onDragStart=useCallback(addr=>{ draggingRef.current=true; setSelectedCell(addr); setSelRange({start:addr,end:addr}); },[]);
+  const onDragEnter=useCallback(addr=>{ if(draggingRef.current)setSelRange(prev=>({...prev,end:addr})); },[]);
+  const focusCell=useCallback(addr=>{ setTimeout(()=>{ const el=document.querySelector(`[data-addr="${addr}"]`); if(el)el.focus(); },0); },[]);
+  const navigate=useCallback((addr,dir)=>{
+    const ref=exParseRef(addr); if(!ref||!active)return;
+    let {row,col}=ref;
+    if(dir==="right"){ col++; if(col>=EX_COLS){col=0;row++;} }
+    else { col--; if(col<0){col=EX_COLS-1;row--;} }
+    if(row<0||row>=active.rowCount||col<0||col>=EX_COLS)return;
+    const nextAddr=exCellAddr(row,col);
+    selectCell(nextAddr);
+    focusCell(nextAddr);
+  },[active,selectCell,focusCell]);
 
   async function addRows(){
     if(!active)return;
@@ -3984,14 +4163,29 @@ function ExpensesGate(){
     await sbUpdate("expense_sheets",active.id,{boxes:newBoxes});
     setBoxModal(null);
   }
-  async function addSheet(month,name){
-    const res=await sbInsert("expense_sheets",esToRow({month,name,cells:{},boxes:[],rowCount:EX_DEFAULT_ROWS}));
+
+  function monthLabel(mo){ const[y,m]=mo.split('-').map(Number); return new Date(y,m-1,1).toLocaleString('default',{month:'long',year:'numeric'}); }
+  async function createSheetForMonth(month){
+    const res=await sbInsert("expense_sheets",esToRow({month,name:monthLabel(month),cells:{},boxes:[],styles:{},merges:[],dropdowns:{},rowCount:EX_DEFAULT_ROWS}));
     if(Array.isArray(res)&&res[0]){
       const s=rowToES(res[0]);
       setSheets(prev=>[...prev,s].sort((a,b)=>a.month.localeCompare(b.month)));
       setActiveId(s.id);
+      return s;
     }
-    setAddSheetModal(false);
+    return null;
+  }
+  function nextSequentialMonth(){
+    const months=sheets.map(s=>s.month).slice().sort();
+    const last=months[months.length-1];
+    let n;
+    if(last){ const[y,m]=last.split('-').map(Number); n=new Date(y,m,1); } else { n=new Date(); }
+    return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
+  }
+  async function handleMonthPick(month){
+    const existing=sheets.find(s=>s.month===month);
+    if(existing)setActiveId(existing.id);
+    else await createSheetForMonth(month);
   }
   async function deleteSheet(id){
     if(!confirm("Delete this sheet? This cannot be undone."))return;
@@ -4008,46 +4202,107 @@ function ExpensesGate(){
     setRenamingId(null);
   }
 
+  function rangeAddrs(){ return exRangeAddrs(selRange.start,selRange.end); }
+  async function applyStyle(patch){
+    if(!active)return;
+    const addrs=rangeAddrs();
+    const newStyles={...active.styles};
+    addrs.forEach(a=>{ newStyles[a]={...(newStyles[a]||{}),...patch}; });
+    setSheets(prev=>prev.map(s=>s.id===active.id?{...s,styles:newStyles}:s));
+    await sbUpdate("expense_sheets",active.id,{styles:newStyles});
+  }
+  function toggleBold(){
+    if(!active)return;
+    const addrs=rangeAddrs();
+    const allBold=addrs.length>0&&addrs.every(a=>active.styles[a]&&active.styles[a].bold);
+    applyStyle({bold:!allBold});
+  }
+  async function mergeCells(){
+    if(!active)return;
+    const addrs=rangeAddrs();
+    if(addrs.length<2)return;
+    const overlaps=active.merges.some(m=>exRangeAddrs(m.start,m.end).some(a=>addrs.includes(a)));
+    if(overlaps){ alert("Selection overlaps an existing merged range."); return; }
+    const newMerges=[...active.merges,{start:selRange.start,end:selRange.end}];
+    setSheets(prev=>prev.map(s=>s.id===active.id?{...s,merges:newMerges}:s));
+    await sbUpdate("expense_sheets",active.id,{merges:newMerges});
+  }
+  async function unmergeCells(){
+    if(!active)return;
+    const newMerges=active.merges.filter(m=>!exRangeAddrs(m.start,m.end).includes(selectedCell));
+    if(newMerges.length===active.merges.length)return;
+    setSheets(prev=>prev.map(s=>s.id===active.id?{...s,merges:newMerges}:s));
+    await sbUpdate("expense_sheets",active.id,{merges:newMerges});
+  }
+  async function saveDropdown(options){
+    if(!active)return;
+    const addrs=rangeAddrs();
+    const newDropdowns={...active.dropdowns};
+    addrs.forEach(a=>{ if(options.length===0)delete newDropdowns[a]; else newDropdowns[a]=options; });
+    setSheets(prev=>prev.map(s=>s.id===active.id?{...s,dropdowns:newDropdowns}:s));
+    await sbUpdate("expense_sheets",active.id,{dropdowns:newDropdowns});
+    setDropdownModal(false);
+  }
+
   if(loading)return <Spinner text="Loading Expenses…"/>;
 
   const cols=Array.from({length:EX_COLS},(_,i)=>i);
   const stickyCorner={position:"sticky",top:0,left:0,zIndex:5,background:"rgba(8,18,38,0.97)",minWidth:44,width:44,borderBottom:"1px solid rgba(255,255,255,0.08)",borderRight:"1px solid rgba(255,255,255,0.08)"};
-  const stickyColHeader={position:"sticky",top:0,zIndex:3,background:"rgba(8,18,38,0.97)",color:"rgba(174,220,255,0.55)",fontWeight:700,fontSize:11,padding:"6px 4px",borderBottom:"1px solid rgba(255,255,255,0.08)",minWidth:100,textAlign:"center"};
+  const stickyColHeader={position:"sticky",top:0,zIndex:3,background:"rgba(8,18,38,0.97)",color:"rgba(174,220,255,0.55)",fontWeight:700,fontSize:11,padding:"6px 4px",borderBottom:"1px solid rgba(255,255,255,0.08)",minWidth:96,textAlign:"center"};
   const stickyRowHeader={position:"sticky",left:0,zIndex:2,background:"rgba(8,18,38,0.97)",color:"rgba(174,220,255,0.45)",fontWeight:600,fontSize:11,textAlign:"center",minWidth:44,width:44,borderRight:"1px solid rgba(255,255,255,0.08)"};
+  const toolBtn={background:"rgba(255,255,255,0.05)",color:"rgba(200,230,255,0.75)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:7,padding:"5px 11px",cursor:"pointer",fontSize:12,fontWeight:700};
 
   return (
     <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+      {/* Calendar dropdown + summary boxes */}
+      <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",padding:"12px 16px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+        <MonthPicker selectedMonth={active?active.month:currentMonth} currentMonth={currentMonth} availableMonths={sheets.map(s=>s.month)} onChange={handleMonthPick} allowFuture={true}/>
+        {active&&active.boxes.map(b=>{
+          const val=exEvalFormula(b.formula,active.cells);
+          return (
+            <div key={b.id} onClick={()=>setBoxModal(b)} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,padding:"10px 18px",minWidth:150,cursor:"pointer",transition:"all .15s"}}
+              onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(255,107,53,0.4)"}
+              onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(255,255,255,0.09)"}>
+              <div style={{fontSize:10,color:"rgba(174,220,255,0.45)",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>{b.label}</div>
+              <div style={{fontSize:20,fontWeight:800,color:"#ff6b35"}}>${(typeof val==="number"?val:0).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
+            </div>
+          );
+        })}
+        {active&&<button onClick={()=>setBoxModal("new")} style={{background:"rgba(35,161,221,0.1)",color:"#23a1dd",border:"1px dashed rgba(35,161,221,0.35)",borderRadius:12,padding:"14px 18px",cursor:"pointer",fontSize:12,fontWeight:700}}>+ Add Box</button>}
+      </div>
+
       {!active?(
         <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14,color:"rgba(174,220,255,0.38)"}}>
           <div style={{fontSize:36}}>🧾</div>
           <div style={{fontWeight:700,fontSize:16,color:"#daeeff"}}>No expense sheets yet</div>
-          <Btn onClick={()=>setAddSheetModal(true)}>+ Create First Sheet</Btn>
+          <Btn onClick={()=>createSheetForMonth(currentMonth)}>+ Create This Month's Sheet</Btn>
         </div>
       ):(
         <>
-          {/* Summary boxes */}
-          <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center",padding:"12px 16px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
-            {active.boxes.map(b=>{
-              const val=exEvalFormula(b.formula,active.cells);
-              return (
-                <div key={b.id} onClick={()=>setBoxModal(b)} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,padding:"10px 18px",minWidth:150,cursor:"pointer",transition:"all .15s"}}
-                  onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(255,107,53,0.4)"}
-                  onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(255,255,255,0.09)"}>
-                  <div style={{fontSize:10,color:"rgba(174,220,255,0.45)",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>{b.label}</div>
-                  <div style={{fontSize:20,fontWeight:800,color:"#ff6b35"}}>${val.toLocaleString(undefined,{maximumFractionDigits:2})}</div>
-                </div>
-              );
-            })}
-            <button onClick={()=>setBoxModal("new")} style={{background:"rgba(35,161,221,0.1)",color:"#23a1dd",border:"1px dashed rgba(35,161,221,0.35)",borderRadius:12,padding:"14px 18px",cursor:"pointer",fontSize:12,fontWeight:700}}>+ Add Box</button>
+          {/* Formatting toolbar */}
+          <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 16px",background:"rgba(255,255,255,0.02)",borderBottom:"1px solid rgba(255,255,255,0.06)",flexWrap:"wrap"}}>
+            <button onClick={toggleBold} title="Bold" style={{...toolBtn,fontWeight:900}}>B</button>
+            <div style={{display:"flex",alignItems:"center",gap:4}}>
+              <span style={{fontSize:10,color:"rgba(174,220,255,0.4)"}}>Text</span>
+              <input type="color" onChange={e=>applyStyle({color:e.target.value})} title="Text color" style={{width:26,height:26,padding:0,border:"1px solid rgba(255,255,255,0.15)",borderRadius:6,background:"transparent",cursor:"pointer"}}/>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:4}}>
+              <span style={{fontSize:10,color:"rgba(174,220,255,0.4)"}}>Fill</span>
+              <input type="color" onChange={e=>applyStyle({bg:e.target.value})} title="Background color" style={{width:26,height:26,padding:0,border:"1px solid rgba(255,255,255,0.15)",borderRadius:6,background:"transparent",cursor:"pointer"}}/>
+            </div>
+            <button onClick={mergeCells} style={toolBtn}>⛶ Merge</button>
+            <button onClick={unmergeCells} style={toolBtn}>⛝ Unmerge</button>
+            <button onClick={()=>setDropdownModal(true)} style={toolBtn}>▾ Dropdown</button>
+            <span style={{fontSize:10,color:"rgba(174,220,255,0.35)"}}>Click a cell, or click + drag to select a range, then apply formatting</span>
           </div>
 
           {/* Formula bar */}
           <div style={{display:"flex",alignItems:"center",gap:8,padding:"7px 16px",background:"rgba(255,255,255,0.02)",borderBottom:"1px solid rgba(255,255,255,0.06)",flexShrink:0}}>
             <span style={{fontWeight:700,fontSize:12,color:"#23a1dd",minWidth:34}}>{selectedCell}</span>
             <span style={{color:"rgba(174,220,255,0.3)",fontStyle:"italic",fontSize:12}}>fx</span>
-            <input value={active.cells[selectedCell]||""} onChange={e=>commitCell(selectedCell,e.target.value)} placeholder="Enter a value or =formula, e.g. =SUM(E2:E10)"
+            <input value={active.cells[selectedCell]||""} onChange={e=>commitCell(selectedCell,e.target.value)} placeholder='Value or =formula, e.g. =IF(B2>100,"Over","OK")'
               style={{...IS,flex:1,fontSize:12,padding:"6px 10px"}}/>
-            <button onClick={addRows} disabled={active.rowCount>=EX_MAX_ROWS} style={{background:"rgba(255,255,255,0.04)",color:"rgba(174,220,255,0.55)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:8,padding:"6px 12px",cursor:active.rowCount>=EX_MAX_ROWS?"default":"pointer",fontSize:11,fontWeight:600,whiteSpace:"nowrap",opacity:active.rowCount>=EX_MAX_ROWS?0.4:1}}>+ 15 Rows</button>
+            <button onClick={addRows} disabled={active.rowCount>=EX_MAX_ROWS} style={{...toolBtn,opacity:active.rowCount>=EX_MAX_ROWS?0.4:1,cursor:active.rowCount>=EX_MAX_ROWS?"default":"pointer"}}>+ 15 Rows</button>
           </div>
 
           {/* Grid */}
@@ -4065,9 +4320,16 @@ function ExpensesGate(){
                     <td style={stickyRowHeader}>{r+1}</td>
                     {cols.map(c=>{
                       const addr=exCellAddr(r,c);
+                      const info=mergeInfo[addr];
+                      if(info&&info.covered)return null;
                       return (
-                        <td key={c} style={{border:"1px solid rgba(255,255,255,0.06)",padding:0,minWidth:100,height:28}}>
-                          <ExCell addr={addr} raw={active.cells[addr]||""} display={exDisplayValue(r,c,active.cells,evalCtx.cache,evalCtx.stack)} selected={selectedCell===addr} onCommit={commitCell} onSelect={setSelectedCell}/>
+                        <td key={c} rowSpan={info&&info.anchor?info.rowSpan:1} colSpan={info&&info.anchor?info.colSpan:1}
+                          style={{border:"1px solid rgba(255,255,255,0.06)",padding:0,minWidth:100,height:28}}>
+                          <ExCell addr={addr} raw={active.cells[addr]||""} display={exDisplayValue(r,c,active.cells,evalCtx.cache,evalCtx.stack)}
+                            styleInfo={active.styles[addr]||{}} dropdownOptions={active.dropdowns[addr]}
+                            selected={selectedCell===addr} inRange={exInRange(addr,selRange.start,selRange.end)}
+                            onCommit={commitCell} onSelect={selectCell} onNavigate={navigate}
+                            onDragStart={onDragStart} onDragEnter={onDragEnter}/>
                         </td>
                       );
                     })}
@@ -4088,13 +4350,13 @@ function ExpensesGate(){
                 <span onClick={e=>{e.stopPropagation();deleteSheet(s.id);}} title="Delete sheet" style={{color:"rgba(174,220,255,0.3)",fontSize:13,cursor:"pointer",lineHeight:1}}>×</span>
               </div>
             ))}
-            <button onClick={()=>setAddSheetModal(true)} style={{background:"rgba(54,242,175,0.1)",color:"#36f2af",border:"1px solid rgba(54,242,175,0.25)",borderRadius:8,padding:"6px 14px",cursor:"pointer",fontSize:12,fontWeight:700,flexShrink:0}}>+ Add Sheet</button>
+            <button onClick={()=>createSheetForMonth(nextSequentialMonth())} style={{background:"rgba(54,242,175,0.1)",color:"#36f2af",border:"1px solid rgba(54,242,175,0.25)",borderRadius:8,padding:"6px 14px",cursor:"pointer",fontSize:12,fontWeight:700,flexShrink:0}}>+ Add Sheet</button>
           </div>
         </>
       )}
 
       {boxModal&&<ExBoxModal box={boxModal==="new"?null:boxModal} onClose={()=>setBoxModal(null)} onSave={saveBox} onDelete={deleteBox}/>}
-      {addSheetModal&&<ExAddSheetModal existingMonths={sheets.map(s=>s.month)} onClose={()=>setAddSheetModal(false)} onSave={addSheet}/>}
+      {dropdownModal&&active&&<ExDropdownModal initial={active.dropdowns[selectedCell]} onClose={()=>setDropdownModal(false)} onSave={saveDropdown}/>}
     </div>
   );
 }

@@ -372,10 +372,13 @@ CREATE TABLE payment_entries (
 ```sql
 CREATE TABLE expense_sheets (
   id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  month text NOT NULL UNIQUE,       -- format: 'YYYY-MM'
-  name text,                        -- sheet display name, e.g. 'July 2026'
-  cells jsonb DEFAULT '{}'::jsonb,  -- { "A1": "raw value or =formula", "B2": "250", ... }
-  boxes jsonb DEFAULT '[]'::jsonb,  -- [{ "id": "...", "label": "Total Spend", "formula": "=SUM(B1:B30)" }]
+  month text NOT NULL UNIQUE,        -- format: 'YYYY-MM'
+  name text,                         -- sheet display name, e.g. 'July 2026'
+  cells jsonb DEFAULT '{}'::jsonb,   -- { "A1": "raw value or =formula", "B2": "250", ... }
+  boxes jsonb DEFAULT '[]'::jsonb,   -- [{ "id": "...", "label": "Total Spend", "formula": "=SUM(B1:B30)" }]
+  styles jsonb DEFAULT '{}'::jsonb,  -- { "A1": { "bold": true, "color": "#fff", "bg": "#222" } }
+  merges jsonb DEFAULT '[]'::jsonb,  -- [{ "start": "E1", "end": "F1" }]
+  dropdowns jsonb DEFAULT '{}'::jsonb, -- { "G1": ["Food","Transport","Rent"] }
   row_count int DEFAULT 30,
   created_at timestamptz DEFAULT now()
 );
@@ -642,21 +645,30 @@ Contract and installment tracker for revenue already closed in Active Clients an
 An in-app spreadsheet for tracking monthly expenses — Excel/Google Sheets-style, one sheet per month.
 
 #### Layout
-- Column headers (`A`, `B`, `C`, …) and row numbers, sticky while scrolling — every cell is directly editable
+- Column headers `A`–`Z` and row numbers, sticky while scrolling — every cell is directly editable
+- **Calendar dropdown** at the top switches between months; picking a month with no sheet yet creates it immediately (no prompts)
 - **Formula bar** shows the selected cell's address and raw content (value or formula)
-- **Summary boxes** at the top — click **+ Add Box** to create a custom box with a name and a formula (e.g. `=SUM(B2:B30)`); click an existing box to edit or delete it
-- **Sheet tabs** at the bottom — click **+ Add Sheet** to create the next month's sheet; double-click a tab to rename it, click the **×** to delete it
+- **Summary boxes** — click **+ Add Box** to create a custom box with a name and a formula (e.g. `=SUM(B2:B30)`); click an existing box to edit or delete it
+- **Formatting toolbar** — select a single cell or click-and-drag a range, then apply **Bold**, text color, background color, **Merge**/**Unmerge**, or set a **Dropdown** (comma-separated options, turning those cells into a `<select>`)
+- **Sheet tabs** at the bottom — **+ Add Sheet** creates the next sequential month instantly (no modal); double-click a tab to rename it, click **×** to delete it
 - **+ 15 Rows** button expands the grid (up to 200 rows) if a sheet needs more line items
+- Keyboard: **Enter** or **Tab** commits the cell and moves the cursor to the next cell on the right (Shift+Tab moves left), wrapping to the next/previous row at the sheet edges
 
 #### Formulas
-Cells starting with `=` are evaluated as formulas:
-- Cell references: `=A1`, `=B2*1.1`
-- Ranges inside functions: `=SUM(B2:B30)`
-- Functions: `SUM`, `AVERAGE` (or `AVG`), `MIN`, `MAX`, `COUNT`
-- Standard arithmetic and parentheses: `=(A1+A2)/2`
+Cells starting with `=` are evaluated by a small formula engine (tokenizer → parser → evaluator) supporting:
+- Cell references and ranges: `=A1`, `=B2*1.1`, `=SUM(B2:B30)`
+- Operators: `+ - * / ^` (power), `&` (text concatenation), comparisons `= <> < > <= >=`
+- Text literals in double quotes: `="Total: "&B2`
+- Math: `SUM`, `AVERAGE`/`AVG`, `MIN`, `MAX`, `COUNT`, `COUNTA`, `ABS`, `ROUND`, `ROUNDUP`, `ROUNDDOWN`, `SQRT`, `POWER`, `MOD`, `CEILING`, `FLOOR`, `PRODUCT`
+- Logic: `IF`, `AND`, `OR`, `NOT`, `IFERROR`
+- Text: `CONCAT`/`CONCATENATE`, `LEFT`, `RIGHT`, `MID`, `LEN`, `UPPER`, `LOWER`, `TRIM`
+- Date: `TODAY`, `NOW`, `YEAR`, `MONTH`, `DAY`
 - Circular references resolve to `0` rather than hanging
 
-Each sheet stores its grid as a single JSON object (`cells`) keyed by cell address (e.g. `"B2": "250"` or `"B3": "=B1+B2"`), so there's no fixed schema — use the columns however fits (Date, Category, Vendor, Amount, etc.).
+This covers the practical set most expense sheets need — it isn't a full reimplementation of every Excel function (there are hundreds), but it's a real tokenizer/parser, not string substitution, so nesting and quoted text work correctly (e.g. `=IF(B2>100,"Over","OK")`).
+
+#### Formatting & structure
+Each sheet stores: `cells` (value/formula per address), `styles` (bold/text color/background per address), `merges` (list of `{start,end}` cell ranges), and `dropdowns` (options list per address) — all as JSON, so there's no fixed column schema; use the columns however fits (Date, Category, Vendor, Amount, etc.).
 
 ---
 

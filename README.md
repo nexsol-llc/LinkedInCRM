@@ -13,13 +13,16 @@
 - [Tech Stack](#tech-stack)
 - [Database Setup](#database-setup)
 - [Getting Started](#getting-started)
+- [Navigation](#navigation)
 - [Pipelines](#pipelines)
   - [LinkedIn Pipeline](#linkedin-pipeline)
   - [Hot Pipeline](#hot-pipeline)
   - [Freelance Pipeline](#freelance-pipeline)
   - [Cold Calling](#cold-calling)
   - [Email Campaign](#email-campaign)
+  - [Paid Leads](#paid-leads)
   - [Active Clients](#active-clients)
+  - [Client Payments](#client-payments)
   - [All Contacts](#all-contacts)
 - [Activity Log](#activity-log)
 - [CSV Import & Export](#csv-import--export)
@@ -33,16 +36,18 @@
 
 ## 🌟 Overview
 
-AffiLinks.io is a custom-built CRM designed for **sales and outreach teams**. It features six separate pipelines accessible from a single password-protected dashboard, all sharing a common sidebar navigation:
+AffiLinks.io is a custom-built CRM designed for **sales and outreach teams**. It features six lead pipelines plus client lifecycle and payments management, all behind a single password-protected dashboard with a common sidebar navigation:
 
 | Pipeline | Purpose |
 |---|---|
-| 🔥 Hot Pipeline | Multi-channel sales tracker (Fiverr, Upwork, LinkedIn, Email, WhatsApp, Calling) |
+| 🔥 Hot Pipeline | Multi-channel sales tracker (Fiverr, Upwork, LinkedIn, Email, WhatsApp, Calling, Paid Leads) |
 | 💼 LinkedIn Pipeline | LinkedIn outreach management with full follow-up tracking |
 | 🧩 Freelance Pipeline | Freelance platform lead tracker (Fiverr, Upwork, Freelancer) |
-| 👥 Active Clients | Monthly client lifecycle manager with revenue analytics |
 | 📞 Cold Calling | Phone outreach tracker with call status and appointment booking |
 | ✉️ Email Campaign | Email outreach pipeline with connected/appointment stages |
+| 💵 Paid Leads | Paid ad lead tracker (Meta Ads, Google Ads, LinkedIn Ads) |
+| 👥 Active Clients | Monthly client lifecycle manager with revenue analytics |
+| 💳 Client Payments | Contract & installment tracker with payment status and calendar |
 
 All data is stored in **Supabase (PostgreSQL)** and syncs across any device in real time.
 
@@ -99,12 +104,26 @@ All data is stored in **Supabase (PostgreSQL)** and syncs across any device in r
 - 🚫 DND stage
 - 📊 Stage and campaign analytics
 
+### Paid Leads
+- 💵 9-stage Kanban (Meta Ads, Google Ads, LinkedIn Ads → WON)
+- 📌 Source filtering by ad platform
+- 📅 Follow-up, appointment & trash flows
+- 🔍 Live search across all cards
+
 ### Active Clients
 - 👥 Three-column Kanban: Active, Winning, Lost
 - 🔄 Auto-roll on new month
 - 🏆 Winning Clients auto-synced from Hot Pipeline Won
 - 💰 Revenue tracking with comparison graph (current vs previous month)
 - 📋 YTD Active Projects & Lost Projects with CSV export
+
+### Client Payments
+- 📅 Month picker (supports future months) with 6 revenue stat boxes
+- 📄 Client Contracts tab — payment source, condition & remarks per contract
+- 💳 Payment Status tab — log installments (Pending / Paid / Balance Lost) with PKR received tracking
+- 🗓️ Payment Calendar tab
+- 🔄 Auto-rolls unpaid "Pending" entries into the current month
+- Pulls contracts automatically from Active Clients + Hot Pipeline "Won" deals
 
 ---
 
@@ -255,6 +274,35 @@ CREATE TABLE email_campaign (
 );
 ```
 
+#### `paid_leads` — Paid Leads (Meta/Google/LinkedIn Ads) contacts
+```sql
+CREATE TABLE paid_leads (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  first_name text,
+  last_name text,
+  company_name text,
+  website text,
+  industry text,
+  region text,
+  phone_number text,
+  email text,
+  linkedin_url text,
+  trending_product text,
+  affiliate_network text,
+  source text,
+  stage text DEFAULT 'Meta Ads',
+  follow_up jsonb,
+  follow_up_history jsonb[] DEFAULT '{}',
+  connected jsonb,
+  appointment jsonb,
+  appointment_history jsonb[] DEFAULT '{}',
+  lost jsonb,
+  trash jsonb,
+  deal jsonb,
+  created_at timestamptz DEFAULT now()
+);
+```
+
 #### `active_clients` — Active Client records
 ```sql
 CREATE TABLE active_clients (
@@ -285,6 +333,40 @@ CREATE TABLE active_clients_monthly_status (
 );
 ```
 
+#### `client_payments` — Contract-level payment metadata
+```sql
+CREATE TABLE client_payments (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  source_type text,        -- 'active' | 'winning'
+  source_id bigint,        -- references active_clients.id or hot_pipeline.id
+  client_name text,
+  company_name text,
+  payment_source text,
+  payment_condition text DEFAULT 'Before Service',
+  contract_date date,
+  amount_closed numeric DEFAULT 0,
+  remarks text,
+  created_at timestamptz DEFAULT now()
+);
+```
+
+#### `payment_entries` — Individual payment installments
+```sql
+CREATE TABLE payment_entries (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  contract_key text,       -- e.g. 'ac_12' or 'hp_34'
+  client_name text,
+  company_name text,
+  scheduled_date date,
+  amount numeric DEFAULT 0,
+  status text DEFAULT 'Pending',  -- 'Pending' | 'Paid' | 'Balance Lost'
+  received_pkr numeric DEFAULT 0,
+  received_from text,
+  month text,               -- format: 'YYYY-MM'
+  created_at timestamptz DEFAULT now()
+);
+```
+
 #### `activity_log` — Team daily activity log
 ```sql
 CREATE TABLE activity_log (
@@ -307,8 +389,11 @@ ALTER TABLE hot_pipeline DISABLE ROW LEVEL SECURITY;
 ALTER TABLE freelance_pipeline DISABLE ROW LEVEL SECURITY;
 ALTER TABLE cold_calling DISABLE ROW LEVEL SECURITY;
 ALTER TABLE email_campaign DISABLE ROW LEVEL SECURITY;
+ALTER TABLE paid_leads DISABLE ROW LEVEL SECURITY;
 ALTER TABLE active_clients DISABLE ROW LEVEL SECURITY;
 ALTER TABLE active_clients_monthly_status DISABLE ROW LEVEL SECURITY;
+ALTER TABLE client_payments DISABLE ROW LEVEL SECURITY;
+ALTER TABLE payment_entries DISABLE ROW LEVEL SECURITY;
 ALTER TABLE activity_log DISABLE ROW LEVEL SECURITY;
 ```
 
@@ -333,6 +418,20 @@ WHERE id NOT IN (
 2. Open `index.html` in your browser — or deploy to Vercel
 3. Enter password: `LinkedIn@7865`
 4. Select a pipeline from the left sidebar
+
+---
+
+## 🧭 Navigation
+
+The sidebar is grouped into sections. Items marked **soon** are placeholders not yet built:
+
+| Section | Items |
+|---|---|
+| Overview | Dashboard *(soon)*, All Contacts, Hot Pipeline, Active Clients |
+| Pipeline | LinkedIn Pipeline, Freelance Pipeline, Cold Calling, Email Campaign, Paid Leads |
+| Delivery | Projects *(soon)*, Tasks *(soon)* |
+| Revenue | Client Payments, Proposals *(soon)*, Invoices *(soon)* |
+| Data | Import *(soon)*, Settings |
 
 ---
 
@@ -367,12 +466,12 @@ Full-featured CRM for LinkedIn affiliate outreach.
 Multi-channel sales tracker for Fiverr, Upwork, LinkedIn, Email, WhatsApp, and Calling leads.
 
 #### Stages
-`Fiverr` → `Upwork` → `LinkedIn` → `Email` → `WhatsApp` → `Calling` → `Freelancer` → `Follow Up` → `Won` → `Loss`
+`Fiverr` → `Upwork` → `LinkedIn` → `Email` → `WhatsApp` → `Calling` → `Freelancer` → `Paid Leads` → `Follow Up` → `Won` → `Loss`
 
 #### Stat Boxes
 | Box | What it shows |
 |---|---|
-| Fiverr / Upwork / LinkedIn / Email / WhatsApp / Calling / Freelancer Sales | Won revenue per source channel |
+| Fiverr / Upwork / LinkedIn / Email / WhatsApp / Calling / Freelancer / Paid Leads Sales | Won revenue per source channel |
 | Total Sales | Sum of all sale values |
 | Pending Revenue | Total Sales minus Won Revenue |
 | Monthly Sales | Last month vs this month comparison |
@@ -448,6 +547,23 @@ Email outreach pipeline for tracking campaigns from lead to close.
 
 ---
 
+### 💵 Paid Leads
+
+Lead tracker for paid ad campaigns (Meta Ads, Google Ads, LinkedIn Ads).
+
+#### Stages
+`Meta Ads` → `Google Ads` → `Linked Ads` → `Connected` → `Follow Up` → `Appointment Booked` → `Trash` → `Lost` → `WON`
+
+#### Tabs
+| Tab | Description |
+|---|---|
+| 🗂️ Kanban | Drag & drop with source filtering |
+| 👥 Contacts | Table view with search |
+| 📅 Calendar | Follow-up and appointment reminders |
+| 📊 Analytics | Stage breakdown analytics |
+
+---
+
 ### 👥 Active Clients
 
 Monthly client lifecycle manager.
@@ -478,9 +594,37 @@ Monthly client lifecycle manager.
 
 ---
 
+### 💳 Client Payments
+
+Contract and installment tracker for revenue already closed in Active Clients and Hot Pipeline.
+
+#### Tabs
+| Tab | Description |
+|---|---|
+| 📄 Client Contracts | One row per contract (from Active Clients + Hot Pipeline Won); edit payment source, condition & remarks |
+| 💳 Payment Status | Log individual installments against a contract with a status (Pending / Paid / Balance Lost) and PKR received amount |
+| 🗓️ Payment Calendar | Calendar view of scheduled payments |
+
+#### Stat Boxes
+| Box | What it shows |
+|---|---|
+| Total Revenue | Sum of `amount_closed` across all contracts for the selected month |
+| Confirm Payment | Sum of all logged installment amounts (click to view entries) |
+| Client Paid | Sum of installments with status `Paid` |
+| Pending Balance | Sum of installments with status `Pending` (click to view breakdown) |
+| Balance Lost | Sum of installments with status `Balance Lost` |
+| Amount Received (PKR) | Sum of `received_pkr` across all installments |
+
+#### Key behaviours
+- **Month Picker** supports selecting future months in addition to past/current
+- **Auto-roll** — unpaid `Pending` installments roll forward into the current month automatically
+- Contracts are read from `active_clients` (status = active for the month) and `hot_pipeline` (`stage = Won`, won in that month) — payment metadata is stored separately in `client_payments` keyed by source
+
+---
+
 ### 🗂️ All Contacts
 
-Unified search view across LinkedIn Pipeline, Hot Pipeline, and Freelance Pipeline.
+Unified search view across LinkedIn Pipeline, Hot Pipeline, Freelance Pipeline, Cold Calling, Email Campaign, and Paid Leads.
 
 - Filter by pipeline, industry, and stage
 - Export filtered results as CSV
@@ -564,7 +708,7 @@ On import the app checks same email address OR same first + last name. Duplicate
 ### Hot Pipeline
 | Stage | Description |
 |---|---|
-| Fiverr / Upwork / LinkedIn / Email / WhatsApp / Calling / Freelancer | Platform-sourced leads |
+| Fiverr / Upwork / LinkedIn / Email / WhatsApp / Calling / Freelancer / Paid Leads | Platform-sourced leads |
 | Follow Up | Scheduled follow-ups |
 | Won | Deals won — appear in Active Clients |
 | Loss | Deals lost |
@@ -599,6 +743,17 @@ On import the app checks same email address OR same first + last name. Duplicate
 | Lost | Not converted |
 | Appointment Booked | Meeting scheduled |
 | Won | Deal closed |
+
+### Paid Leads
+| Stage | Description |
+|---|---|
+| Meta Ads / Google Ads / Linked Ads | Ad platform lead sources |
+| Connected | Initial contact made |
+| Follow Up | Scheduled follow-up |
+| Appointment Booked | Meeting scheduled |
+| Trash | Discarded/invalid lead |
+| Lost | Not converted |
+| WON | Deal closed |
 
 ---
 

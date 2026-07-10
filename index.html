@@ -851,7 +851,7 @@ function HPInsightModal({contacts,onClose,currentMonth}){
   const lastMonthStr=`${lmDate.getFullYear()}-${String(lmDate.getMonth()+1).padStart(2,'0')}`;
 
   const dated=useMemo(()=>contacts.filter(c=>{
-    const cr=c.createdAt?c.createdAt.slice(0,10):null;
+    const cr=(c.wonAt||c.createdAt)?(c.wonAt||c.createdAt).slice(0,10):null;
     const cm=cr?cr.slice(0,7):currentMonth;
     if(dateMode==="thisMonth")return cm===thisMonthStr;
     if(dateMode==="lastMonth")return cm===lastMonthStr;
@@ -961,20 +961,22 @@ function HotPipelineGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
 
   useEffect(()=>{ setLoading(true); sbGetAll("hot_pipeline").then(data=>{ if(Array.isArray(data))setContacts(data.map(rowToHP)); setLoading(false); }).catch(()=>setLoading(false)); },[]);
 
-  const availableMonths=useMemo(()=>{ const s=new Set(contacts.map(c=>c.createdAt?c.createdAt.slice(0,7):currentMonth)); s.add(currentMonth); return [...s].sort().reverse(); },[contacts,currentMonth]);
+  // Won contacts are bucketed by the month they were actually won in (falls back to creation month for everything else)
+  const monthOf=useCallback(c=>(c.wonAt||c.createdAt||currentMonth).slice(0,7),[currentMonth]);
+  const availableMonths=useMemo(()=>{ const s=new Set(contacts.map(monthOf)); s.add(currentMonth); return [...s].sort().reverse(); },[contacts,currentMonth,monthOf]);
   const filteredContacts=useMemo(()=>{
     if(selectedMonth===currentMonth){
       return contacts.filter(c=>{
-        // Won and Loss reset each month — only show contacts added in the current month
+        // Won and Loss reset each month — Won contacts show/count in the month they were won
         if(c.stage==="Won"||c.stage==="Loss"){
-          return (c.createdAt?c.createdAt.slice(0,7):currentMonth)===currentMonth;
+          return monthOf(c)===currentMonth;
         }
         // All active stages carry forward into the new month
         return true;
       });
     }
-    return contacts.filter(c=>(c.createdAt?c.createdAt.slice(0,7):currentMonth)===selectedMonth);
-  },[contacts,selectedMonth,currentMonth]);
+    return contacts.filter(c=>monthOf(c)===selectedMonth);
+  },[contacts,selectedMonth,currentMonth,monthOf]);
 
   const searchedContacts=useMemo(()=>{
     if(!search.trim())return filteredContacts;
@@ -993,8 +995,8 @@ function HotPipelineGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
   useEffect(()=>{ onRevenue({val:stats.won||0,label:"Revenue Won",color:"#36f2af"}); },[stats.won]);
 
   const lastMonth=useMemo(()=>{const[y,m]=selectedMonth.split('-').map(Number);const lm=m===1?12:m-1;const ly=m===1?y-1:y;return `${ly}-${String(lm).padStart(2,'0')}`;},[selectedMonth]);
-  const lastMonthTotal=useMemo(()=>contacts.filter(c=>(c.createdAt?c.createdAt.slice(0,7):currentMonth)===lastMonth).reduce((s,c)=>s+(c.saleValue||0),0),[contacts,lastMonth,currentMonth]);
-  const thisMonthTotal=useMemo(()=>contacts.filter(c=>(c.createdAt?c.createdAt.slice(0,7):currentMonth)===selectedMonth).reduce((s,c)=>s+(c.saleValue||0),0),[contacts,selectedMonth,currentMonth]);
+  const lastMonthTotal=useMemo(()=>contacts.filter(c=>monthOf(c)===lastMonth).reduce((s,c)=>s+(c.saleValue||0),0),[contacts,lastMonth,monthOf]);
+  const thisMonthTotal=useMemo(()=>contacts.filter(c=>monthOf(c)===selectedMonth).reduce((s,c)=>s+(c.saleValue||0),0),[contacts,selectedMonth,monthOf]);
 
   const onDragStart=useCallback((e,id)=>{setDragId(id);e.dataTransfer.effectAllowed="move";},[]);
   const onDragOver=useCallback(stage=>setDragOver(stage),[]);

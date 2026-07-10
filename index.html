@@ -4177,6 +4177,7 @@ function ExpensesGate(){
       setActiveId(s.id);
       return s;
     }
+    alert("Couldn't create the sheet:\n"+(res?.message||res?.error||JSON.stringify(res))+"\n\nIf this mentions a duplicate/unique 'month' value, run this once in Supabase:\nALTER TABLE expense_sheets DROP CONSTRAINT IF EXISTS expense_sheets_month_key;");
     return null;
   }
   async function handleMonthPick(month){

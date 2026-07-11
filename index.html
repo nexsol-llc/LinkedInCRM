@@ -4020,8 +4020,16 @@ function ExCell({addr,raw,display,styleInfo,dropdownOptions,selected,inRange,onC
       onChange={e=>setLocal(e.target.value)}
       onBlur={()=>{setEditing(false);if(local!==(raw||""))onCommit(addr,local);}}
       onKeyDown={e=>{
-        if(e.key==="Enter"){ e.preventDefault(); e.target.blur(); onNavigate(addr,"right"); }
-        else if(e.key==="Tab"){ e.preventDefault(); e.target.blur(); onNavigate(addr,e.shiftKey?"left":"right"); }
+        if(e.key==="Enter"){ e.preventDefault(); onNavigate(addr,"right"); }
+        else if(e.key==="Tab"){ e.preventDefault(); onNavigate(addr,e.shiftKey?"left":"right"); }
+        else if(e.key==="ArrowUp"){ e.preventDefault(); onNavigate(addr,"up",{wrap:false}); }
+        else if(e.key==="ArrowDown"){ e.preventDefault(); onNavigate(addr,"down",{wrap:false}); }
+        else if(e.key==="ArrowLeft"){
+          if(e.target.selectionStart===0&&e.target.selectionEnd===0){ e.preventDefault(); onNavigate(addr,"left",{wrap:false}); }
+        }
+        else if(e.key==="ArrowRight"){
+          if(e.target.selectionStart===e.target.value.length&&e.target.selectionEnd===e.target.value.length){ e.preventDefault(); onNavigate(addr,"right",{wrap:false}); }
+        }
       }}
       style={{width:"100%",height:"100%",boxSizing:"border-box",border:"none",outline:"none",background:cellBg,color:textColor,fontWeight,fontSize:12,padding:"5px 7px",fontFamily:"inherit"}}
     />
@@ -4131,13 +4139,17 @@ function ExpensesGate(){
   const onDragStart=useCallback(addr=>{ draggingRef.current=true; setSelectedCell(addr); setSelRange({start:addr,end:addr}); },[]);
   const onDragEnter=useCallback(addr=>{ if(draggingRef.current)setSelRange(prev=>({...prev,end:addr})); },[]);
   const focusCell=useCallback(addr=>{ setTimeout(()=>{ const el=document.querySelector(`[data-addr="${addr}"]`); if(el)el.focus(); },0); },[]);
-  const navigate=useCallback((addr,dir)=>{
+  const navigate=useCallback((addr,dir,opts)=>{
     const ref=exParseRef(addr); if(!ref||!active)return;
     let {row,col}=ref;
-    if(dir==="right"){ col++; if(col>=EX_COLS){col=0;row++;} }
-    else { col--; if(col<0){col=EX_COLS-1;row--;} }
-    if(row<0||row>=active.rowCount||col<0||col>=EX_COLS)return;
+    const wrap=!opts||opts.wrap!==false;
+    if(dir==="right"){ col++; if(col>=EX_COLS){ if(!wrap)return; col=0;row++; } }
+    else if(dir==="left"){ col--; if(col<0){ if(!wrap)return; col=EX_COLS-1;row--; } }
+    else if(dir==="down")row++;
+    else if(dir==="up")row--;
+    if(row<0||row>=active.rowCount||col<0||col>=EX_COLS)return; // no valid destination — leave current cell focused/editable
     const nextAddr=exCellAddr(row,col);
+    if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
     selectCell(nextAddr);
     focusCell(nextAddr);
   },[active,selectCell,focusCell]);

@@ -4099,7 +4099,17 @@ function ExpensesGate(){
     return ()=>window.removeEventListener("mouseup",up);
   },[]);
 
+  // Revenue box pulls "Amount Received (PKR)" from Client Payments → Payment Status, per month
+  const [paymentEntries,setPaymentEntries]=useState([]);
+  useEffect(()=>{
+    sbGetAll("payment_entries").then(rows=>{ if(Array.isArray(rows))setPaymentEntries(rows.map(rowToPE)); }).catch(()=>{});
+  },[]);
+
   const active=useMemo(()=>sheets.find(s=>s.id===activeId)||null,[sheets,activeId]);
+  const revenuePkr=useMemo(()=>{
+    const mo=active?active.month:currentMonth;
+    return paymentEntries.filter(e=>e.month===mo).reduce((s,e)=>s+(e.receivedPkr||0),0);
+  },[paymentEntries,active,currentMonth]);
   const evalCtx=useMemo(()=>({cache:new Map(),stack:new Set()}),[active&&active.cells]);
   const mergeInfo=useMemo(()=>{
     const map={};
@@ -4272,6 +4282,10 @@ function ExpensesGate(){
       {/* Calendar dropdown + summary boxes */}
       <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",padding:"12px 16px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
         <MonthPicker selectedMonth={active?active.month:currentMonth} currentMonth={currentMonth} availableMonths={sheets.map(s=>s.month)} onChange={handleMonthPick} allowFuture={true}/>
+        <div title="From Revenue → Client Payments → Payment Status → Amount Received (PKR), for this month" style={{background:"linear-gradient(135deg,rgba(168,85,247,0.18),rgba(192,132,252,0.08))",border:"2px solid rgba(168,85,247,0.45)",borderRadius:12,padding:"10px 18px",minWidth:170,boxShadow:"0 0 20px rgba(168,85,247,0.15)"}}>
+          <div style={{fontSize:10,color:"rgba(192,132,252,0.85)",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>Revenue (PKR)</div>
+          <div style={{fontSize:20,fontWeight:800,color:"#c084fc"}}>₨ {revenuePkr.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+        </div>
         {active&&active.boxes.map(b=>{
           const val=exEvalFormula(b.formula,active.cells);
           return (

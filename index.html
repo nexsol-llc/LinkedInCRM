@@ -3758,8 +3758,8 @@ const EX_DEFAULT_ROWS=30;
 const EX_MAX_ROWS=200;
 const EX_COLS=26; // A..Z
 
-function rowToES(r){ return { id:r.id, month:r.month||"", name:r.name||"", cells:r.cells||{}, boxes:r.boxes||[], styles:r.styles||{}, merges:r.merges||[], dropdowns:r.dropdowns||{}, rowCount:r.row_count||EX_DEFAULT_ROWS, createdAt:r.created_at||null }; }
-function esToRow(s){ return { month:s.month||"", name:s.name||"", cells:s.cells||{}, boxes:s.boxes||[], styles:s.styles||{}, merges:s.merges||[], dropdowns:s.dropdowns||{}, row_count:s.rowCount||EX_DEFAULT_ROWS }; }
+function rowToES(r){ return { id:r.id, month:r.month||"", name:r.name||"", cells:r.cells||{}, boxes:r.boxes||[], styles:r.styles||{}, merges:r.merges||[], dropdowns:r.dropdowns||{}, totalExpensesFormula:r.total_expenses_formula||"", rowCount:r.row_count||EX_DEFAULT_ROWS, createdAt:r.created_at||null }; }
+function esToRow(s){ return { month:s.month||"", name:s.name||"", cells:s.cells||{}, boxes:s.boxes||[], styles:s.styles||{}, merges:s.merges||[], dropdowns:s.dropdowns||{}, total_expenses_formula:s.totalExpensesFormula||"", row_count:s.rowCount||EX_DEFAULT_ROWS }; }
 
 function exColLetter(col){ let s="",n=col+1; while(n>0){ const rem=(n-1)%26; s=String.fromCharCode(65+rem)+s; n=Math.floor((n-1)/26); } return s; }
 function exLetterToCol(letters){ let n=0; for(let i=0;i<letters.length;i++)n=n*26+(letters.charCodeAt(i)-64); return n-1; }
@@ -4055,6 +4055,21 @@ function ExBoxModal({box,onClose,onSave,onDelete}){
   );
 }
 
+function ExTotalExpensesModal({formula,onClose,onSave}){
+  const [text,setText]=useState(formula||"");
+  return (
+    <Modal title="✏️ Total Expenses — Formula" onClose={onClose}>
+      <div style={{fontSize:12,color:"rgba(174,220,255,0.5)",marginBottom:12}}>Built-in box — appears on every month automatically, right after Revenue. Set the formula for this sheet (e.g. sum your amount column).</div>
+      <Inp label="Formula" value={text} onChange={e=>setText(e.target.value)} placeholder="=SUM(B2:B31)"/>
+      <div style={{fontSize:11,color:"rgba(174,220,255,0.45)",marginBottom:14}}>Supports cell refs (A1), ranges (A1:A10), and functions like SUM, AVERAGE, IF, ROUND, CONCAT.</div>
+      <div style={{display:"flex",justifyContent:"flex-end",gap:8}}>
+        <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
+        <Btn onClick={()=>onSave(text.trim())}>Save</Btn>
+      </div>
+    </Modal>
+  );
+}
+
 function ExDropdownModal({initial,onClose,onSave}){
   const [text,setText]=useState((initial||[]).join(", "));
   return (
@@ -4074,6 +4089,7 @@ function ExpensesGate(){
   const [loading,setLoading]=useState(true);
   const [activeId,setActiveId]=useState(null);
   const [boxModal,setBoxModal]=useState(null); // null | "new" | box
+  const [totalExpensesModal,setTotalExpensesModal]=useState(false);
   const [dropdownModal,setDropdownModal]=useState(false);
   const [renamingId,setRenamingId]=useState(null);
   const [selectedCell,setSelectedCell]=useState("A1");
@@ -4110,9 +4126,15 @@ function ExpensesGate(){
     const mo=active?active.month:currentMonth;
     return paymentEntries.filter(e=>e.month===mo).reduce((s,e)=>s+(e.receivedPkr||0),0);
   },[paymentEntries,active,currentMonth]);
-  // "Total Expenses" is pinned right after Revenue (whichever month is active); "Available Balance" is derived from it automatically
-  const totalExpensesBox=useMemo(()=>active?active.boxes.find(b=>(b.label||"").trim().toLowerCase()==="total expenses"):null,[active]);
-  const totalExpensesVal=useMemo(()=>totalExpensesBox&&active?exEvalFormula(totalExpensesBox.formula,active.cells):0,[totalExpensesBox,active&&active.cells]);
+  // "Total Expenses" is a built-in box on every sheet — pinned right after Revenue; "Available Balance" is derived from it automatically.
+  // Legacy fallback: sheets created before this was built-in may have a custom box literally named "Total Expenses" — hide it from the
+  // regular box list and use its formula as this sheet's starting value if no built-in formula has been set yet.
+  const legacyTotalExpensesBox=useMemo(()=>active?active.boxes.find(b=>(b.label||"").trim().toLowerCase()==="total expenses"):null,[active]);
+  const totalExpensesFormula=useMemo(()=>{
+    if(!active)return "";
+    return active.totalExpensesFormula||(legacyTotalExpensesBox?legacyTotalExpensesBox.formula:"");
+  },[active,legacyTotalExpensesBox]);
+  const totalExpensesVal=useMemo(()=>active?exEvalFormula(totalExpensesFormula,active.cells):0,[totalExpensesFormula,active&&active.cells]);
   const availableBalance=useMemo(()=>revenuePkr-totalExpensesVal,[revenuePkr,totalExpensesVal]);
   const evalCtx=useMemo(()=>({cache:new Map(),stack:new Set()}),[active&&active.cells]);
   const mergeInfo=useMemo(()=>{
@@ -4188,6 +4210,12 @@ function ExpensesGate(){
     setSheets(prev=>prev.map(s=>s.id===active.id?{...s,boxes:newBoxes}:s));
     await sbUpdate("expense_sheets",active.id,{boxes:newBoxes});
     setBoxModal(null);
+  }
+  async function saveTotalExpensesFormula(formula){
+    if(!active)return;
+    setSheets(prev=>prev.map(s=>s.id===active.id?{...s,totalExpensesFormula:formula}:s));
+    await sbUpdate("expense_sheets",active.id,{total_expenses_formula:formula});
+    setTotalExpensesModal(false);
   }
 
   function monthLabel(mo){ const[y,m]=mo.split('-').map(Number); return new Date(y,m-1,1).toLocaleString('default',{month:'long',year:'numeric'}); }
@@ -4290,11 +4318,11 @@ function ExpensesGate(){
           <div style={{fontSize:10,color:"rgba(192,132,252,0.85)",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>Revenue (PKR)</div>
           <div style={{fontSize:20,fontWeight:800,color:"#c084fc"}}>₨ {revenuePkr.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
         </div>
-        {totalExpensesBox&&(
-          <div key={totalExpensesBox.id} onClick={()=>setBoxModal(totalExpensesBox)} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,padding:"10px 18px",minWidth:150,cursor:"pointer",transition:"all .15s"}}
+        {active&&(
+          <div onClick={()=>setTotalExpensesModal(true)} title="Built-in — click to set/edit this sheet's Total Expenses formula" style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,padding:"10px 18px",minWidth:150,cursor:"pointer",transition:"all .15s"}}
             onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(255,107,53,0.4)"}
             onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(255,255,255,0.09)"}>
-            <div style={{fontSize:10,color:"rgba(174,220,255,0.45)",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>{totalExpensesBox.label}</div>
+            <div style={{fontSize:10,color:"rgba(174,220,255,0.45)",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>Total Expenses</div>
             <div style={{fontSize:20,fontWeight:800,color:"#ff6b35"}}>₨ {totalExpensesVal.toLocaleString(undefined,{maximumFractionDigits:2})}</div>
           </div>
         )}
@@ -4304,7 +4332,7 @@ function ExpensesGate(){
             <div style={{fontSize:20,fontWeight:800,color:availableBalance>=0?"#36f2af":"#ef4444"}}>₨ {availableBalance.toLocaleString(undefined,{maximumFractionDigits:2})}</div>
           </div>
         )}
-        {active&&active.boxes.filter(b=>b!==totalExpensesBox).map(b=>{
+        {active&&active.boxes.filter(b=>b!==legacyTotalExpensesBox).map(b=>{
           const val=exEvalFormula(b.formula,active.cells);
           return (
             <div key={b.id} onClick={()=>setBoxModal(b)} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,padding:"10px 18px",minWidth:150,cursor:"pointer",transition:"all .15s"}}
@@ -4404,6 +4432,7 @@ function ExpensesGate(){
       )}
 
       {boxModal&&<ExBoxModal box={boxModal==="new"?null:boxModal} onClose={()=>setBoxModal(null)} onSave={saveBox} onDelete={deleteBox}/>}
+      {totalExpensesModal&&active&&<ExTotalExpensesModal formula={totalExpensesFormula} onClose={()=>setTotalExpensesModal(false)} onSave={saveTotalExpensesFormula}/>}
       {dropdownModal&&active&&<ExDropdownModal initial={active.dropdowns[selectedCell]} onClose={()=>setDropdownModal(false)} onSave={saveDropdown}/>}
     </div>
   );

@@ -379,6 +379,7 @@ CREATE TABLE expense_sheets (
   styles jsonb DEFAULT '{}'::jsonb,  -- { "A1": { "bold": true, "color": "#fff", "bg": "#222" } }
   merges jsonb DEFAULT '[]'::jsonb,  -- [{ "start": "E1", "end": "F1" }]
   dropdowns jsonb DEFAULT '{}'::jsonb, -- { "G1": ["Food","Transport","Rent"] }
+  total_expenses_formula text DEFAULT '', -- built-in "Total Expenses" box formula for this sheet, e.g. '=SUM(B2:B31)'
   row_count int DEFAULT 30,
   created_at timestamptz DEFAULT now()
 );
@@ -649,7 +650,7 @@ An in-app spreadsheet for tracking expenses — Excel/Google Sheets-style, organ
 - **Calendar dropdown** at the top switches between months; picking a month with no sheet yet creates its first sheet immediately (no prompts)
 - **Formula bar** shows the selected cell's address and raw content (value or formula)
 - **Revenue (PKR) box** — a fixed box next to the calendar dropdown, pulled live from Client Payments → Payment Status → Amount Received (PKR) for the currently active month (sums `received_pkr` across that month's `payment_entries`, same figure Client Payments shows). Switching months updates it automatically.
-- **Total Expenses** — if you create a custom box (see below) named exactly "Total Expenses", it's automatically pinned right after the Revenue box regardless of when it was created or where it sits in the list, and recalculates per month using whatever formula you gave it.
+- **Total Expenses box** — built-in, appears automatically on every sheet right after Revenue (no need to create it via +Add Box). Starts at ₨0; click it to set/edit that sheet's formula (e.g. `=SUM(B2:B31)`). Each sheet keeps its own formula, so different months (or different sheets within a month) can total different columns.
 - **Available Balance** — a fixed box right after Total Expenses, computed automatically as `Revenue (PKR) − Total Expenses` (green if positive, red if negative). No formula to set — it just reflects the two boxes next to it, live, for whichever month you're viewing.
 - **Summary boxes** — click **+ Add Box** to create a custom box with a name and a formula (e.g. `=SUM(B2:B30)`), displayed in **PKR (₨)**; click an existing box to edit or delete it
 - **Formatting toolbar** — select a single cell or click-and-drag a range, then apply **Bold**, text color, background color, **Merge**/**Unmerge**, or set a **Dropdown** (comma-separated options, turning those cells into a `<select>`)

@@ -4293,7 +4293,7 @@ function ExpensesGate(){
               onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(255,107,53,0.4)"}
               onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(255,255,255,0.09)"}>
               <div style={{fontSize:10,color:"rgba(174,220,255,0.45)",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>{b.label}</div>
-              <div style={{fontSize:20,fontWeight:800,color:"#ff6b35"}}>${(typeof val==="number"?val:0).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
+              <div style={{fontSize:20,fontWeight:800,color:"#ff6b35"}}>₨ {(typeof val==="number"?val:0).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
             </div>
           );
         })}

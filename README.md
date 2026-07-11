@@ -649,7 +649,7 @@ An in-app spreadsheet for tracking expenses — Excel/Google Sheets-style, organ
 - **Calendar dropdown** at the top switches between months; picking a month with no sheet yet creates its first sheet immediately (no prompts)
 - **Formula bar** shows the selected cell's address and raw content (value or formula)
 - **Revenue (PKR) box** — a fixed box next to the calendar dropdown, pulled live from Client Payments → Payment Status → Amount Received (PKR) for the currently active month (sums `received_pkr` across that month's `payment_entries`, same figure Client Payments shows). Switching months updates it automatically.
-- **Summary boxes** — click **+ Add Box** to create a custom box with a name and a formula (e.g. `=SUM(B2:B30)`); click an existing box to edit or delete it
+- **Summary boxes** — click **+ Add Box** to create a custom box with a name and a formula (e.g. `=SUM(B2:B30)`), displayed in **PKR (₨)**; click an existing box to edit or delete it
 - **Formatting toolbar** — select a single cell or click-and-drag a range, then apply **Bold**, text color, background color, **Merge**/**Unmerge**, or set a **Dropdown** (comma-separated options, turning those cells into a `<select>`)
 - **Sheet tabs** at the bottom are scoped to the currently active month (like tabs within one Excel workbook) — **+ Add Sheet** adds another sheet *within that same month* (auto-named "Sheet 2", "Sheet 3", …); double-click a tab to rename it (e.g. "Rent", "Travel"), click **×** to delete it. To start a *different* month, use the calendar dropdown, not "+ Add Sheet"
 - **+ 15 Rows** button expands the grid (up to 200 rows) if a sheet needs more line items

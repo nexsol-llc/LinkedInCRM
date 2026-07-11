@@ -4301,7 +4301,7 @@ function ExpensesGate(){
     setDropdownModal(false);
   }
 
-  if(loading)return <Spinner text="Loading Expenses…"/>;
+  if(loading)return <Spinner text="Loading Balance Sheet…"/>;
 
   const cols=Array.from({length:EX_COLS},(_,i)=>i);
   const stickyCorner={position:"sticky",top:0,left:0,zIndex:5,background:"rgba(8,18,38,0.97)",minWidth:44,width:44,borderBottom:"1px solid rgba(255,255,255,0.08)",borderRight:"1px solid rgba(255,255,255,0.08)"};
@@ -5040,10 +5040,10 @@ function App(){
     {section:"OVERVIEW",items:[{key:"dashboard",label:"Dashboard",soon:true},{key:"allcontacts",label:"All Contacts"},{key:"pipeline",label:"Hot Pipeline"},{key:"clients",label:"Active Clients"}]},
     {section:"PIPELINE",items:[{key:"contacts",label:"LinkedIn Pipeline"},{key:"freelance",label:"Freelance Pipeline"},{key:"coldcalling",label:"Cold Calling"},{key:"emailcampaign",label:"Email Campaign"},{key:"paidleads",label:"Paid Leads"}]},
     {section:"DELIVERY",items:[{key:"projects",label:"Projects",soon:true},{key:"tasks",label:"Tasks",soon:true}]},
-    {section:"REVENUE",items:[{key:"clientpayments",label:"Client Payments"},{key:"expenses",label:"Expenses"},{key:"proposals",label:"Proposals",soon:true},{key:"invoices",label:"Invoices",soon:true}]},
+    {section:"REVENUE",items:[{key:"clientpayments",label:"Client Payments"},{key:"expenses",label:"Balance Sheet"},{key:"proposals",label:"Proposals",soon:true},{key:"invoices",label:"Invoices",soon:true}]},
     {section:"DATA",items:[{key:"import",label:"Import",soon:true},{key:"settings",label:"Settings"}]},
   ];
-  const titles={dashboard:"Dashboard",allcontacts:"All Contacts",clientpayments:"Client Payments",expenses:"Expenses",pipeline:"Hot Pipeline",contacts:"LinkedIn Pipeline",freelance:"Freelance Pipeline",deals:"Deals",clients:"Active Clients",coldcalling:"Cold Calling",emailcampaign:"Email Campaign",paidleads:"Paid Leads",projects:"Projects",tasks:"Tasks",proposals:"Proposals",invoices:"Invoices",import:"Import",settings:"Settings"};
+  const titles={dashboard:"Dashboard",allcontacts:"All Contacts",clientpayments:"Client Payments",expenses:"Balance Sheet",pipeline:"Hot Pipeline",contacts:"LinkedIn Pipeline",freelance:"Freelance Pipeline",deals:"Deals",clients:"Active Clients",coldcalling:"Cold Calling",emailcampaign:"Email Campaign",paidleads:"Paid Leads",projects:"Projects",tasks:"Tasks",proposals:"Proposals",invoices:"Invoices",import:"Import",settings:"Settings"};
 
   return (
     <div style={{display:"flex",height:"100vh",overflow:"hidden"}}>

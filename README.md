@@ -23,7 +23,7 @@
   - [Paid Leads](#paid-leads)
   - [Active Clients](#active-clients)
   - [Client Payments](#client-payments)
-  - [Expenses](#expenses)
+  - [Balance Sheet](#balance-sheet)
   - [All Contacts](#all-contacts)
 - [Activity Log](#activity-log)
 - [CSV Import & Export](#csv-import--export)
@@ -449,7 +449,7 @@ The sidebar is grouped into sections. Items marked **soon** are placeholders not
 | Overview | Dashboard *(soon)*, All Contacts, Hot Pipeline, Active Clients |
 | Pipeline | LinkedIn Pipeline, Freelance Pipeline, Cold Calling, Email Campaign, Paid Leads |
 | Delivery | Projects *(soon)*, Tasks *(soon)* |
-| Revenue | Client Payments, Expenses, Proposals *(soon)*, Invoices *(soon)* |
+| Revenue | Client Payments, Balance Sheet, Proposals *(soon)*, Invoices *(soon)* |
 | Data | Import *(soon)*, Settings |
 
 ---
@@ -641,9 +641,9 @@ Contract and installment tracker for revenue already closed in Active Clients an
 
 ---
 
-### 🧾 Expenses
+### 🧾 Balance Sheet
 
-An in-app spreadsheet for tracking expenses — Excel/Google Sheets-style, organized like a workbook per month: each month can hold one or more sheets (tabs).
+An in-app spreadsheet for tracking expenses — Excel/Google Sheets-style, organized like a workbook per month: each month can hold one or more sheets (tabs). (Sidebar label: **Balance Sheet**; internally still referred to as "Expenses" in the codebase and Supabase table name.)
 
 #### Layout
 - Column headers `A`–`Z` and row numbers, sticky while scrolling — every cell is directly editable

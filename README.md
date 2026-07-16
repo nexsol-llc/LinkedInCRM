@@ -656,6 +656,9 @@ An in-app spreadsheet for tracking expenses — Excel/Google Sheets-style, organ
 - **Formatting toolbar** — select a single cell or click-and-drag a range, then apply **Bold**, text color, background color, **Merge**/**Unmerge**, or set a **Dropdown** (comma-separated options, turning those cells into a `<select>`)
 - **Sheet tabs** at the bottom are scoped to the currently active month (like tabs within one Excel workbook) — **+ Add Sheet** adds another sheet *within that same month* (auto-named "Sheet 2", "Sheet 3", …); double-click a tab to rename it (e.g. "Rent", "Travel"), click **×** to delete it. To start a *different* month, use the calendar dropdown, not "+ Add Sheet"
 - **+ 15 Rows** button expands the grid (up to 200 rows) if a sheet needs more line items
+- **Import / Export** — available on every sheet (new or existing), next to the formula bar. Columns A–E on every sheet are treated as a fixed ledger: **Date, Description, Amount, Remarks, Project**.
+  - **Import** accepts a CSV with a header row containing those column names in any order (matched case-insensitively) — writes the bold header row into A1:E1 if not already present, then appends the rows after whatever data already exists on that sheet.
+  - **Export** downloads a CSV of just those 5 columns (skipping blank rows), with the standard header row, regardless of what's actually typed in A1:E1 on the sheet.
 - Keyboard: **Enter** or **Tab** commits the cell and moves the cursor to the next cell on the right (Shift+Tab moves left), wrapping to the next/previous row at the sheet edges. **Arrow keys** move between cells in any direction (↑/↓ always; ←/→ move the cell once the text cursor is at the start/end of the cell's content, so editing text within a cell still works normally)
 
 #### Formulas

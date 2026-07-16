@@ -3757,6 +3757,20 @@ function ClientPaymentsGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
 const EX_DEFAULT_ROWS=30;
 const EX_MAX_ROWS=200;
 const EX_COLS=26; // A..Z
+const BS_FIELDS=["Date","Description","Amount","Remarks","Project"]; // maps to columns A,B,C,D,E on every sheet
+
+function parseBSCSV(text){
+  const lines=text.trim().split("\n").map(l=>l.trim()).filter(Boolean);
+  if(lines.length<2)return [];
+  const hmap={date:"Date",description:"Description",desc:"Description",amount:"Amount",remarks:"Remarks",remark:"Remarks",notes:"Remarks",project:"Project"};
+  const headers=parseCSVLine(lines[0]).map(h=>h.toLowerCase().replace(/\s+/g,"").replace(/[^a-z]/g,""));
+  return lines.slice(1).map(line=>{
+    const vals=parseCSVLine(line);
+    const obj={Date:"",Description:"",Amount:"",Remarks:"",Project:""};
+    headers.forEach((h,idx)=>{ const key=hmap[h]; if(key)obj[key]=vals[idx]||""; });
+    return obj;
+  }).filter(r=>r.Date||r.Description||r.Amount||r.Remarks||r.Project);
+}
 
 function rowToES(r){ return { id:r.id, month:r.month||"", name:r.name||"", cells:r.cells||{}, boxes:r.boxes||[], styles:r.styles||{}, merges:r.merges||[], dropdowns:r.dropdowns||{}, totalExpensesFormula:r.total_expenses_formula||"", rowCount:r.row_count||EX_DEFAULT_ROWS, createdAt:r.created_at||null }; }
 function esToRow(s){ return { month:s.month||"", name:s.name||"", cells:s.cells||{}, boxes:s.boxes||[], styles:s.styles||{}, merges:s.merges||[], dropdowns:s.dropdowns||{}, total_expenses_formula:s.totalExpensesFormula||"", row_count:s.rowCount||EX_DEFAULT_ROWS }; }
@@ -4070,6 +4084,40 @@ function ExTotalExpensesModal({formula,onClose,onSave}){
   );
 }
 
+function ExImportModal({onClose,onImport}){
+  const [preview,setPreview]=useState(null);
+  const [err,setErr]=useState("");
+  const [importing,setImporting]=useState(false);
+  const fileRef=useRef();
+  function handle(text){
+    const rows=parseBSCSV(text);
+    if(!rows.length){ setErr("Could not parse file. Make sure it has a header row with Date, Description, Amount, Remarks, Project."); setPreview(null); }
+    else{ setErr(""); setPreview(rows); }
+  }
+  async function doImport(){ if(!preview)return; setImporting(true); await onImport(preview); setImporting(false); }
+  return (
+    <Modal title="📥 Import Rows" onClose={onClose} wide>
+      <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:12,marginBottom:14}}>
+        <div style={{fontSize:12,color:"rgba(174,220,255,0.55)",marginBottom:6,fontWeight:600}}>CSV headers expected (any order):</div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{BS_FIELDS.map(h=><span key={h} style={{background:"rgba(35,161,221,0.1)",color:"#23a1dd",borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:500}}>{h}</span>)}</div>
+      </div>
+      <input ref={fileRef} type="file" accept=".csv" onChange={e=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=ev=>handle(ev.target.result);r.readAsText(f);}}} style={{display:"none"}}/>
+      <div onClick={()=>fileRef.current.click()} style={{border:"2px dashed rgba(35,161,221,0.4)",borderRadius:10,padding:20,textAlign:"center",cursor:"pointer",color:"rgba(174,220,255,0.55)",fontSize:13,marginBottom:12,background:"rgba(255,255,255,0.04)"}}>📂 Click to choose CSV file</div>
+      <Tex label="Or paste CSV text" onChange={e=>handle(e.target.value)} style={{fontFamily:"monospace",fontSize:12}}/>
+      {err&&<div style={{color:"#ef4444",fontSize:12,marginBottom:8}}>⚠ {err}</div>}
+      {preview&&<div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(35,161,221,0.2)",borderRadius:8,padding:10,marginBottom:10}}>
+        <div style={{fontSize:12,color:"#23a1dd",marginBottom:4,fontWeight:600}}>✓ {preview.length} rows ready — will be appended after this sheet's existing rows</div>
+        {preview.slice(0,5).map((r,i)=><div key={i} style={{fontSize:11,color:"rgba(174,220,255,0.55)",padding:"2px 0"}}>{r.Date} · {r.Description} · {r.Amount}</div>)}
+        {preview.length>5&&<div style={{fontSize:11,color:"rgba(174,220,255,0.38)"}}>...and {preview.length-5} more</div>}
+      </div>}
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
+        <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
+        <button onClick={doImport} style={{background:"#23a1dd",color:"#fff",border:"none",borderRadius:8,padding:"8px 16px",cursor:"pointer",fontSize:13,fontWeight:600,opacity:preview&&!importing?1:0.4}}>{importing?"Importing...":`Import ${preview?.length||0} Rows`}</button>
+      </div>
+    </Modal>
+  );
+}
+
 function ExDropdownModal({initial,onClose,onSave}){
   const [text,setText]=useState((initial||[]).join(", "));
   return (
@@ -4091,6 +4139,7 @@ function ExpensesGate(){
   const [boxModal,setBoxModal]=useState(null); // null | "new" | box
   const [totalExpensesModal,setTotalExpensesModal]=useState(false);
   const [dropdownModal,setDropdownModal]=useState(false);
+  const [importModal,setImportModal]=useState(false);
   const [renamingId,setRenamingId]=useState(null);
   const [selectedCell,setSelectedCell]=useState("A1");
   const [selRange,setSelRange]=useState({start:"A1",end:"A1"});
@@ -4301,6 +4350,45 @@ function ExpensesGate(){
     setDropdownModal(false);
   }
 
+  async function importRows(rows){
+    if(!active)return;
+    const newCells={...active.cells};
+    const newStyles={...active.styles};
+    BS_FIELDS.forEach((f,i)=>{
+      const addr=exCellAddr(0,i);
+      if(!newCells[addr])newCells[addr]=f;
+      newStyles[addr]={...(newStyles[addr]||{}),bold:true};
+    });
+    let maxUsedRow=0;
+    for(let r=0;r<active.rowCount;r++){ if(BS_FIELDS.some((f,i)=>newCells[exCellAddr(r,i)]))maxUsedRow=r; }
+    let r=Math.max(1,maxUsedRow+1);
+    rows.forEach(row=>{
+      BS_FIELDS.forEach((f,i)=>{ if(row[f])newCells[exCellAddr(r,i)]=row[f]; });
+      r++;
+    });
+    const rowCount=Math.min(EX_MAX_ROWS,Math.max(active.rowCount,r));
+    setSheets(prev=>prev.map(s=>s.id===active.id?{...s,cells:newCells,styles:newStyles,rowCount}:s));
+    await sbUpdate("expense_sheets",active.id,{cells:newCells,styles:newStyles,row_count:rowCount});
+    setImportModal(false);
+  }
+
+  function exportRows(){
+    if(!active)return;
+    const cache=new Map(),stack=new Set();
+    const rows=[];
+    for(let r=1;r<active.rowCount;r++){
+      const vals=BS_FIELDS.map((f,i)=>exDisplayValue(r,i,active.cells,cache,stack));
+      if(vals.some(v=>v!==""))rows.push(vals);
+    }
+    const esc=v=>`"${String(v||"").replace(/"/g,'""')}"`;
+    const csv=[BS_FIELDS.map(esc).join(","),...rows.map(vals=>vals.map(esc).join(","))].join("\n");
+    const blob=new Blob([csv],{type:"text/csv"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url; a.download=`${(active.name||active.month).replace(/\s+/g,"_")}_balance_sheet.csv`; a.click();
+    URL.revokeObjectURL(url);
+  }
+
   if(loading)return <Spinner text="Loading Balance Sheet…"/>;
 
   const cols=Array.from({length:EX_COLS},(_,i)=>i);
@@ -4377,6 +4465,8 @@ function ExpensesGate(){
             <span style={{color:"rgba(174,220,255,0.3)",fontStyle:"italic",fontSize:12}}>fx</span>
             <input value={active.cells[selectedCell]||""} onChange={e=>commitCell(selectedCell,e.target.value)} placeholder='Value or =formula, e.g. =IF(B2>100,"Over","OK")'
               style={{...IS,flex:1,fontSize:12,padding:"6px 10px"}}/>
+            <button onClick={()=>setImportModal(true)} title="Import rows: Date, Description, Amount, Remarks, Project" style={toolBtn}>📥 Import</button>
+            <button onClick={exportRows} title="Export this sheet's Date, Description, Amount, Remarks, Project columns" style={{...toolBtn,background:"rgba(54,242,175,0.08)",color:"#36f2af",border:"1px solid rgba(54,242,175,0.2)"}}>⬇ Export</button>
             <button onClick={addRows} disabled={active.rowCount>=EX_MAX_ROWS} style={{...toolBtn,opacity:active.rowCount>=EX_MAX_ROWS?0.4:1,cursor:active.rowCount>=EX_MAX_ROWS?"default":"pointer"}}>+ 15 Rows</button>
           </div>
 
@@ -4434,6 +4524,7 @@ function ExpensesGate(){
       {boxModal&&<ExBoxModal box={boxModal==="new"?null:boxModal} onClose={()=>setBoxModal(null)} onSave={saveBox} onDelete={deleteBox}/>}
       {totalExpensesModal&&active&&<ExTotalExpensesModal formula={totalExpensesFormula} onClose={()=>setTotalExpensesModal(false)} onSave={saveTotalExpensesFormula}/>}
       {dropdownModal&&active&&<ExDropdownModal initial={active.dropdowns[selectedCell]} onClose={()=>setDropdownModal(false)} onSave={saveDropdown}/>}
+      {importModal&&active&&<ExImportModal onClose={()=>setImportModal(false)} onImport={importRows}/>}
     </div>
   );
 }

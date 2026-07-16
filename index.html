@@ -4004,7 +4004,7 @@ function exEvalFormula(formula,cells){
   return typeof val==="number"?val:exToNum(val);
 }
 
-function ExCell({addr,raw,display,styleInfo,dropdownOptions,selected,inRange,onCommit,onSelect,onNavigate,onDragStart,onDragEnter}){
+function ExCell({addr,raw,display,styleInfo,dropdownOptions,selected,inRange,onCommit,onSelect,onNavigate,onDragStart,onDragEnter,onClearRange}){
   const [local,setLocal]=useState(raw);
   const [editing,setEditing]=useState(false);
   useEffect(()=>{ if(!editing)setLocal(raw); },[raw,editing]);
@@ -4019,6 +4019,9 @@ function ExCell({addr,raw,display,styleInfo,dropdownOptions,selected,inRange,onC
         onMouseDown={()=>onDragStart(addr)} onMouseEnter={()=>onDragEnter(addr)}
         onFocus={()=>onSelect(addr)}
         onChange={e=>onCommit(addr,e.target.value)}
+        onKeyDown={e=>{
+          if(e.key==="Delete"||e.key==="Backspace"){ if(onClearRange()){ e.preventDefault(); } }
+        }}
         style={{width:"100%",height:"100%",boxSizing:"border-box",border:"none",outline:"none",background:cellBg,color:textColor,fontWeight,fontSize:12,padding:"4px 4px",fontFamily:"inherit"}}>
         <option value=""></option>
         {dropdownOptions.map(o=><option key={o} value={o}>{o}</option>)}
@@ -4043,6 +4046,10 @@ function ExCell({addr,raw,display,styleInfo,dropdownOptions,selected,inRange,onC
         }
         else if(e.key==="ArrowRight"){
           if(e.target.selectionStart===e.target.value.length&&e.target.selectionEnd===e.target.value.length){ e.preventDefault(); onNavigate(addr,"right",{wrap:false}); }
+        }
+        else if(e.key==="Delete"||e.key==="Backspace"){
+          // Multi-cell range selected -> clear all of it in one shot; single cell -> let normal text editing happen
+          if(onClearRange()){ e.preventDefault(); setLocal(""); }
         }
       }}
       style={{width:"100%",height:"100%",boxSizing:"border-box",border:"none",outline:"none",background:cellBg,color:textColor,fontWeight,fontSize:12,padding:"5px 7px",fontFamily:"inherit"}}
@@ -4309,6 +4316,21 @@ function ExpensesGate(){
   }
 
   function rangeAddrs(){ return exRangeAddrs(selRange.start,selRange.end); }
+  function clearRange(){
+    // Only intercepts Delete/Backspace when more than one cell is selected — clears them all in one shot.
+    // A single selected cell falls through to normal in-cell text editing (returns false, unhandled).
+    const addrs=rangeAddrs();
+    if(addrs.length<=1)return false;
+    setSheets(prev=>prev.map(s=>{
+      if(s.id!==activeId)return s;
+      const newCells={...s.cells};
+      let changed=false;
+      addrs.forEach(a=>{ if(newCells[a]!==undefined){ delete newCells[a]; changed=true; } });
+      return changed?{...s,cells:newCells}:s;
+    }));
+    dirtyRef.current=true;
+    return true;
+  }
   async function applyStyle(patch){
     if(!active)return;
     const addrs=rangeAddrs();
@@ -4494,7 +4516,7 @@ function ExpensesGate(){
                             styleInfo={active.styles[addr]||{}} dropdownOptions={active.dropdowns[addr]}
                             selected={selectedCell===addr} inRange={exInRange(addr,selRange.start,selRange.end)}
                             onCommit={commitCell} onSelect={selectCell} onNavigate={navigate}
-                            onDragStart={onDragStart} onDragEnter={onDragEnter}/>
+                            onDragStart={onDragStart} onDragEnter={onDragEnter} onClearRange={clearRange}/>
                         </td>
                       );
                     })}

@@ -69,19 +69,65 @@ const { useState, useEffect, useMemo, useCallback, useRef } = React;
 // ── Config ────────────────────────────────────────────────────────────────────
 const SB_URL = "https://iededwksmveomkrhofzu.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllZGVkd2tzbXZlb21rcmhvZnp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NjEwNzYsImV4cCI6MjA5NjIzNzA3Nn0.Mr-vDFFTUoCA6aj9b2kQPh_W0qFnLVknMspN8RTVG2o";
-const CRM_PASSWORD = "LinkedIn@7865";
-const HEADERS = {
-  "Content-Type": "application/json",
-  "apikey": SB_KEY,
-  "Authorization": `Bearer ${SB_KEY}`,
-  "Prefer": "return=representation"
-};
+
+// ── Auth session ──────────────────────────────────────────────────────────────
+const SESSION_KEY = "crm_session";
+function loadSession(){ try{ const raw=localStorage.getItem(SESSION_KEY); return raw?JSON.parse(raw):null; }catch(e){ return null; } }
+function saveSession(s){ try{ if(s)localStorage.setItem(SESSION_KEY,JSON.stringify(s)); else localStorage.removeItem(SESSION_KEY); }catch(e){} }
+let currentSession = loadSession();
+let refreshPromise = null;
+
+function authHeaders(){
+  const token = (currentSession&&currentSession.access_token) || SB_KEY;
+  return { "Content-Type":"application/json", "apikey":SB_KEY, "Authorization":`Bearer ${token}`, "Prefer":"return=representation" };
+}
+function clearSession(){ currentSession=null; saveSession(null); }
+function hasSession(){ return !!(currentSession&&currentSession.access_token); }
+
+async function sbSignIn(email,password){
+  const r = await fetch(`${SB_URL}/auth/v1/token?grant_type=password`, { method:"POST", headers:{"Content-Type":"application/json","apikey":SB_KEY}, body:JSON.stringify({email,password}) });
+  const data = await r.json().catch(()=>({}));
+  if(!r.ok || !data.access_token) return { error: data.error_description||data.msg||data.error||"Incorrect email or password." };
+  currentSession = { access_token:data.access_token, refresh_token:data.refresh_token, expires_at:Date.now()+((data.expires_in||3600)*1000), user:data.user };
+  saveSession(currentSession);
+  return { session: currentSession };
+}
+function sbSignOut(){ clearSession(); }
+
+async function refreshSession(){
+  if(!currentSession||!currentSession.refresh_token) return false;
+  if(refreshPromise) return refreshPromise;
+  refreshPromise = (async()=>{
+    try{
+      const r = await fetch(`${SB_URL}/auth/v1/token?grant_type=refresh_token`, { method:"POST", headers:{"Content-Type":"application/json","apikey":SB_KEY}, body:JSON.stringify({refresh_token:currentSession.refresh_token}) });
+      const data = await r.json().catch(()=>({}));
+      if(!r.ok||!data.access_token){ clearSession(); return false; }
+      currentSession = { access_token:data.access_token, refresh_token:data.refresh_token||currentSession.refresh_token, expires_at:Date.now()+((data.expires_in||3600)*1000), user:data.user||currentSession.user };
+      saveSession(currentSession);
+      return true;
+    } finally { refreshPromise=null; }
+  })();
+  return refreshPromise;
+}
+async function ensureFreshSession(){
+  if(!currentSession)return;
+  if(Date.now() > currentSession.expires_at-60000) await refreshSession();
+}
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
+async function sbFetch(path, opts={}){
+  await ensureFreshSession();
+  let r = await fetch(`${SB_URL}${path}`, { ...opts, headers:{...authHeaders(),...(opts.headers||{})} });
+  if(r.status===401 && currentSession){
+    const ok = await refreshSession();
+    if(ok) r = await fetch(`${SB_URL}${path}`, { ...opts, headers:{...authHeaders(),...(opts.headers||{})} });
+  }
+  return r;
+}
 async function sbGetAll(table) {
   let all = [], from = 0;
   while (true) {
-    const r = await fetch(`${SB_URL}/rest/v1/${table}?order=id.asc&offset=${from}&limit=1000`, { headers: HEADERS });
+    const r = await sbFetch(`/rest/v1/${table}?order=id.asc&offset=${from}&limit=1000`);
     const data = await r.json();
     if (!Array.isArray(data) || data.length === 0) break;
     all = [...all, ...data];
@@ -91,22 +137,22 @@ async function sbGetAll(table) {
   return all;
 }
 async function sbInsert(table, data) {
-  const r = await fetch(`${SB_URL}/rest/v1/${table}`, { method:"POST", headers:HEADERS, body:JSON.stringify(data) });
+  const r = await sbFetch(`/rest/v1/${table}`, { method:"POST", body:JSON.stringify(data) });
   return r.json();
 }
 async function sbUpdate(table, id, data) {
-  const r = await fetch(`${SB_URL}/rest/v1/${table}?id=eq.${id}`, { method:"PATCH", headers:HEADERS, body:JSON.stringify(data) });
+  const r = await sbFetch(`/rest/v1/${table}?id=eq.${id}`, { method:"PATCH", body:JSON.stringify(data) });
   return r.json();
 }
 async function sbDelete(table, id) {
-  await fetch(`${SB_URL}/rest/v1/${table}?id=eq.${id}`, { method:"DELETE", headers:HEADERS });
+  await sbFetch(`/rest/v1/${table}?id=eq.${id}`, { method:"DELETE" });
 }
 async function sbUpsert(table, onConflict, data) {
-  const r = await fetch(`${SB_URL}/rest/v1/${table}?on_conflict=${onConflict}`, { method:"POST", headers:{...HEADERS,"Prefer":"return=representation,resolution=merge-duplicates"}, body:JSON.stringify(data) });
+  const r = await sbFetch(`/rest/v1/${table}?on_conflict=${onConflict}`, { method:"POST", headers:{"Prefer":"return=representation,resolution=merge-duplicates"}, body:JSON.stringify(data) });
   return r.json();
 }
 async function sbGetWhere(table, col, val) {
-  const r = await fetch(`${SB_URL}/rest/v1/${table}?${col}=eq.${encodeURIComponent(val)}&order=date.desc,id.desc&limit=1000`, { headers: HEADERS });
+  const r = await sbFetch(`/rest/v1/${table}?${col}=eq.${encodeURIComponent(val)}&order=date.desc,id.desc&limit=1000`);
   return r.json();
 }
 
@@ -269,22 +315,33 @@ function Modal({title,onClose,children,wide}){
 function Spinner({text="Loading..."}){ return <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:60,gap:16}}><div style={{width:40,height:40,border:"2px solid rgba(255,255,255,0.07)",borderTop:"2px solid #23a1dd",borderRadius:"50%",animation:"spin 0.8s linear infinite",boxShadow:"0 0 16px rgba(35,161,221,0.3)"}}/><div style={{color:"rgba(174,220,255,0.5)",fontSize:14}}>{text}</div></div>; }
 
 // ── Password Screen ───────────────────────────────────────────────────────────
-function PasswordScreen({onUnlock}){
-  const [input,setInput]=useState(""); const [err,setErr]=useState(""); const [show,setShow]=useState(false);
-  function submit(){ if(input.trim()===CRM_PASSWORD){onUnlock();}else{setErr("Incorrect password.");setInput("");} }
+function LoginScreen({onSignedIn,initialError}){
+  const [email,setEmail]=useState(""); const [password,setPassword]=useState("");
+  const [err,setErr]=useState(initialError||""); const [show,setShow]=useState(false); const [busy,setBusy]=useState(false);
+  async function submit(){
+    if(busy)return;
+    if(!email.trim()||!password){ setErr("Enter your email and password."); return; }
+    setBusy(true); setErr("");
+    const res=await sbSignIn(email.trim(),password);
+    setBusy(false);
+    if(res.error){ setErr(res.error); setPassword(""); return; }
+    onSignedIn();
+  }
   return (
     <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",position:"relative"}}>
       <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse 80% 60% at 50% 30%,rgba(35,161,221,0.15) 0%,transparent 60%)",pointerEvents:"none"}}/>
       <div style={{background:"rgba(10,22,45,0.75)",backdropFilter:"blur(40px) saturate(180%)",border:"1px solid rgba(35,161,221,0.2)",borderRadius:24,padding:"44px 40px",width:400,maxWidth:"90vw",textAlign:"center",boxShadow:"0 32px 80px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.08),0 0 0 1px rgba(35,161,221,0.06)"}}>
         <div style={{background:"linear-gradient(135deg,#23a1dd,#04bee7)",borderRadius:18,width:58,height:58,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,margin:"0 auto 20px",boxShadow:"0 8px 24px rgba(35,161,221,0.4),inset 0 1px 0 rgba(255,255,255,0.3)"}}>🚀</div>
         <div style={{fontWeight:800,fontSize:24,color:"#daeeff",marginBottom:6,letterSpacing:"-0.02em"}}>AffiLinks.io</div>
-        <div style={{fontSize:13,color:"rgba(174,220,255,0.5)",marginBottom:28}}>Enter your password to access the CRM</div>
+        <div style={{fontSize:13,color:"rgba(174,220,255,0.5)",marginBottom:24}}>Sign in with your team account</div>
+        <input type="email" value={email} onChange={e=>{setEmail(e.target.value);setErr("");}} onKeyDown={e=>{if(e.key==="Enter")submit();}} placeholder="you@company.com" style={{...IS,fontSize:14,marginBottom:12}} autoFocus autoComplete="username"/>
         <div style={{position:"relative",marginBottom:14}}>
-          <input type={show?"text":"password"} value={input} onChange={e=>{setInput(e.target.value);setErr("");}} onKeyDown={e=>{if(e.key==="Enter")submit();}} placeholder="Enter password..." style={{...IS,paddingRight:44,fontSize:15,textAlign:"center"}} autoFocus/>
+          <input type={show?"text":"password"} value={password} onChange={e=>{setPassword(e.target.value);setErr("");}} onKeyDown={e=>{if(e.key==="Enter")submit();}} placeholder="Password" style={{...IS,paddingRight:44,fontSize:14}} autoComplete="current-password"/>
           <button onClick={()=>setShow(v=>!v)} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"rgba(174,220,255,0.4)",cursor:"pointer",fontSize:16}}>{show?"🙈":"👁"}</button>
         </div>
         {err&&<div style={{color:"#ef4444",fontSize:12,marginBottom:12}}>⚠ {err}</div>}
-        <button onClick={submit} style={{width:"100%",padding:"12px",fontSize:14,background:"linear-gradient(135deg,#23a1dd,#04bee7)",color:"#fff",border:"none",borderRadius:10,cursor:"pointer",fontWeight:700,boxShadow:"0 4px 20px rgba(35,161,221,0.4),inset 0 1px 0 rgba(255,255,255,0.2)",letterSpacing:"0.02em"}}>Unlock CRM</button>
+        <button onClick={submit} disabled={busy} style={{width:"100%",padding:"12px",fontSize:14,background:"linear-gradient(135deg,#23a1dd,#04bee7)",color:"#fff",border:"none",borderRadius:10,cursor:busy?"default":"pointer",fontWeight:700,boxShadow:"0 4px 20px rgba(35,161,221,0.4),inset 0 1px 0 rgba(255,255,255,0.2)",letterSpacing:"0.02em",opacity:busy?0.7:1}}>{busy?"Signing in...":"Sign In"}</button>
+        <div style={{fontSize:11,color:"rgba(174,220,255,0.32)",marginTop:16}}>No account? Ask your admin to create one.</div>
       </div>
     </div>
   );
@@ -2263,12 +2320,100 @@ function AllContactsView({search="",setSearch=()=>{}}){
   );
 }
 
-function SettingsModal({darkMode,onToggleDark,onClose}){
+const PERMISSION_SECTIONS=[
+  {key:"allcontacts",label:"All Contacts"},
+  {key:"pipeline",label:"Hot Pipeline"},
+  {key:"clients",label:"Active Clients"},
+  {key:"contacts",label:"LinkedIn Pipeline"},
+  {key:"freelance",label:"Freelance Pipeline"},
+  {key:"coldcalling",label:"Cold Calling"},
+  {key:"emailcampaign",label:"Email Campaign"},
+  {key:"paidleads",label:"Paid Leads"},
+  {key:"clientpayments",label:"Client Payments"},
+  {key:"expenses",label:"Balance Sheet"},
+];
+
+function TeamAccessPanel({profile,onReloadProfile}){
+  const users=profile.allProfiles||[];
+  const [selectedUserId,setSelectedUserId]=useState(users[0]?users[0].id:null);
+  const [saving,setSaving]=useState(false);
+  const selectedUser=users.find(u=>u.id===selectedUserId);
+  const permsForUser=(profile.allPerms||[]).filter(p=>p.user_id===selectedUserId);
+
+  function levelFor(section){
+    const p=permsForUser.find(x=>x.section===section);
+    if(!p)return "none";
+    if(p.can_edit)return "edit";
+    if(p.can_view)return "view";
+    return "none";
+  }
+  async function setLevel(section,level){
+    setSaving(true);
+    await sbUpsert("user_permissions","user_id,section",{user_id:selectedUserId,section,can_view:level!=="none",can_edit:level==="edit"});
+    setSaving(false);
+    onReloadProfile();
+  }
+  async function toggleField(field){
+    setSaving(true);
+    await sbUpdate("user_profiles",selectedUserId,{[field]:!selectedUser[field]});
+    setSaving(false);
+    onReloadProfile();
+  }
+
+  if(!users.length)return <div style={{color:"rgba(174,220,255,0.5)",fontSize:13,padding:"20px 0"}}>No team members yet — add accounts from the Supabase Dashboard.</div>;
+
+  return (
+    <div style={{display:"flex",gap:16,minHeight:320}}>
+      <div style={{width:180,borderRight:"1px solid rgba(255,255,255,0.08)",paddingRight:12,overflowY:"auto",maxHeight:380}}>
+        {users.map(u=>(
+          <button key={u.id} onClick={()=>setSelectedUserId(u.id)}
+            style={{display:"block",width:"100%",textAlign:"left",background:u.id===selectedUserId?"rgba(35,161,221,0.15)":"transparent",color:u.id===selectedUserId?"#23a1dd":"rgba(200,230,255,0.7)",border:"none",borderRadius:8,padding:"8px 10px",cursor:"pointer",fontSize:12,fontWeight:u.id===selectedUserId?700:500,marginBottom:4}}>
+            {u.name||u.email}{!u.is_active&&<span style={{marginLeft:6,color:"#ef4444",fontSize:10}}>(disabled)</span>}
+          </button>
+        ))}
+      </div>
+      <div style={{flex:1,overflowY:"auto",maxHeight:380}}>
+        {selectedUser&&<>
+          <div style={{fontSize:13,fontWeight:700,color:"#daeeff",marginBottom:2}}>{selectedUser.name||selectedUser.email}</div>
+          <div style={{fontSize:11,color:"rgba(174,220,255,0.45)",marginBottom:12}}>{selectedUser.email}</div>
+          <div style={{display:"flex",gap:16,marginBottom:14}}>
+            <label style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"rgba(200,230,255,0.75)",cursor:"pointer"}}>
+              <input type="checkbox" checked={!!selectedUser.is_admin} onChange={()=>toggleField("is_admin")} disabled={saving}/> Admin (full access)
+            </label>
+            <label style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"rgba(200,230,255,0.75)",cursor:"pointer"}}>
+              <input type="checkbox" checked={!!selectedUser.is_active} onChange={()=>toggleField("is_active")} disabled={saving}/> Active
+            </label>
+          </div>
+          {selectedUser.is_admin?
+            <div style={{fontSize:12,color:"rgba(174,220,255,0.45)",fontStyle:"italic"}}>Admins automatically have full access to every section.</div>
+          :
+            <div style={{display:"grid",gap:8}}>
+              {PERMISSION_SECTIONS.map(sec=>(
+                <div key={sec.key} style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <span style={{fontSize:12,color:"rgba(200,230,255,0.75)"}}>{sec.label}</span>
+                  <select value={levelFor(sec.key)} onChange={e=>setLevel(sec.key,e.target.value)} disabled={saving}
+                    style={{background:"rgba(255,255,255,0.06)",color:"#daeeff",border:"1px solid rgba(255,255,255,0.12)",borderRadius:6,padding:"4px 8px",fontSize:12}}>
+                    <option value="none">No Access</option>
+                    <option value="view">View Only</option>
+                    <option value="edit">View &amp; Edit</option>
+                  </select>
+                </div>
+              ))}
+            </div>
+          }
+        </>}
+      </div>
+    </div>
+  );
+}
+
+function SettingsModal({darkMode,onToggleDark,onClose,profile,isAdmin,onReloadProfile}){
+  const [tab,setTab]=useState("general");
   return (
     <div style={{position:"fixed",inset:0,background:"rgba(4,8,20,0.75)",backdropFilter:"blur(6px)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
-      <div style={{background:"rgba(8,18,38,0.9)",backdropFilter:"blur(32px) saturate(180%)",border:"1px solid rgba(35,161,221,0.15)",borderRadius:18,padding:"26px 28px",width:420,maxWidth:"92vw",boxShadow:"0 24px 80px rgba(0,0,0,0.8),inset 0 1px 0 rgba(255,255,255,0.06)"}}>
+      <div style={{background:"rgba(8,18,38,0.9)",backdropFilter:"blur(32px) saturate(180%)",border:"1px solid rgba(35,161,221,0.15)",borderRadius:18,padding:"26px 28px",width:tab==="team"?640:420,maxWidth:"92vw",boxShadow:"0 24px 80px rgba(0,0,0,0.8),inset 0 1px 0 rgba(255,255,255,0.06)"}}>
         {/* Header */}
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
           <div style={{display:"flex",alignItems:"center",gap:9}}>
             <div style={{background:"rgba(255,255,255,0.03)",borderRadius:10,width:34,height:34,display:"flex",alignItems:"center",justifyContent:"center"}}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#23a1dd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -2281,26 +2426,38 @@ function SettingsModal({darkMode,onToggleDark,onClose}){
           <button onClick={onClose} style={{background:"none",border:"none",color:"rgba(174,220,255,0.38)",fontSize:20,cursor:"pointer",lineHeight:1,padding:4}}>✕</button>
         </div>
 
-        {/* Display Section */}
-        <div style={{marginBottom:8}}>
-          <div style={{fontSize:10,fontWeight:700,color:"rgba(174,220,255,0.38)",letterSpacing:"0.1em",marginBottom:10}}>DISPLAY</div>
+        {isAdmin&&(
+          <div style={{display:"flex",gap:4,marginBottom:18,borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+            {[{key:"general",label:"General"},{key:"team",label:"Team Access"}].map(t=>(
+              <button key={t.key} onClick={()=>setTab(t.key)} style={{background:"none",border:"none",borderBottom:`2px solid ${tab===t.key?"#23a1dd":"transparent"}`,color:tab===t.key?"#23a1dd":"rgba(174,220,255,0.5)",padding:"8px 12px",cursor:"pointer",fontSize:12,fontWeight:tab===t.key?700:500}}>{t.label}</button>
+            ))}
+          </div>
+        )}
 
-          {/* Dark Mode row */}
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 16px",background:"rgba(255,255,255,0.04)",borderRadius:12,border:"1px solid rgba(255,255,255,0.09)"}}>
-            <div style={{display:"flex",alignItems:"center",gap:10}}>
-              <span style={{fontSize:18}}>{darkMode?"🌙":"☀️"}</span>
-              <div>
-                <div style={{fontWeight:600,fontSize:13,color:"#daeeff"}}>Dark Mode</div>
-                <div style={{fontSize:11,color:"rgba(174,220,255,0.38)",marginTop:1}}>{darkMode?"Dark theme active":"Light theme active"}</div>
+        {tab==="team"?(
+          <TeamAccessPanel profile={profile} onReloadProfile={onReloadProfile}/>
+        ):(
+          /* Display Section */
+          <div style={{marginBottom:8}}>
+            <div style={{fontSize:10,fontWeight:700,color:"rgba(174,220,255,0.38)",letterSpacing:"0.1em",marginBottom:10}}>DISPLAY</div>
+
+            {/* Dark Mode row */}
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 16px",background:"rgba(255,255,255,0.04)",borderRadius:12,border:"1px solid rgba(255,255,255,0.09)"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:18}}>{darkMode?"🌙":"☀️"}</span>
+                <div>
+                  <div style={{fontWeight:600,fontSize:13,color:"#daeeff"}}>Dark Mode</div>
+                  <div style={{fontSize:11,color:"rgba(174,220,255,0.38)",marginTop:1}}>{darkMode?"Dark theme active":"Light theme active"}</div>
+                </div>
+              </div>
+              {/* Toggle pill */}
+              <div onClick={onToggleDark}
+                style={{width:46,height:26,background:darkMode?"#23a1dd":"#e2e8f0",borderRadius:13,cursor:"pointer",position:"relative",transition:"background 0.25s",flexShrink:0}}>
+                <div style={{width:20,height:20,background:"#fff",borderRadius:"50%",position:"absolute",top:3,left:darkMode?23:3,transition:"left 0.25s",boxShadow:"0 1px 4px rgba(0,0,0,0.3)"}}/>
               </div>
             </div>
-            {/* Toggle pill */}
-            <div onClick={onToggleDark}
-              style={{width:46,height:26,background:darkMode?"#23a1dd":"#e2e8f0",borderRadius:13,cursor:"pointer",position:"relative",transition:"background 0.25s",flexShrink:0}}>
-              <div style={{width:20,height:20,background:"#fff",borderRadius:"50%",position:"absolute",top:3,left:darkMode?23:3,transition:"left 0.25s",boxShadow:"0 1px 4px rgba(0,0,0,0.3)"}}/>
-            </div>
           </div>
-        </div>
+        )}
 
         <div style={{marginTop:22,display:"flex",justifyContent:"flex-end"}}>
           <Btn variant="ghost" onClick={onClose}>Close</Btn>
@@ -5139,8 +5296,67 @@ function PaidLeadsPipelineGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
   );
 }
 
-function App(){
-  const [gate,setGate]=useState("pipeline");
+function AuthGate(){
+  const [ready,setReady]=useState(false);
+  const [authed,setAuthed]=useState(false);
+  const [profile,setProfile]=useState(null);
+  const [loadErr,setLoadErr]=useState("");
+
+  const loadProfile=useCallback(async()=>{
+    try{
+      const [profiles,perms]=await Promise.all([sbGetAll("user_profiles"),sbGetAll("user_permissions")]);
+      const uid=currentSession&&currentSession.user&&currentSession.user.id;
+      const me=(Array.isArray(profiles)?profiles:[]).find(p=>p.id===uid)||null;
+      if(!me){
+        setLoadErr("Your account isn't set up yet. Ask your admin to grant you access.");
+        clearSession(); setAuthed(false); setReady(true); return;
+      }
+      const myPerms=(Array.isArray(perms)?perms:[]).filter(p=>p.user_id===uid);
+      setProfile({ me, myPerms, allProfiles:Array.isArray(profiles)?profiles:[], allPerms:Array.isArray(perms)?perms:[] });
+      setAuthed(true); setReady(true);
+    }catch(e){
+      setLoadErr("Couldn't load your account. Please sign in again.");
+      clearSession(); setAuthed(false); setReady(true);
+    }
+  },[]);
+
+  useEffect(()=>{ if(hasSession())loadProfile(); else setReady(true); },[loadProfile]);
+
+  function handleSignedIn(){ setReady(false); setLoadErr(""); loadProfile(); }
+  function handleLogout(){ sbSignOut(); setAuthed(false); setProfile(null); }
+  function reloadProfile(){ loadProfile(); }
+
+  if(!ready)return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}><Spinner text="Loading..."/></div>;
+  if(!authed||!profile)return <LoginScreen onSignedIn={handleSignedIn} initialError={loadErr}/>;
+  return <App profile={profile} onLogout={handleLogout} onReloadProfile={reloadProfile}/>;
+}
+
+function App({profile,onLogout,onReloadProfile}){
+  const isAdmin=!!(profile&&profile.me&&profile.me.is_admin);
+  const canView=useCallback(key=>{
+    if(isAdmin)return true;
+    return (profile.myPerms||[]).some(p=>p.section===key&&(p.can_view||p.can_edit));
+  },[isAdmin,profile]);
+
+  const ALL_NAV=useMemo(()=>[
+    {section:"OVERVIEW",items:[{key:"dashboard",label:"Dashboard",soon:true},{key:"allcontacts",label:"All Contacts"},{key:"pipeline",label:"Hot Pipeline"},{key:"clients",label:"Active Clients"}]},
+    {section:"PIPELINE",items:[{key:"contacts",label:"LinkedIn Pipeline"},{key:"freelance",label:"Freelance Pipeline"},{key:"coldcalling",label:"Cold Calling"},{key:"emailcampaign",label:"Email Campaign"},{key:"paidleads",label:"Paid Leads"}]},
+    {section:"DELIVERY",items:[{key:"projects",label:"Projects",soon:true},{key:"tasks",label:"Tasks",soon:true}]},
+    {section:"REVENUE",items:[{key:"clientpayments",label:"Client Payments"},{key:"expenses",label:"Balance Sheet"},{key:"proposals",label:"Proposals",soon:true},{key:"invoices",label:"Invoices",soon:true}]},
+    {section:"DATA",items:[{key:"import",label:"Import",soon:true},{key:"settings",label:"Settings"}]},
+  ],[]);
+  // Only show nav items the user can view (plus inert "soon" placeholders and Settings, always visible) — this is UX convenience, not the real boundary; Supabase RLS is what actually blocks data.
+  const NAV=useMemo(()=>ALL_NAV.map(sec=>({
+    ...sec,
+    items:sec.items.filter(item=>item.soon||item.key==="settings"||canView(item.key))
+  })).filter(sec=>sec.items.length>0),[ALL_NAV,canView]);
+
+  const firstAccessible=useMemo(()=>{
+    for(const sec of NAV)for(const item of sec.items)if(!item.soon&&item.key!=="settings")return item.key;
+    return "allcontacts";
+  },[NAV]);
+
+  const [gate,setGate]=useState(firstAccessible);
   const [darkMode,setDarkMode]=useState(true);
   const [showSettings,setShowSettings]=useState(false);
   const [search,setSearch]=useState("");
@@ -5149,13 +5365,6 @@ function App(){
   useEffect(()=>{ document.body.classList.toggle("dark-mode",darkMode); },[darkMode]);
   useEffect(()=>{ setSearch(""); setPipelineRevenue(null); },[gate]);
 
-  const NAV=[
-    {section:"OVERVIEW",items:[{key:"dashboard",label:"Dashboard",soon:true},{key:"allcontacts",label:"All Contacts"},{key:"pipeline",label:"Hot Pipeline"},{key:"clients",label:"Active Clients"}]},
-    {section:"PIPELINE",items:[{key:"contacts",label:"LinkedIn Pipeline"},{key:"freelance",label:"Freelance Pipeline"},{key:"coldcalling",label:"Cold Calling"},{key:"emailcampaign",label:"Email Campaign"},{key:"paidleads",label:"Paid Leads"}]},
-    {section:"DELIVERY",items:[{key:"projects",label:"Projects",soon:true},{key:"tasks",label:"Tasks",soon:true}]},
-    {section:"REVENUE",items:[{key:"clientpayments",label:"Client Payments"},{key:"expenses",label:"Balance Sheet"},{key:"proposals",label:"Proposals",soon:true},{key:"invoices",label:"Invoices",soon:true}]},
-    {section:"DATA",items:[{key:"import",label:"Import",soon:true},{key:"settings",label:"Settings"}]},
-  ];
   const titles={dashboard:"Dashboard",allcontacts:"All Contacts",clientpayments:"Client Payments",expenses:"Balance Sheet",pipeline:"Hot Pipeline",contacts:"LinkedIn Pipeline",freelance:"Freelance Pipeline",deals:"Deals",clients:"Active Clients",coldcalling:"Cold Calling",emailcampaign:"Email Campaign",paidleads:"Paid Leads",projects:"Projects",tasks:"Tasks",proposals:"Proposals",invoices:"Invoices",import:"Import",settings:"Settings"};
 
   return (
@@ -5210,21 +5419,23 @@ function App(){
               {search&&<span onClick={()=>setSearch("")} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",color:"rgba(174,220,255,0.4)",cursor:"pointer",fontSize:15,lineHeight:1,fontWeight:400}}>×</span>}
             </div>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontSize:12,color:"rgba(174,220,255,0.55)",maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={profile.me.email}>{profile.me.name||profile.me.email}</span>
               <div style={{width:34,height:34,background:"linear-gradient(135deg,#23a1dd,#04bee7)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:13,flexShrink:0,boxShadow:"0 4px 12px rgba(35,161,221,0.35)"}}>👤</div>
+              <button onClick={onLogout} title="Sign out" style={{background:"rgba(255,255,255,0.05)",color:"rgba(174,220,255,0.55)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:12,fontWeight:600}}>Logout</button>
             </div>
           </div>
         </div>
         {/* Content */}
         <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-          {gate==="pipeline"?<HotPipelineGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="contacts"?<LinkedInGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="freelance"?<FreelancePipelineGate search={search} onRevenue={setPipelineRevenue}/>:gate==="clients"?<ActiveClientsGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="allcontacts"?<AllContactsView search={search} setSearch={setSearch}/>:gate==="clientpayments"?<ClientPaymentsGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="coldcalling"?<ColdCallingGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="emailcampaign"?<EmailCampaignGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="paidleads"?<PaidLeadsPipelineGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="expenses"?<ExpensesGate/>:<ComingSoonView label={titles[gate]||gate}/>}
+          {!canView(gate)?<ComingSoonView label="Access Restricted"/>:gate==="pipeline"?<HotPipelineGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="contacts"?<LinkedInGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="freelance"?<FreelancePipelineGate search={search} onRevenue={setPipelineRevenue}/>:gate==="clients"?<ActiveClientsGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="allcontacts"?<AllContactsView search={search} setSearch={setSearch}/>:gate==="clientpayments"?<ClientPaymentsGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="coldcalling"?<ColdCallingGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="emailcampaign"?<EmailCampaignGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="paidleads"?<PaidLeadsPipelineGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="expenses"?<ExpensesGate/>:<ComingSoonView label={titles[gate]||gate}/>}
         </div>
       </div>
-      {showSettings&&<SettingsModal darkMode={darkMode} onToggleDark={()=>setDarkMode(v=>!v)} onClose={()=>setShowSettings(false)}/>}
+      {showSettings&&<SettingsModal darkMode={darkMode} onToggleDark={()=>setDarkMode(v=>!v)} onClose={()=>setShowSettings(false)} profile={profile} isAdmin={isAdmin} onReloadProfile={onReloadProfile}/>}
     </div>
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+ReactDOM.createRoot(document.getElementById("root")).render(<AuthGate/>);
 </script>
 </body>
 </html>

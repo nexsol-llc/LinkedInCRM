@@ -398,23 +398,35 @@ CREATE TABLE activity_log (
 );
 ```
 
-### Disable RLS
-Run this for all tables to allow API access:
+#### `user_profiles` / `user_permissions` — team accounts & per-pipeline access
+Created by [`supabase-auth-migration.sql`](supabase-auth-migration.sql), not by hand — see that file for the full schema, the auto-profile trigger, and the RLS policies. Summary:
 ```sql
-ALTER TABLE leads DISABLE ROW LEVEL SECURITY;
-ALTER TABLE templates DISABLE ROW LEVEL SECURITY;
-ALTER TABLE hot_pipeline DISABLE ROW LEVEL SECURITY;
-ALTER TABLE freelance_pipeline DISABLE ROW LEVEL SECURITY;
-ALTER TABLE cold_calling DISABLE ROW LEVEL SECURITY;
-ALTER TABLE email_campaign DISABLE ROW LEVEL SECURITY;
-ALTER TABLE paid_leads DISABLE ROW LEVEL SECURITY;
-ALTER TABLE active_clients DISABLE ROW LEVEL SECURITY;
-ALTER TABLE active_clients_monthly_status DISABLE ROW LEVEL SECURITY;
-ALTER TABLE client_payments DISABLE ROW LEVEL SECURITY;
-ALTER TABLE payment_entries DISABLE ROW LEVEL SECURITY;
-ALTER TABLE expense_sheets DISABLE ROW LEVEL SECURITY;
-ALTER TABLE activity_log DISABLE ROW LEVEL SECURITY;
+CREATE TABLE user_profiles (
+  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email text NOT NULL,
+  name text,
+  is_admin boolean NOT NULL DEFAULT false,
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamptz DEFAULT now()
+);
+CREATE TABLE user_permissions (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  section text NOT NULL,        -- matches a sidebar item, e.g. 'pipeline', 'coldcalling', 'clientpayments'
+  can_view boolean NOT NULL DEFAULT true,
+  can_edit boolean NOT NULL DEFAULT false,
+  UNIQUE(user_id, section)
+);
 ```
+
+### Authentication & Row Level Security
+⚠️ The instructions that used to be here (`DISABLE ROW LEVEL SECURITY` on every table) are **no longer used** — that left the whole database wide open behind nothing but a client-side string comparison, readable by anyone in the page source. The app now uses real Supabase Auth (individual per-teammate logins) with per-pipeline permissions enforced by real RLS policies.
+
+Run **[`supabase-auth-migration.sql`](supabase-auth-migration.sql)** in the Supabase SQL editor to set this up — it's split into clearly-labeled stages (schema → deploy code → enable RLS → narrow individual access) with an explanation of what to do and verify at each one. Do not paste the whole file at once; follow the staged rollout notes at the top of the file.
+
+Two new tables back this: `user_profiles` (one row per teammate, linked to `auth.users`, with `is_admin`/`is_active` flags) and `user_permissions` (per-user, per-pipeline `can_view`/`can_edit` grants). Both are created by the migration file — see it for the exact schema.
+
+New team members are added via **Supabase Dashboard → Authentication → Users → Add user** (not self-signup — that's intentionally disabled). Once logged in, an admin manages who can see which pipeline from **Settings → Team Access** inside the app.
 
 ### Remove Duplicate Leads (LinkedIn Pipeline)
 ```sql
@@ -434,9 +446,10 @@ WHERE id NOT IN (
 ## 🚀 Getting Started
 
 1. Clone or download the repository
-2. Open `index.html` in your browser — or deploy to Vercel
-3. Enter password: `LinkedIn@7865`
-4. Select a pipeline from the left sidebar
+2. Run `supabase-auth-migration.sql`'s Stage 1 block in Supabase, then add your own account via Dashboard → Authentication → Users and flag it admin (see the migration file's comments)
+3. Open `index.html` in your browser — or deploy to Vercel
+4. Sign in with your team account (see [Authentication & Row Level Security](#authentication--row-level-security))
+5. Select a pipeline from the left sidebar
 
 ---
 
@@ -871,9 +884,11 @@ The bell icon 🔔 in the header shows overdue + today's follow-up count.
 
 | Feature | Details |
 |---|---|
-| Password | `LinkedIn@7865` — required on every session |
-| Session | Stays unlocked until browser tab is closed |
-| Database | Supabase with anon key (RLS disabled for simplicity) |
+| Login | Individual email + password per teammate, via Supabase Auth — no shared password, no self-signup |
+| Session | Persisted in the browser (`localStorage`) with automatic token refresh; **Logout** in the top header clears it |
+| Access control | Per-pipeline `can_view`/`can_edit` grants, managed by an admin in **Settings → Team Access**, enforced by Postgres Row Level Security — not just hidden in the UI |
+| Database | Supabase with RLS **enabled** on every table (see [`supabase-auth-migration.sql`](supabase-auth-migration.sql)) — the anon key alone no longer grants any data access |
+| Adding teammates | Supabase Dashboard → Authentication → Users → Add user, then grant their pipeline access from Team Access |
 | Recommendation | Keep GitHub repo **Private** to protect credentials |
 
 ### Make GitHub Repo Private

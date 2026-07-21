@@ -426,7 +426,21 @@ Run **[`supabase-auth-migration.sql`](supabase-auth-migration.sql)** in the Supa
 
 Two new tables back this: `user_profiles` (one row per teammate, linked to `auth.users`, with `is_admin`/`is_active` flags) and `user_permissions` (per-user, per-pipeline `can_view`/`can_edit` grants). Both are created by the migration file — see it for the exact schema.
 
-New team members are added via **Supabase Dashboard → Authentication → Users → Add user** (not self-signup — that's intentionally disabled). Once logged in, an admin manages who can see which pipeline from **Settings → Team Access** inside the app.
+New team members can be added two ways — pick whichever's set up:
+- **In-app** — Settings → Team Access → **+ Add User** (admin-only), which creates the login for you via a Supabase Edge Function. Requires the one-time Edge Function deploy below.
+- **Manually** — Supabase Dashboard → Authentication → Users → Add user.
+
+Either way, self-signup stays intentionally disabled (nobody can register their own account by hitting the Auth API directly). Once logged in, an admin manages who can see which pipeline from **Settings → Team Access** inside the app.
+
+#### Deploying the "Add User" Edge Function (one-time)
+The in-app "+ Add User" button calls a small server-side function (`supabase/functions/create-user`) that holds Supabase's `service_role` key — the key that can create logins — entirely server-side. That key is never present in `index.html` or the browser; it's injected automatically by Supabase into the function's runtime. Deploy it with the [Supabase CLI](https://supabase.com/docs/guides/cli):
+```bash
+npm install -g supabase   # if you don't have it already
+supabase login
+supabase link --project-ref iededwksmveomkrhofzu
+supabase functions deploy create-user
+```
+No manual secrets to set — `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` are provided to every Edge Function automatically. The function itself re-checks that the caller is an active admin (via `user_profiles`) before creating anything, so even though the endpoint is reachable with just the anon key, only an admin's request actually succeeds. If you skip this deploy, "+ Add User" will just show an error — the Dashboard method above always works as a fallback.
 
 ### Remove Duplicate Leads (LinkedIn Pipeline)
 ```sql

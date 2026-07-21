@@ -94,6 +94,18 @@ async function sbSignIn(email,password){
 }
 function sbSignOut(){ clearSession(); }
 
+async function sbCreateUser(email,password,name){
+  const token = (currentSession&&currentSession.access_token)||"";
+  const r = await fetch(`${SB_URL}/functions/v1/create-user`, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "apikey":SB_KEY, "Authorization":`Bearer ${token}` },
+    body: JSON.stringify({email,password,name})
+  });
+  const data = await r.json().catch(()=>({}));
+  if(!r.ok) return { error: data.error||"Couldn't create user." };
+  return { user: data };
+}
+
 async function refreshSession(){
   if(!currentSession||!currentSession.refresh_token) return false;
   if(refreshPromise) return refreshPromise;
@@ -2337,8 +2349,23 @@ function TeamAccessPanel({profile,onReloadProfile}){
   const users=profile.allProfiles||[];
   const [selectedUserId,setSelectedUserId]=useState(users[0]?users[0].id:null);
   const [saving,setSaving]=useState(false);
+  const [showAdd,setShowAdd]=useState(false);
+  const [newName,setNewName]=useState(""); const [newEmail,setNewEmail]=useState(""); const [newPassword,setNewPassword]=useState("");
+  const [addErr,setAddErr]=useState(""); const [creating,setCreating]=useState(false);
   const selectedUser=users.find(u=>u.id===selectedUserId);
   const permsForUser=(profile.allPerms||[]).filter(p=>p.user_id===selectedUserId);
+
+  async function createUser(){
+    if(creating)return;
+    setAddErr("");
+    if(!newEmail.trim()||newPassword.length<8){ setAddErr("Enter an email and a password of at least 8 characters."); return; }
+    setCreating(true);
+    const res=await sbCreateUser(newEmail.trim(),newPassword,newName.trim());
+    setCreating(false);
+    if(res.error){ setAddErr(res.error); return; }
+    setNewName("");setNewEmail("");setNewPassword("");setShowAdd(false);
+    onReloadProfile();
+  }
 
   function levelFor(section){
     const p=permsForUser.find(x=>x.section===section);
@@ -2360,11 +2387,20 @@ function TeamAccessPanel({profile,onReloadProfile}){
     onReloadProfile();
   }
 
-  if(!users.length)return <div style={{color:"rgba(174,220,255,0.5)",fontSize:13,padding:"20px 0"}}>No team members yet — add accounts from the Supabase Dashboard.</div>;
-
   return (
     <div style={{display:"flex",gap:16,minHeight:320}}>
-      <div style={{width:180,borderRight:"1px solid rgba(255,255,255,0.08)",paddingRight:12,overflowY:"auto",maxHeight:380}}>
+      <div style={{width:200,borderRight:"1px solid rgba(255,255,255,0.08)",paddingRight:12,overflowY:"auto",maxHeight:420}}>
+        <button onClick={()=>{setShowAdd(v=>!v);setAddErr("");}} style={{width:"100%",background:showAdd?"rgba(35,161,221,0.15)":"rgba(54,242,175,0.1)",color:showAdd?"#23a1dd":"#36f2af",border:`1px solid ${showAdd?"rgba(35,161,221,0.3)":"rgba(54,242,175,0.25)"}`,borderRadius:8,padding:"7px 10px",cursor:"pointer",fontSize:12,fontWeight:700,marginBottom:10}}>{showAdd?"Cancel":"+ Add User"}</button>
+        {showAdd&&(
+          <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:10,marginBottom:12}}>
+            <input placeholder="Name (optional)" value={newName} onChange={e=>setNewName(e.target.value)} style={{...IS,fontSize:11,padding:"6px 8px",marginBottom:6}}/>
+            <input placeholder="Email" type="email" value={newEmail} onChange={e=>setNewEmail(e.target.value)} style={{...IS,fontSize:11,padding:"6px 8px",marginBottom:6}}/>
+            <input placeholder="Password (min 8 chars)" type="password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} style={{...IS,fontSize:11,padding:"6px 8px",marginBottom:8}}/>
+            {addErr&&<div style={{color:"#ef4444",fontSize:10,marginBottom:8}}>⚠ {addErr}</div>}
+            <button onClick={createUser} disabled={creating} style={{width:"100%",background:"#23a1dd",color:"#fff",border:"none",borderRadius:6,padding:"6px 0",cursor:creating?"default":"pointer",fontSize:11,fontWeight:700,opacity:creating?0.6:1}}>{creating?"Creating...":"Create User"}</button>
+          </div>
+        )}
+        {!users.length&&<div style={{color:"rgba(174,220,255,0.4)",fontSize:11,padding:"6px 0"}}>No team members yet.</div>}
         {users.map(u=>(
           <button key={u.id} onClick={()=>setSelectedUserId(u.id)}
             style={{display:"block",width:"100%",textAlign:"left",background:u.id===selectedUserId?"rgba(35,161,221,0.15)":"transparent",color:u.id===selectedUserId?"#23a1dd":"rgba(200,230,255,0.7)",border:"none",borderRadius:8,padding:"8px 10px",cursor:"pointer",fontSize:12,fontWeight:u.id===selectedUserId?700:500,marginBottom:4}}>

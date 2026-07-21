@@ -124,10 +124,14 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON user_permissions TO authenticated;
 GRANT USAGE, SELECT ON SEQUENCE user_permissions_id_seq TO authenticated;
 
 -- After running this block: sign up your first teammate via Supabase
--- Dashboard → Authentication → Users → Add user. Then run, once:
+-- Dashboard → Authentication → Users → Add user (the in-app "+ Add User"
+-- button can't be used yet — it requires an existing logged-in admin, and
+-- also requires deploying supabase/functions/create-user first, see README).
+-- Then run, once:
 --   UPDATE user_profiles SET is_admin = true WHERE email = 'you@yourcompany.com';
--- That's the only manually-flagged admin; they can promote/demote others
--- later from the app's Team Access panel once Stage 2 code is live.
+-- That's the only manually-flagged admin. Once they're logged in, they can
+-- promote/demote others and (after deploying the create-user Edge Function)
+-- add every subsequent teammate straight from the app's Team Access panel.
 
 
 -- ═══════════════════════════════════════════════════════════════════════════

@@ -557,6 +557,7 @@ function LinkedInGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
   const [tab,setTab]=useState("Kanban"); const [modal,setModal]=useState(null); const [dragId,setDragId]=useState(null); const [dragOver,setDragOver]=useState(null);
   const [fuPending,setFuPending]=useState(null); const [wonPending,setWonPending]=useState(null); const [lostPending,setLostPending]=useState(null); const [reviewPending,setReviewPending]=useState(null);
   const [saving,setSaving]=useState(false); const [showUpload,setShowUpload]=useState(false); const [showSNUpload,setShowSNUpload]=useState(false); const [stageTab,setStageTab]=useState("All");
+  const [showBellPanel,setShowBellPanel]=useState(false);
   const today=todayStr();
 
   useEffect(()=>{ setLoading(true); Promise.all([sbGetAll("leads"),sbGetAll("templates")]).then(([l,t])=>{ if(Array.isArray(l))setLeads(l.map(rowToLead)); if(Array.isArray(t))setTemplates(t); setLoading(false); }).catch(()=>setLoading(false)); },[]);
@@ -603,7 +604,22 @@ function LinkedInGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
         </div>
         <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0,paddingLeft:10}}>
           <div style={{position:"relative"}}>
-            <button onClick={()=>{ const first=[...overdueLeads,...todayLeads][0]; if(first)setReviewPending(first); }} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:8,width:32,height:32,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,position:"relative"}}>🔔{reminderCount>0&&<span style={{position:"absolute",top:-3,right:-3,background:"#ef4444",color:"#fff",borderRadius:"50%",width:15,height:15,fontSize:8,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}}>{reminderCount}</span>}</button>
+            <button onClick={()=>setShowBellPanel(v=>!v)} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:8,width:32,height:32,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,position:"relative"}}>🔔{reminderCount>0&&<span style={{position:"absolute",top:-3,right:-3,background:"#ef4444",color:"#fff",borderRadius:"50%",width:15,height:15,fontSize:8,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}}>{reminderCount}</span>}</button>
+            {showBellPanel&&(
+              <div style={{position:"absolute",top:38,right:0,width:320,maxHeight:400,overflowY:"auto",background:"#0b1830",border:"1px solid rgba(255,255,255,0.12)",borderRadius:12,boxShadow:"0 12px 32px rgba(0,0,0,0.5)",zIndex:50,padding:12}}>
+                <div style={{fontWeight:700,color:"#daeeff",marginBottom:8,fontSize:13}}>🔔 Reminders ({reminderCount})</div>
+                {reminderCount===0&&<div style={{color:"rgba(174,220,255,0.4)",fontSize:12,textAlign:"center",padding:16}}>No reminders due.</div>}
+                {[...overdueLeads,...todayLeads].map(l=>(
+                  <div key={l.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 0",borderTop:"1px solid rgba(255,255,255,0.06)",gap:8}}>
+                    <span style={{color:"#daeeff",fontWeight:600,fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{l.firstName} {l.lastName}<span style={{color:"rgba(174,220,255,0.5)",fontWeight:400}}> · {l.followUp?.date}</span></span>
+                    <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
+                      {l.followUp?.date<today?<span style={{background:"rgba(239,68,68,0.1)",color:"#ef4444",borderRadius:20,padding:"1px 7px",fontSize:9,fontWeight:700}}>OVERDUE</span>:<span style={{background:"rgba(245,158,11,0.08)",color:"#f59e0b",borderRadius:20,padding:"1px 7px",fontSize:9,fontWeight:700}}>TODAY</span>}
+                      <button onClick={()=>{setReviewPending(l);setShowBellPanel(false);}} style={{background:"rgba(35,161,221,0.12)",color:"#23a1dd",border:"none",borderRadius:8,padding:"3px 9px",cursor:"pointer",fontSize:10,fontWeight:600}}>Review →</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <button onClick={()=>setShowUpload(true)} style={{background:"rgba(255,255,255,0.04)",color:"rgba(174,220,255,0.55)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:11,fontWeight:600}}>📥 Import</button>
           <button onClick={()=>setShowSNUpload(true)} style={{background:"rgba(1,217,221,0.08)",color:"#01d9dd",border:"1px solid rgba(1,217,221,0.25)",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:11,fontWeight:600}}>🔍 SN Import</button>

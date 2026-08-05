@@ -211,6 +211,10 @@ function ecToRow(c){ return {first_name:c.firstName||"",last_name:c.lastName||""
 function rowToPL(r){ return {id:r.id,firstName:r.first_name||"",lastName:r.last_name||"",companyName:r.company_name||"",website:r.website||"",industry:r.industry||"",region:r.region||"",phoneNumber:r.phone_number||"",email:r.email||"",linkedinUrl:r.linkedin_url||"",trendingProduct:r.trending_product||"",affiliateNetwork:r.affiliate_network||"",source:r.source||"",stage:r.stage||"Meta Ads",followUp:r.follow_up||null,followUpHistory:r.follow_up_history||[],connected:r.connected||null,appointment:r.appointment||null,appointmentHistory:r.appointment_history||[],lost:r.lost||null,trash:r.trash||null,deal:r.deal||null,createdAt:r.created_at||null}; }
 function plToRow(c){ return {first_name:c.firstName||"",last_name:c.lastName||"",company_name:c.companyName||"",website:c.website||"",industry:c.industry||"",region:c.region||"",phone_number:c.phoneNumber||"",email:c.email||"",linkedin_url:c.linkedinUrl||"",trending_product:c.trendingProduct||"",affiliate_network:c.affiliateNetwork||"",source:c.source||"",stage:c.stage||"Meta Ads",follow_up:c.followUp||null,follow_up_history:c.followUpHistory||[],connected:c.connected||null,appointment:c.appointment||null,appointment_history:c.appointmentHistory||[],lost:c.lost||null,trash:c.trash||null,deal:c.deal||null}; }
 
+// ── Tasks mappers ─────────────────────────────────────────────────────────────
+function rowToTask(r){ return {id:r.id,title:r.title||"",description:r.description||"",status:r.status||"To Do",priority:r.priority||"Medium",assignee:r.assignee||"",dueDate:r.due_date||"",linkedPipeline:r.linked_pipeline||"",linkedId:r.linked_id||"",linkedName:r.linked_name||"",checklist:r.checklist||[],activity:r.activity||[],createdAt:r.created_at||null}; }
+function taskToRow(t){ return {title:t.title||"",description:t.description||"",status:t.status||"To Do",priority:t.priority||"Medium",assignee:t.assignee||"",due_date:t.dueDate||null,linked_pipeline:t.linkedPipeline||null,linked_id:t.linkedId||null,linked_name:t.linkedName||null,checklist:t.checklist||[],activity:t.activity||[]}; }
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 const LI_STAGES = ["Cold","Sales Navigator","Connection Sent","Connected","Follow Up","Won","Lost"];
 const LI_COLORS = { "Cold":"#23a1dd","Sales Navigator":"#01d9dd","Connection Sent":"#f59e0b","Connected":"#04bee7","Follow Up":"#a855f7","Won":"#36f2af","Lost":"#ef4444" };
@@ -234,6 +238,15 @@ const EC_SOURCE_STAGES = ["Awin Leads","SN Leads","Apollo Leads","Other Leads"];
 const PL_STAGES = ["Meta Ads","Google Ads","Linked Ads","Follow Up","Connected","Trash","Lost","Appointment Booked","WON"];
 const PL_COLORS = {"Meta Ads":"#1877f2","Google Ads":"#4285f4","Linked Ads":"#0a66c2","Follow Up":"#a855f7","Connected":"#23a1dd","Trash":"#64748b","Lost":"#ef4444","Appointment Booked":"#10b981","WON":"#36f2af"};
 const PL_SOURCE_STAGES = ["Meta Ads","Google Ads","Linked Ads"];
+
+const TASK_STATUSES = ["To Do","In Progress","Review","Done"];
+const TASK_STATUS_COLORS = {"To Do":"#64748b","In Progress":"#23a1dd","Review":"#a855f7","Done":"#36f2af"};
+const TASK_PRIORITIES = ["Urgent","High","Medium","Low"];
+const TASK_PRIORITY_COLORS = {"Urgent":"#ef4444","High":"#f97316","Medium":"#f59e0b","Low":"#64748b"};
+const TASK_LINK_PIPELINES = [
+  {key:"leads",label:"LinkedIn Pipeline"},{key:"hot_pipeline",label:"Hot Pipeline"},{key:"freelance_pipeline",label:"Freelance Pipeline"},
+  {key:"cold_calling",label:"Cold Calling"},{key:"email_campaign",label:"Email Campaign"},{key:"paid_leads",label:"Paid Leads"},
+];
 
 const DEFAULT_TAGS = [
   {name:"hot-lead",color:"#ef4444"},{name:"vip",color:"#f59e0b"},{name:"tech",color:"#23a1dd"},
@@ -2360,6 +2373,7 @@ const PERMISSION_SECTIONS=[
   {key:"paidleads",label:"Paid Leads"},
   {key:"clientpayments",label:"Client Payments"},
   {key:"expenses",label:"Balance Sheet"},
+  {key:"tasks",label:"Tasks"},
 ];
 
 function TeamAccessPanel({profile,onReloadProfile}){
@@ -5349,6 +5363,403 @@ function PaidLeadsPipelineGate({search="",setSearch=()=>{},onRevenue=()=>{}}){
   );
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// ── TASKS ─────────────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+function useLinkableRecords(){
+  const [rows,setRows]=useState([]);
+  useEffect(()=>{
+    Promise.all([sbGetAll("leads"),sbGetAll("hot_pipeline"),sbGetAll("freelance_pipeline"),sbGetAll("cold_calling"),sbGetAll("email_campaign"),sbGetAll("paid_leads")]).then(([li,hp,fp,cc,ec,pl])=>{
+      const mk=(list,key,label,nameFn,companyFn)=>(list||[]).map(r=>({pipeline:key,pipelineLabel:label,id:String(r.id),name:nameFn(r),company:companyFn(r)}));
+      setRows([
+        ...mk(li,"leads","LinkedIn Pipeline",r=>`${r.first_name||""} ${r.last_name||""}`.trim(),r=>r.affiliate_network||r.company_name||""),
+        ...mk(hp,"hot_pipeline","Hot Pipeline",r=>`${r.first_name||""} ${r.last_name||""}`.trim(),r=>r.account_name||""),
+        ...mk(fp,"freelance_pipeline","Freelance Pipeline",r=>`${r.first_name||""} ${r.last_name||""}`.trim(),r=>r.company_name||""),
+        ...mk(cc,"cold_calling","Cold Calling",r=>`${r.first_name||""} ${r.last_name||""}`.trim(),r=>r.company_name||""),
+        ...mk(ec,"email_campaign","Email Campaign",r=>`${r.first_name||""} ${r.last_name||""}`.trim(),r=>r.company_name||""),
+        ...mk(pl,"paid_leads","Paid Leads",r=>`${r.first_name||""} ${r.last_name||""}`.trim(),r=>r.company_name||""),
+      ]);
+    }).catch(()=>{});
+  },[]);
+  return rows;
+}
+
+function TaskLinkPicker({value,onChange,records}){
+  const [q,setQ]=useState("");
+  const [open,setOpen]=useState(false);
+  const matches=useMemo(()=>{
+    if(!q.trim())return [];
+    const s=q.toLowerCase();
+    return records.filter(r=>(r.name&&r.name.toLowerCase().includes(s))||(r.company&&r.company.toLowerCase().includes(s))).slice(0,8);
+  },[q,records]);
+  return (
+    <div style={{marginBottom:12}}>
+      <label style={{display:"block",fontSize:12,color:"rgba(174,220,255,0.6)",marginBottom:4,fontWeight:600,letterSpacing:"0.03em"}}>Linked Contact</label>
+      {value.linkedName?(
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(35,161,221,0.08)",border:"1px solid rgba(35,161,221,0.2)",borderRadius:8,padding:"8px 11px"}}>
+          <span style={{fontSize:13,color:"#daeeff"}}>{value.linkedName}<span style={{color:"rgba(174,220,255,0.5)",fontSize:11}}> · {value.linkedPipeline}</span></span>
+          <button onClick={()=>onChange({linkedPipeline:"",linkedId:"",linkedName:""})} style={{background:"none",border:"none",color:"#ef4444",cursor:"pointer",fontSize:12}}>Remove</button>
+        </div>
+      ):(
+        <div style={{position:"relative"}}>
+          <input value={q} onChange={e=>{setQ(e.target.value);setOpen(true);}} onFocus={()=>setOpen(true)} onBlur={()=>setTimeout(()=>setOpen(false),150)} placeholder="Search contacts across pipelines…" style={IS}/>
+          {open&&q.trim()&&(
+            <div style={{position:"absolute",top:38,left:0,right:0,maxHeight:220,overflowY:"auto",background:"#0b1830",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,zIndex:10,boxShadow:"0 12px 32px rgba(0,0,0,0.5)"}}>
+              {matches.length===0&&<div style={{padding:10,fontSize:12,color:"rgba(174,220,255,0.4)"}}>No matches.</div>}
+              {matches.map(m=>(
+                <div key={m.pipeline+m.id} onClick={()=>{onChange({linkedPipeline:m.pipelineLabel,linkedId:m.id,linkedName:m.name||m.company});setQ("");setOpen(false);}} style={{padding:"8px 11px",cursor:"pointer",borderTop:"1px solid rgba(255,255,255,0.06)"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(35,161,221,0.08)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                  <div style={{fontSize:13,color:"#daeeff",fontWeight:600}}>{m.name||"(no name)"}</div>
+                  <div style={{fontSize:11,color:"rgba(174,220,255,0.5)"}}>{m.company} · {m.pipelineLabel}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TaskChecklist({items,onChange}){
+  const [text,setText]=useState("");
+  const list=items||[];
+  const done=list.filter(i=>i.done).length;
+  const pct=list.length?Math.round(done/list.length*100):0;
+  function add(){ if(!text.trim())return; onChange([...list,{id:String(Date.now())+Math.random().toString(36).slice(2,7),text:text.trim(),done:false}]); setText(""); }
+  function toggle(id){ onChange(list.map(i=>i.id===id?{...i,done:!i.done}:i)); }
+  function remove(id){ onChange(list.filter(i=>i.id!==id)); }
+  return (
+    <div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+        <span style={{fontSize:12,color:"rgba(174,220,255,0.6)",fontWeight:600}}>Checklist ({done}/{list.length})</span>
+        <span style={{fontSize:11,color:"#36f2af",fontWeight:700}}>{pct}%</span>
+      </div>
+      <div style={{background:"rgba(255,255,255,0.06)",borderRadius:6,height:6,overflow:"hidden",marginBottom:10}}>
+        <div style={{width:`${pct}%`,background:"#36f2af",height:"100%",borderRadius:6,transition:"width .2s"}}/>
+      </div>
+      {list.map(i=>(
+        <div key={i.id} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 0"}}>
+          <input type="checkbox" checked={i.done} onChange={()=>toggle(i.id)} style={{width:15,height:15,cursor:"pointer",accentColor:"#36f2af"}}/>
+          <span style={{flex:1,fontSize:13,color:i.done?"rgba(174,220,255,0.4)":"#daeeff",textDecoration:i.done?"line-through":"none"}}>{i.text}</span>
+          <button onClick={()=>remove(i.id)} style={{background:"none",border:"none",color:"rgba(239,68,68,0.6)",cursor:"pointer",fontSize:13}}>✕</button>
+        </div>
+      ))}
+      <div style={{display:"flex",gap:6,marginTop:8}}>
+        <input value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();add();}}} placeholder="Add subtask…" style={{...IS,flex:1}}/>
+        <button onClick={add} style={{background:"rgba(35,161,221,0.15)",color:"#23a1dd",border:"1px solid rgba(35,161,221,0.3)",borderRadius:8,padding:"0 14px",cursor:"pointer",fontSize:13,fontWeight:600}}>+</button>
+      </div>
+    </div>
+  );
+}
+
+function TaskKanbanCard({task,onDragStart,onClick}){
+  const pc=TASK_PRIORITY_COLORS[task.priority]||"#64748b";
+  const done=(task.checklist||[]).filter(i=>i.done).length;
+  const total=(task.checklist||[]).length;
+  const overdue=task.dueDate&&task.dueDate<todayStr()&&task.status!=="Done";
+  return (
+    <div draggable onDragStart={e=>onDragStart(e,task.id)} onClick={()=>onClick(task)}
+      style={{background:"rgba(255,255,255,0.05)",border:`1px solid ${overdue?"rgba(239,68,68,0.35)":"rgba(255,255,255,0.09)"}`,borderRadius:10,padding:"10px 12px",marginBottom:8,cursor:"pointer",boxShadow:"0 2px 10px rgba(0,0,0,0.25)"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6,marginBottom:6}}>
+        <span style={{fontSize:13,fontWeight:600,color:"#daeeff",lineHeight:1.3}}>{task.title}</span>
+        <span style={{flexShrink:0,background:pc+"18",color:pc,borderRadius:20,padding:"1px 7px",fontSize:9,fontWeight:700}}>{task.priority}</span>
+      </div>
+      {task.linkedName&&<div style={{fontSize:11,color:"#23a1dd",marginBottom:5}}>🔗 {task.linkedName}</div>}
+      {total>0&&<div style={{background:"rgba(255,255,255,0.06)",borderRadius:6,height:4,overflow:"hidden",marginBottom:6}}><div style={{width:`${Math.round(done/total*100)}%`,background:"#36f2af",height:"100%"}}/></div>}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <span style={{fontSize:11,color:"rgba(174,220,255,0.5)"}}>{task.assignee||"Unassigned"}</span>
+        {task.dueDate&&<span style={{fontSize:10,fontWeight:700,color:overdue?"#ef4444":"rgba(174,220,255,0.5)"}}>{overdue?"⚠ ":""}{task.dueDate}</span>}
+      </div>
+    </div>
+  );
+}
+
+function TaskKanbanCol({status,tasks,onDragStart,onDrop,onDragOver,onDragLeave,onClick,isDragOver,onAdd}){
+  const c=TASK_STATUS_COLORS[status]||"#23a1dd";
+  return (
+    <div onDrop={e=>onDrop(e,status)} onDragOver={e=>{e.preventDefault();onDragOver(status);}} onDragLeave={onDragLeave}
+      style={{minWidth:230,flex:"0 0 230px",background:isDragOver?"rgba(35,161,221,0.12)":"rgba(255,255,255,0.04)",backdropFilter:"blur(12px)",border:`1px solid ${isDragOver?c+"66":"rgba(255,255,255,0.08)"}`,borderRadius:14,display:"flex",flexDirection:"column",transition:"all .15s",height:"calc(100vh - 300px)"}}>
+      <div style={{padding:"11px 13px 9px",borderBottom:`2px solid ${c}`,background:`linear-gradient(180deg,${c}12,transparent)`,display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
+        <span style={{fontWeight:700,fontSize:12,color:c}}>{status}</span>
+        <span style={{background:c+"18",color:c,borderRadius:20,padding:"2px 8px",fontSize:11,fontWeight:700}}>{tasks.length}</span>
+      </div>
+      <div style={{padding:"9px 9px 0",flex:1,overflowY:"auto",minHeight:0}}>
+        {tasks.map(t=><TaskKanbanCard key={t.id} task={t} onDragStart={onDragStart} onClick={onClick}/>)}
+        {!tasks.length&&<div style={{color:"rgba(174,220,255,0.22)",fontSize:11,textAlign:"center",paddingTop:18}}>Drop here</div>}
+      </div>
+      <div style={{padding:9,flexShrink:0}}>
+        <button onClick={()=>onAdd(status)} style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px dashed rgba(255,255,255,0.15)",borderRadius:8,padding:"7px 0",color:"rgba(174,220,255,0.5)",cursor:"pointer",fontSize:12,fontWeight:600}}>+ Add Task</button>
+      </div>
+    </div>
+  );
+}
+
+function TaskAddModal({defaultStatus,onClose,onSave,assigneeOptions,records}){
+  const [form,setForm]=useState({title:"",description:"",status:defaultStatus||"To Do",priority:"Medium",assignee:"",dueDate:"",linkedPipeline:"",linkedId:"",linkedName:""});
+  const [saving,setSaving]=useState(false);
+  const f=(k,v)=>setForm(p=>({...p,[k]:v}));
+  async function submit(){ if(!form.title.trim())return; setSaving(true); await onSave(form); setSaving(false); }
+  return (
+    <Modal title="+ Quick Add Task" onClose={onClose}>
+      <Inp label="Title *" value={form.title} onChange={e=>f("title",e.target.value)} placeholder="What needs to be done?"/>
+      <Tex label="Description" value={form.description} onChange={e=>f("description",e.target.value)}/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 10px"}}>
+        <Sel label="Status" value={form.status} onChange={e=>f("status",e.target.value)}>{TASK_STATUSES.map(s=><option key={s}>{s}</option>)}</Sel>
+        <Sel label="Priority" value={form.priority} onChange={e=>f("priority",e.target.value)}>{TASK_PRIORITIES.map(p=><option key={p}>{p}</option>)}</Sel>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 10px"}}>
+        <div style={{marginBottom:12}}>
+          <label style={{display:"block",fontSize:12,color:"rgba(174,220,255,0.6)",marginBottom:4,fontWeight:600,letterSpacing:"0.03em"}}>Assignee</label>
+          <input list="task-assignees" value={form.assignee} onChange={e=>f("assignee",e.target.value)} placeholder="Assign to…" style={IS}/>
+          <datalist id="task-assignees">{assigneeOptions.map(a=><option key={a} value={a}/>)}</datalist>
+        </div>
+        <Inp label="Due Date" type="date" value={form.dueDate} onChange={e=>f("dueDate",e.target.value)} style={{colorScheme:"light"}}/>
+      </div>
+      <TaskLinkPicker value={form} onChange={patch=>setForm(p=>({...p,...patch}))} records={records}/>
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:6}}>
+        <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
+        <Btn onClick={submit} disabled={saving||!form.title.trim()}>{saving?"Adding…":"+ Add Task"}</Btn>
+      </div>
+    </Modal>
+  );
+}
+
+function TaskDetailModal({task,onClose,onSave,onDelete,assigneeOptions,records}){
+  const [form,setForm]=useState({...task});
+  const [note,setNote]=useState("");
+  const local=(k,v)=>setForm(p=>({...p,[k]:v}));
+  function commit(k,v){ const next={...form,[k]:v}; setForm(next); onSave(next); }
+  function commitPatch(patch){ const next={...form,...patch}; setForm(next); onSave(next); }
+  function addNote(){
+    if(!note.trim())return;
+    const entry={id:String(Date.now()),text:note.trim(),date:new Date().toISOString()};
+    commit("activity",[entry,...(form.activity||[])]);
+    setNote("");
+  }
+  return (
+    <Modal title="📋 Task Details" onClose={onClose} wide>
+      <Inp label="Title" value={form.title} onChange={e=>local("title",e.target.value)} onBlur={()=>onSave(form)}/>
+      <Tex label="Description" value={form.description} onChange={e=>local("description",e.target.value)} onBlur={()=>onSave(form)}/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"0 10px"}}>
+        <Sel label="Status" value={form.status} onChange={e=>commit("status",e.target.value)}>{TASK_STATUSES.map(s=><option key={s}>{s}</option>)}</Sel>
+        <Sel label="Priority" value={form.priority} onChange={e=>commit("priority",e.target.value)}>{TASK_PRIORITIES.map(p=><option key={p}>{p}</option>)}</Sel>
+        <Inp label="Due Date" type="date" value={form.dueDate||""} onChange={e=>commit("dueDate",e.target.value)} style={{colorScheme:"light"}}/>
+      </div>
+      <div style={{marginBottom:12}}>
+        <label style={{display:"block",fontSize:12,color:"rgba(174,220,255,0.6)",marginBottom:4,fontWeight:600,letterSpacing:"0.03em"}}>Assignee</label>
+        <input list="task-assignees-edit" value={form.assignee||""} onChange={e=>local("assignee",e.target.value)} onBlur={()=>onSave(form)} style={IS}/>
+        <datalist id="task-assignees-edit">{assigneeOptions.map(a=><option key={a} value={a}/>)}</datalist>
+      </div>
+      <TaskLinkPicker value={form} onChange={commitPatch} records={records}/>
+      <div style={{borderTop:"1px solid rgba(255,255,255,0.08)",margin:"16px 0",paddingTop:14}}>
+        <TaskChecklist items={form.checklist||[]} onChange={list=>commit("checklist",list)}/>
+      </div>
+      <div style={{borderTop:"1px solid rgba(255,255,255,0.08)",margin:"16px 0",paddingTop:14}}>
+        <span style={{fontSize:12,color:"rgba(174,220,255,0.6)",fontWeight:600,display:"block",marginBottom:8}}>Activity Timeline</span>
+        <div style={{display:"flex",gap:6,marginBottom:10}}>
+          <input value={note} onChange={e=>setNote(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();addNote();}}} placeholder="Add a note (call log, meeting, update)…" style={{...IS,flex:1}}/>
+          <button onClick={addNote} style={{background:"rgba(35,161,221,0.15)",color:"#23a1dd",border:"1px solid rgba(35,161,221,0.3)",borderRadius:8,padding:"0 14px",cursor:"pointer",fontSize:13,fontWeight:600}}>Add Note</button>
+        </div>
+        <div style={{maxHeight:180,overflowY:"auto"}}>
+          {(form.activity||[]).length===0&&<div style={{fontSize:12,color:"rgba(174,220,255,0.35)",textAlign:"center",padding:12}}>No activity yet.</div>}
+          {(form.activity||[]).map(a=>(
+            <div key={a.id} style={{padding:"7px 0",borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+              <div style={{fontSize:12,color:"#daeeff"}}>{a.text}</div>
+              <div style={{fontSize:10,color:"rgba(174,220,255,0.4)"}}>{new Date(a.date).toLocaleString()}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",marginTop:16}}>
+        <Btn variant="danger" onClick={()=>{if(confirm("Delete this task?")){onDelete(task.id);onClose();}}}>Delete Task</Btn>
+        <Btn variant="ghost" onClick={onClose}>Close</Btn>
+      </div>
+    </Modal>
+  );
+}
+
+function TasksGate({search="",setSearch=()=>{},onRevenue=()=>{},profile}){
+  const [tasks,setTasks]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [tab,setTab]=useState("Kanban");
+  const [statusFilter,setStatusFilter]=useState("All");
+  const [priorityFilter,setPriorityFilter]=useState("All");
+  const [assigneeFilter,setAssigneeFilter]=useState("All");
+  const [addModal,setAddModal]=useState(null);
+  const [detailTask,setDetailTask]=useState(null);
+  const [dragId,setDragId]=useState(null);
+  const [dragOver,setDragOver]=useState(null);
+  const today=todayStr();
+  const records=useLinkableRecords();
+
+  useEffect(()=>{ setLoading(true); sbGetAll("tasks").then(rows=>{ if(Array.isArray(rows))setTasks(rows.map(rowToTask)); setLoading(false); }).catch(()=>setLoading(false)); },[]);
+
+  const assigneeOptions=useMemo(()=>{
+    const fromProfiles=((profile&&profile.allProfiles)||[]).map(p=>p.name||p.email).filter(Boolean);
+    const fromTasks=tasks.map(t=>t.assignee).filter(Boolean);
+    return [...new Set([...fromProfiles,...fromTasks])].sort();
+  },[profile,tasks]);
+
+  const filtered=useMemo(()=>{
+    const q=search.toLowerCase();
+    return tasks.filter(t=>{
+      if(q&&![t.title,t.description,t.assignee,t.linkedName].join(" ").toLowerCase().includes(q))return false;
+      if(statusFilter!=="All"&&t.status!==statusFilter)return false;
+      if(priorityFilter!=="All"&&t.priority!==priorityFilter)return false;
+      if(assigneeFilter!=="All"&&t.assignee!==assigneeFilter)return false;
+      return true;
+    });
+  },[tasks,search,statusFilter,priorityFilter,assigneeFilter]);
+
+  const byStatus=useMemo(()=>{ const m={}; TASK_STATUSES.forEach(s=>m[s]=filtered.filter(t=>t.status===s)); return m; },[filtered]);
+
+  const stats=useMemo(()=>{
+    const total=tasks.length;
+    const done=tasks.filter(t=>t.status==="Done").length;
+    const overdue=tasks.filter(t=>t.dueDate&&t.dueDate<today&&t.status!=="Done").length;
+    const dueToday=tasks.filter(t=>t.dueDate===today&&t.status!=="Done").length;
+    return {total,done,overdue,dueToday,rate:total?Math.round(done/total*100):0};
+  },[tasks,today]);
+
+  async function addTask(form){ const res=await sbInsert("tasks",taskToRow(form)); if(Array.isArray(res)&&res[0]){ setTasks(p=>[...p,rowToTask(res[0])]); setAddModal(null); } }
+  async function updateTask(form){ const res=await sbUpdate("tasks",form.id,taskToRow(form)); if(Array.isArray(res)&&res[0]){ const updated=rowToTask(res[0]); setTasks(p=>p.map(t=>t.id===form.id?updated:t)); setDetailTask(updated); } }
+  async function deleteTask(id){ await sbDelete("tasks",id); setTasks(p=>p.filter(t=>t.id!==id)); setDetailTask(null); }
+
+  const onDragStart=useCallback((e,id)=>{setDragId(id);e.dataTransfer.effectAllowed="move";},[]);
+  const onDragOverCol=useCallback(status=>setDragOver(status),[]);
+  const onDragLeave=useCallback(()=>setDragOver(null),[]);
+  const onDrop=useCallback((e,status)=>{
+    e.preventDefault();setDragOver(null);
+    if(dragId==null)return;
+    const t=tasks.find(x=>x.id===dragId);
+    if(!t||t.status===status){setDragId(null);return;}
+    updateTask({...t,status});
+    setDragId(null);
+  },[dragId,tasks]);
+
+  if(loading)return <Spinner text="Loading Tasks..."/>;
+
+  return (
+    <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+      {/* Filters bar */}
+      <div style={{background:"rgba(6,14,28,0.6)",backdropFilter:"blur(16px)",borderBottom:"1px solid rgba(255,255,255,0.07)",padding:"10px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+          <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} style={{...IS,width:"auto",padding:"6px 10px",fontSize:12}}>
+            <option value="All">All Statuses</option>{TASK_STATUSES.map(s=><option key={s}>{s}</option>)}
+          </select>
+          <select value={priorityFilter} onChange={e=>setPriorityFilter(e.target.value)} style={{...IS,width:"auto",padding:"6px 10px",fontSize:12}}>
+            <option value="All">All Priorities</option>{TASK_PRIORITIES.map(p=><option key={p}>{p}</option>)}
+          </select>
+          <select value={assigneeFilter} onChange={e=>setAssigneeFilter(e.target.value)} style={{...IS,width:"auto",padding:"6px 10px",fontSize:12}}>
+            <option value="All">All Assignees</option>{assigneeOptions.map(a=><option key={a}>{a}</option>)}
+          </select>
+        </div>
+        <Btn onClick={()=>setAddModal("To Do")}>+ Quick Add Task</Btn>
+      </div>
+      {/* Stat boxes */}
+      <div style={{background:"rgba(255,255,255,0.05)",borderBottom:"1px solid rgba(255,255,255,0.07)",padding:"10px 20px",display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+        {[
+          {label:"Total Tasks",val:stats.total,c:"#23a1dd"},
+          {label:"Due Today",val:stats.dueToday,c:"#f59e0b"},
+          {label:"Completed",val:stats.done,c:"#36f2af"},
+          {label:"Completion Rate",val:stats.rate+"%",c:"#a855f7"},
+        ].map(s=>(
+          <div key={s.label} style={{background:"rgba(255,255,255,0.04)",backdropFilter:"blur(10px)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"8px 14px",display:"flex",flexDirection:"column",gap:2,minWidth:100,boxShadow:"0 4px 16px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.05)"}}>
+            <div style={{fontWeight:700,fontSize:15,color:s.c}}>{s.val}</div>
+            <div style={{fontSize:10,color:"rgba(174,220,255,0.38)",fontWeight:500}}>{s.label}</div>
+          </div>
+        ))}
+        {stats.overdue>0&&<div onClick={()=>setTab("Calendar")} title="Click to view overdue tasks" style={{cursor:"pointer",background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.25)",borderRadius:10,padding:"8px 14px",display:"flex",flexDirection:"column",gap:2,minWidth:100,boxShadow:"0 4px 16px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
+          <div style={{fontWeight:700,fontSize:15,color:"#ef4444"}}>{stats.overdue}</div>
+          <div style={{fontSize:10,color:"rgba(174,220,255,0.38)",fontWeight:500}}>Overdue Tasks</div>
+        </div>}
+      </div>
+      {/* View tabs */}
+      <div style={{background:"rgba(255,255,255,0.05)",borderBottom:"1px solid rgba(255,255,255,0.07)",padding:"0 20px",display:"flex",gap:0}}>
+        {["Kanban","Table","Calendar","Analytics"].map(t=><button key={t} onClick={()=>setTab(t)} style={{background:"none",color:tab===t?"#04bee7":"rgba(174,220,255,0.5)",border:"none",borderBottom:tab===t?"2px solid #23a1dd":"2px solid transparent",padding:"10px 14px",cursor:"pointer",fontWeight:tab===t?600:500,fontSize:13,transition:"all .15s",marginBottom:-1}}>{t}</button>)}
+      </div>
+      {/* Content */}
+      <div style={{flex:1,overflow:"auto",padding:tab==="Kanban"?"12px 16px":"16px 20px",background:"rgba(174,251,102,0.025)"}}>
+        {tab==="Kanban"&&(
+          <div style={{display:"flex",gap:10,alignItems:"flex-start",height:"100%"}}>
+            {TASK_STATUSES.map(status=>(
+              <TaskKanbanCol key={status} status={status} tasks={byStatus[status]||[]} onDragStart={onDragStart} onDrop={onDrop} onDragOver={onDragOverCol} onDragLeave={onDragLeave} onClick={t=>setDetailTask(t)} isDragOver={dragOver===status} onAdd={s=>setAddModal(s)}/>
+            ))}
+          </div>
+        )}
+        {tab==="Table"&&(
+          <div style={{overflowX:"auto",borderRadius:12,border:"1px solid rgba(255,255,255,0.09)",background:"rgba(6,14,28,0.5)",backdropFilter:"blur(12px)"}}>
+            <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+              <thead style={{background:"rgba(255,255,255,0.04)"}}>
+                <tr>{["Title","Status","Priority","Assignee","Due Date","Linked","Progress","Actions"].map(h=><th key={h} style={{padding:"9px 12px",textAlign:"left",color:"rgba(174,220,255,0.38)",fontWeight:600,fontSize:11,borderBottom:"1px solid rgba(255,255,255,0.07)",whiteSpace:"nowrap",textTransform:"uppercase",letterSpacing:"0.05em"}}>{h}</th>)}</tr>
+              </thead>
+              <tbody>
+                {filtered.map(t=>{
+                  const sc=TASK_STATUS_COLORS[t.status]||"#23a1dd"; const pc=TASK_PRIORITY_COLORS[t.priority]||"#64748b";
+                  const done=(t.checklist||[]).filter(i=>i.done).length; const total=(t.checklist||[]).length;
+                  const overdue=t.dueDate&&t.dueDate<today&&t.status!=="Done";
+                  return (
+                    <tr key={t.id} style={{borderBottom:"1px solid rgba(255,255,255,0.05)",cursor:"pointer"}} onClick={()=>setDetailTask(t)} onMouseEnter={e=>e.currentTarget.style.background="rgba(35,161,221,0.06)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                      <td style={{padding:"9px 12px",color:"#daeeff",fontWeight:600}}>{t.title}</td>
+                      <td style={{padding:"9px 12px"}}><span style={{background:sc+"18",color:sc,borderRadius:20,padding:"2px 9px",fontSize:11,fontWeight:600}}>{t.status}</span></td>
+                      <td style={{padding:"9px 12px"}}><span style={{background:pc+"18",color:pc,borderRadius:20,padding:"2px 9px",fontSize:11,fontWeight:600}}>{t.priority}</span></td>
+                      <td style={{padding:"9px 12px",color:"rgba(174,220,255,0.55)"}}>{t.assignee||"—"}</td>
+                      <td style={{padding:"9px 12px",fontSize:12,fontWeight:600,color:overdue?"#ef4444":"rgba(174,220,255,0.55)"}}>{t.dueDate?(overdue?"⚠ ":"")+t.dueDate:"—"}</td>
+                      <td style={{padding:"9px 12px",fontSize:12,color:"#23a1dd"}}>{t.linkedName||"—"}</td>
+                      <td style={{padding:"9px 12px",fontSize:12,color:"rgba(174,220,255,0.55)"}}>{total?`${done}/${total}`:"—"}</td>
+                      <td style={{padding:"9px 12px"}} onClick={e=>e.stopPropagation()}><button onClick={()=>{if(confirm(`Delete "${t.title}"?`))deleteTask(t.id);}} style={{background:"rgba(239,68,68,0.1)",color:"#ef4444",border:"none",borderRadius:5,padding:"3px 8px",cursor:"pointer",fontSize:11}}>🗑</button></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {!filtered.length&&<div style={{padding:40,textAlign:"center",color:"rgba(174,220,255,0.38)"}}>No tasks match your filters.</div>}
+          </div>
+        )}
+        {tab==="Calendar"&&(
+          <div>
+            {[
+              {label:"OVERDUE",items:filtered.filter(t=>t.dueDate&&t.dueDate<today&&t.status!=="Done"),titleColor:"#ef4444",bg:"rgba(239,68,68,0.08)",border:"rgba(239,68,68,0.25)"},
+              {label:"DUE TODAY",items:filtered.filter(t=>t.dueDate===today&&t.status!=="Done"),titleColor:"#f59e0b",bg:"rgba(245,158,11,0.08)",border:"rgba(245,158,11,0.25)"},
+              {label:"UPCOMING (7 DAYS)",items:filtered.filter(t=>t.dueDate&&t.dueDate>today&&t.dueDate<=addDays(7)&&t.status!=="Done"),titleColor:"#1d4ed8",bg:"rgba(35,161,221,0.08)",border:"rgba(35,161,221,0.25)"},
+            ].map(group=>group.items.length>0&&(
+              <div key={group.label} style={{background:group.bg,border:`1px solid ${group.border}`,borderRadius:12,padding:"12px 16px",marginBottom:18}}>
+                <div style={{fontWeight:700,color:group.titleColor,marginBottom:8}}>🔔 {group.label} ({group.items.length})</div>
+                {group.items.map(t=>(
+                  <div key={t.id} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderTop:`1px solid ${group.border}`,alignItems:"center"}}>
+                    <span style={{color:"#daeeff",fontWeight:600}}>{t.title}<span style={{color:"rgba(174,220,255,0.55)",fontSize:12,fontWeight:400}}> · {t.dueDate} · {t.assignee||"Unassigned"}</span></span>
+                    <button onClick={()=>setDetailTask(t)} style={{background:"rgba(35,161,221,0.12)",color:"#23a1dd",border:"none",borderRadius:8,padding:"3px 10px",cursor:"pointer",fontSize:11,fontWeight:600}}>Open →</button>
+                  </div>
+                ))}
+              </div>
+            ))}
+            {filtered.filter(t=>t.dueDate&&t.status!=="Done").length===0&&<div style={{color:"rgba(174,220,255,0.38)",fontSize:13,textAlign:"center",padding:40}}>✅ No upcoming due dates.</div>}
+          </div>
+        )}
+        {tab==="Analytics"&&(
+          <div style={{display:"grid",gap:16}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:12}}>
+              {[{label:"Total",val:stats.total,c:"#23a1dd"},{label:"Done",val:stats.done,c:"#36f2af"},{label:"Overdue",val:stats.overdue,c:"#ef4444"},{label:"Completion Rate",val:stats.rate+"%",c:"#a855f7"}].map(k=><div key={k.label} style={{background:"rgba(6,14,28,0.55)",backdropFilter:"blur(12px)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"14px 16px",boxShadow:"0 4px 20px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.06)"}}><div style={{fontWeight:700,fontSize:22,color:k.c}}>{k.val}</div><div style={{fontSize:12,color:"rgba(174,220,255,0.55)",marginTop:2}}>{k.label}</div></div>)}
+            </div>
+            <div style={{background:"rgba(6,14,28,0.6)",backdropFilter:"blur(16px)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:20,boxShadow:"0 4px 24px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.06)"}}>
+              <div style={{fontWeight:700,color:"#daeeff",marginBottom:16,fontSize:14}}>Tasks by Status</div>
+              {TASK_STATUSES.map(s=>{ const count=tasks.filter(t=>t.status===s).length; const max=Math.max(...TASK_STATUSES.map(st=>tasks.filter(t=>t.status===st).length),1); return <div key={s} style={{marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4}}><span style={{color:TASK_STATUS_COLORS[s],fontWeight:600}}>{s}</span><span style={{color:"rgba(174,220,255,0.38)"}}>{count}</span></div><div style={{background:"rgba(255,255,255,0.03)",borderRadius:6,height:8,overflow:"hidden"}}><div style={{width:`${(count/max)*100}%`,background:TASK_STATUS_COLORS[s],height:"100%",borderRadius:6}}/></div></div>; })}
+            </div>
+            <div style={{background:"rgba(6,14,28,0.6)",backdropFilter:"blur(16px)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:20,boxShadow:"0 4px 24px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.06)"}}>
+              <div style={{fontWeight:700,color:"#daeeff",marginBottom:16,fontSize:14}}>Tasks by Priority</div>
+              {TASK_PRIORITIES.map(s=>{ const count=tasks.filter(t=>t.priority===s).length; const max=Math.max(...TASK_PRIORITIES.map(st=>tasks.filter(t=>t.priority===st).length),1); return <div key={s} style={{marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4}}><span style={{color:TASK_PRIORITY_COLORS[s],fontWeight:600}}>{s}</span><span style={{color:"rgba(174,220,255,0.38)"}}>{count}</span></div><div style={{background:"rgba(255,255,255,0.03)",borderRadius:6,height:8,overflow:"hidden"}}><div style={{width:`${(count/max)*100}%`,background:TASK_PRIORITY_COLORS[s],height:"100%",borderRadius:6}}/></div></div>; })}
+            </div>
+          </div>
+        )}
+      </div>
+      {/* Modals */}
+      {addModal&&<TaskAddModal defaultStatus={addModal} onClose={()=>setAddModal(null)} onSave={addTask} assigneeOptions={assigneeOptions} records={records}/>}
+      {detailTask&&<TaskDetailModal task={detailTask} onClose={()=>setDetailTask(null)} onSave={updateTask} onDelete={deleteTask} assigneeOptions={assigneeOptions} records={records}/>}
+    </div>
+  );
+}
+
 function AuthGate(){
   const [ready,setReady]=useState(false);
   const [authed,setAuthed]=useState(false);
@@ -5394,7 +5805,7 @@ function App({profile,onLogout,onReloadProfile}){
   const ALL_NAV=useMemo(()=>[
     {section:"OVERVIEW",items:[{key:"dashboard",label:"Dashboard",soon:true},{key:"allcontacts",label:"All Contacts"},{key:"pipeline",label:"Hot Pipeline"},{key:"clients",label:"Active Clients"}]},
     {section:"PIPELINE",items:[{key:"contacts",label:"LinkedIn Pipeline"},{key:"freelance",label:"Freelance Pipeline"},{key:"coldcalling",label:"Cold Calling"},{key:"emailcampaign",label:"Email Campaign"},{key:"paidleads",label:"Paid Leads"}]},
-    {section:"DELIVERY",items:[{key:"projects",label:"Projects",soon:true},{key:"tasks",label:"Tasks",soon:true}]},
+    {section:"DELIVERY",items:[{key:"projects",label:"Projects",soon:true},{key:"tasks",label:"Tasks"}]},
     {section:"REVENUE",items:[{key:"clientpayments",label:"Client Payments"},{key:"expenses",label:"Balance Sheet"},{key:"proposals",label:"Proposals",soon:true},{key:"invoices",label:"Invoices",soon:true}]},
     {section:"DATA",items:[{key:"import",label:"Import",soon:true},{key:"settings",label:"Settings"}]},
   ],[]);
@@ -5480,7 +5891,7 @@ function App({profile,onLogout,onReloadProfile}){
         </div>
         {/* Content */}
         <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-          {!canView(gate)?<ComingSoonView label="Access Restricted"/>:gate==="pipeline"?<HotPipelineGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="contacts"?<LinkedInGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="freelance"?<FreelancePipelineGate search={search} onRevenue={setPipelineRevenue}/>:gate==="clients"?<ActiveClientsGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="allcontacts"?<AllContactsView search={search} setSearch={setSearch}/>:gate==="clientpayments"?<ClientPaymentsGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="coldcalling"?<ColdCallingGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="emailcampaign"?<EmailCampaignGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="paidleads"?<PaidLeadsPipelineGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="expenses"?<ExpensesGate/>:<ComingSoonView label={titles[gate]||gate}/>}
+          {!canView(gate)?<ComingSoonView label="Access Restricted"/>:gate==="pipeline"?<HotPipelineGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="contacts"?<LinkedInGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="freelance"?<FreelancePipelineGate search={search} onRevenue={setPipelineRevenue}/>:gate==="clients"?<ActiveClientsGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="allcontacts"?<AllContactsView search={search} setSearch={setSearch}/>:gate==="clientpayments"?<ClientPaymentsGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="coldcalling"?<ColdCallingGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="emailcampaign"?<EmailCampaignGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="paidleads"?<PaidLeadsPipelineGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue}/>:gate==="expenses"?<ExpensesGate/>:gate==="tasks"?<TasksGate search={search} setSearch={setSearch} onRevenue={setPipelineRevenue} profile={profile}/>:<ComingSoonView label={titles[gate]||gate}/>}
         </div>
       </div>
       {showSettings&&<SettingsModal darkMode={darkMode} onToggleDark={()=>setDarkMode(v=>!v)} onClose={()=>setShowSettings(false)} profile={profile} isAdmin={isAdmin} onReloadProfile={onReloadProfile}/>}

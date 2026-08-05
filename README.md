@@ -25,6 +25,7 @@
   - [Client Payments](#client-payments)
   - [Balance Sheet](#balance-sheet)
   - [All Contacts](#all-contacts)
+- [Tasks](#tasks)
 - [Activity Log](#activity-log)
 - [CSV Import & Export](#csv-import--export)
 - [Stages Reference](#stages-reference)
@@ -125,6 +126,18 @@ All data is stored in **Supabase (PostgreSQL)** and syncs across any device in r
 - 🗓️ Payment Calendar tab
 - 🔄 Auto-rolls unpaid "Pending" entries into the current month
 - Pulls contracts automatically from Active Clients + Hot Pipeline "Won" deals
+
+### Tasks
+- 🗂️ Kanban board (To Do → In Progress → Review → Done) with drag & drop
+- 📊 Table view — spreadsheet-style list with status/priority pills, assignee, due date, checklist progress
+- 📅 Calendar view — Overdue / Due Today / Upcoming (7 days) grouping
+- 📈 Analytics tab — breakdown by status and by priority
+- ⚡ Priority badges (Urgent / High / Medium / Low) and status pills with custom colors
+- 🔗 Link a task to any contact/lead across all six pipelines via a cross-pipeline search picker
+- ✅ Subtask checklist per task with a live completion-percentage bar
+- 🕒 Activity timeline per task — freeform notes (call logs, meeting updates) with timestamps
+- ➕ Quick Add Task modal; click any card/row for the full detail view
+- Quick filters by status, priority, and assignee; shares the header search bar with every other pipeline
 
 ---
 
@@ -398,6 +411,27 @@ CREATE TABLE activity_log (
 );
 ```
 
+#### `tasks` — internal task manager (Kanban / Table / Calendar / Analytics)
+Created by [`supabase-auth-migration.sql`](supabase-auth-migration.sql)'s STAGE 5 block (run independently, any time after Stage 3 is stable — see that file).
+```sql
+CREATE TABLE tasks (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  title text NOT NULL,
+  description text DEFAULT '',
+  status text NOT NULL DEFAULT 'To Do',      -- 'To Do' | 'In Progress' | 'Review' | 'Done'
+  priority text NOT NULL DEFAULT 'Medium',   -- 'Urgent' | 'High' | 'Medium' | 'Low'
+  assignee text DEFAULT '',
+  due_date date,
+  linked_pipeline text,      -- e.g. 'LinkedIn Pipeline', 'Hot Pipeline' — which source table linked_id points into
+  linked_id text,            -- id of the linked lead/contact row
+  linked_name text,          -- denormalized contact/company name, so the UI doesn't need a join
+  checklist jsonb DEFAULT '[]'::jsonb,  -- [{ "id": "...", "text": "...", "done": false }]
+  activity jsonb DEFAULT '[]'::jsonb,   -- [{ "id": "...", "text": "...", "date": "..." }] notes/timeline
+  created_at timestamptz DEFAULT now()
+);
+```
+STAGE 5 also adds `'tasks'` as a valid `user_permissions.section` value and RLS policies matching every other pipeline — grant it from **Settings → Team Access** the same way as any other section.
+
 #### `user_profiles` / `user_permissions` — team accounts & per-pipeline access
 Created by [`supabase-auth-migration.sql`](supabase-auth-migration.sql), not by hand — see that file for the full schema, the auto-profile trigger, and the RLS policies. Summary:
 ```sql
@@ -475,7 +509,7 @@ The sidebar is grouped into sections. Items marked **soon** are placeholders not
 |---|---|
 | Overview | Dashboard *(soon)*, All Contacts, Hot Pipeline, Active Clients |
 | Pipeline | LinkedIn Pipeline, Freelance Pipeline, Cold Calling, Email Campaign, Paid Leads |
-| Delivery | Projects *(soon)*, Tasks *(soon)* |
+| Delivery | Projects *(soon)*, Tasks |
 | Revenue | Client Payments, Balance Sheet, Proposals *(soon)*, Invoices *(soon)* |
 | Data | Import *(soon)*, Settings |
 
@@ -713,6 +747,46 @@ Unified search view across LinkedIn Pipeline, Hot Pipeline, Freelance Pipeline, 
 - Filter by pipeline, industry, and stage
 - Export filtered results as CSV
 - Read-only — edits must be made inside each pipeline
+
+---
+
+## ✅ Tasks
+
+An internal task manager (sidebar: **Delivery → Tasks**) — separate from the sales pipelines above, for tracking to-dos, follow-through, and delivery work across the team. Persisted in Supabase (`tasks` table) and gated by the `tasks` permission section like every other pipeline.
+
+#### Tabs
+| Tab | Description |
+|---|---|
+| 🗂️ Kanban | Drag & drop across `To Do` → `In Progress` → `Review` → `Done`; each column has its own **+ Add Task** |
+| 📊 Table | Spreadsheet-style list — status pill, priority badge, assignee, due date, linked contact, checklist progress |
+| 📅 Calendar | Tasks grouped as OVERDUE / DUE TODAY / UPCOMING (7 days) |
+| 📈 Analytics | Bar breakdown of tasks by status and by priority |
+
+#### Stat Boxes
+| Box | What it shows |
+|---|---|
+| Total Tasks | Count of every task |
+| Due Today | Tasks due today that aren't Done |
+| Completed | Tasks with status `Done` |
+| Completion Rate | `Completed ÷ Total` as a percentage |
+| Overdue Tasks | Tasks past due and not Done — only shown when > 0; click it to jump to the Calendar tab |
+
+#### Task fields
+- **Title / Description** — free text
+- **Status** — `To Do`, `In Progress`, `Review`, `Done` (the Kanban columns)
+- **Priority** — `Urgent`, `High`, `Medium`, `Low`, each with its own badge color
+- **Assignee** — free text with autocomplete suggestions pulled from current teammates (`user_profiles`) plus any assignee names already used on other tasks
+- **Due Date**
+- **Linked Contact** — optional; a search box matches by name or company across all six pipelines (LinkedIn, Hot, Freelance, Cold Calling, Email Campaign, Paid Leads) and stores a denormalized reference (`linked_pipeline`, `linked_id`, `linked_name`) so the task list doesn't need a live join
+- **Checklist** — an arbitrary list of subtasks, each with its own checkbox; the detail view shows a live `done/total` completion bar
+- **Activity Timeline** — freeform timestamped notes (call logs, meeting updates, status changes) logged via **Add Note** in the task detail view
+
+#### How to use
+1. **+ Quick Add Task** (top right, or per-column on the Kanban board) opens a short form: title, status, priority, assignee, due date, and an optional linked contact
+2. Click any card or table row to open the **full detail view** — edit any field inline, manage the checklist, and log activity notes
+3. Drag cards between Kanban columns to change status
+4. Use the status / priority / assignee filter pills, or the shared header search bar, to narrow the list
+5. Non-admin teammates need `tasks` access granted from **Settings → Team Access** — see [Database Setup](#database-setup)
 
 ---
 

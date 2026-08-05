@@ -372,3 +372,55 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON
 --     client_payments, payment_entries, expense_sheets, activity_log,
 --     user_profiles, user_permissions
 --     FROM anon;
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- STAGE 5 — Tasks feature (run any time after Stage 3 is stable; independent
+-- of the other tables). Adds the `tasks` table backing the sidebar's "Tasks"
+-- view, plus a new 'tasks' permission section so it's covered by Team Access
+-- the same way every other pipeline is.
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- Allow 'tasks' as a valid user_permissions.section value. The name below
+-- (<table>_<column>_check) is Postgres' default name for an inline column
+-- CHECK, which is what STAGE 1 declared — safe to drop/recreate.
+ALTER TABLE user_permissions DROP CONSTRAINT IF EXISTS user_permissions_section_check;
+ALTER TABLE user_permissions ADD CONSTRAINT user_permissions_section_check CHECK (section IN
+  ('allcontacts','pipeline','clients','contacts','freelance',
+   'coldcalling','emailcampaign','paidleads','clientpayments','expenses','tasks'));
+
+CREATE TABLE IF NOT EXISTS tasks (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  title text NOT NULL,
+  description text DEFAULT '',
+  status text NOT NULL DEFAULT 'To Do',      -- 'To Do' | 'In Progress' | 'Review' | 'Done'
+  priority text NOT NULL DEFAULT 'Medium',   -- 'Urgent' | 'High' | 'Medium' | 'Low'
+  assignee text DEFAULT '',
+  due_date date,
+  linked_pipeline text,      -- e.g. 'LinkedIn Pipeline', 'Hot Pipeline' — which table linked_id points into
+  linked_id text,            -- id of the linked lead/contact row (kept as text; source tables use bigint ids of different sequences)
+  linked_name text,          -- denormalized contact/company name so the UI doesn't need a join
+  checklist jsonb DEFAULT '[]'::jsonb,  -- [{ "id": "...", "text": "...", "done": false }]
+  activity jsonb DEFAULT '[]'::jsonb,   -- [{ "id": "...", "text": "...", "date": "...", "author": "..." }] notes/timeline
+  created_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tasks_select ON tasks;
+CREATE POLICY tasks_select ON tasks FOR SELECT TO authenticated
+  USING (has_section_access('tasks', false));
+DROP POLICY IF EXISTS tasks_insert ON tasks;
+CREATE POLICY tasks_insert ON tasks FOR INSERT TO authenticated
+  WITH CHECK (has_section_access('tasks', true));
+DROP POLICY IF EXISTS tasks_update ON tasks;
+CREATE POLICY tasks_update ON tasks FOR UPDATE TO authenticated
+  USING (has_section_access('tasks', true)) WITH CHECK (has_section_access('tasks', true));
+DROP POLICY IF EXISTS tasks_delete ON tasks;
+CREATE POLICY tasks_delete ON tasks FOR DELETE TO authenticated
+  USING (has_section_access('tasks', true));
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON tasks TO authenticated;
+
+-- Reminder: admins get 'tasks' access automatically (is_admin_user() bypasses
+-- the permission table entirely). Non-admin teammates need an explicit grant
+-- from Settings → Team Access, same as every other section.

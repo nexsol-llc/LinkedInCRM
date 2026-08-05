@@ -121,7 +121,7 @@ All data is stored in **Supabase (PostgreSQL)** and syncs across any device in r
 ### Client Payments
 - 📅 Month picker (supports future months) with 6 revenue stat boxes
 - 📄 Client Contracts tab — payment source, condition & remarks per contract
-- 💳 Payment Status tab — log installments (Pending / Paid / Balance Lost) with PKR received tracking
+- 💳 Payment Status tab — log installments (Pending / Paid / Hold / Decline / Balance Lost) with PKR received tracking
 - 🗓️ Payment Calendar tab
 - 🔄 Auto-rolls unpaid "Pending" entries into the current month
 - Pulls contracts automatically from Active Clients + Hot Pipeline "Won" deals
@@ -360,7 +360,7 @@ CREATE TABLE payment_entries (
   company_name text,
   scheduled_date date,
   amount numeric DEFAULT 0,
-  status text DEFAULT 'Pending',  -- 'Pending' | 'Paid' | 'Balance Lost'
+  status text DEFAULT 'Pending',  -- 'Pending' | 'Paid' | 'Hold' | 'Decline' | 'Balance Lost'
   received_pkr numeric DEFAULT 0,
   received_from text,
   month text,               -- format: 'YYYY-MM'
@@ -598,7 +598,7 @@ Email outreach pipeline for tracking campaigns from lead to close.
 Lead tracker for paid ad campaigns (Meta Ads, Google Ads, LinkedIn Ads).
 
 #### Stages
-`Meta Ads` → `Google Ads` → `Linked Ads` → `Connected` → `Follow Up` → `Appointment Booked` → `Trash` → `Lost` → `WON`
+`Meta Ads` → `Google Ads` → `Linked Ads` → `Follow Up` → `Connected` → `Trash` → `Lost` → `Appointment Booked` → `WON`
 
 #### Tabs
 | Tab | Description |
@@ -648,7 +648,7 @@ Contract and installment tracker for revenue already closed in Active Clients an
 | Tab | Description |
 |---|---|
 | 📄 Client Contracts | One row per contract (from Active Clients + Hot Pipeline Won); edit payment source, condition & remarks |
-| 💳 Payment Status | Log individual installments against a contract with a status (Pending / Paid / Balance Lost) and PKR received amount |
+| 💳 Payment Status | Log individual installments against a contract with a status (Pending / Paid / Hold / Decline / Balance Lost) and PKR received amount |
 | 🗓️ Payment Calendar | Calendar view of scheduled payments |
 
 #### Stat Boxes
@@ -832,11 +832,11 @@ On import the app checks same email address OR same first + last name. Duplicate
 | Stage | Description |
 |---|---|
 | Meta Ads / Google Ads / Linked Ads | Ad platform lead sources |
-| Connected | Initial contact made |
 | Follow Up | Scheduled follow-up |
-| Appointment Booked | Meeting scheduled |
+| Connected | Initial contact made |
 | Trash | Discarded/invalid lead |
 | Lost | Not converted |
+| Appointment Booked | Meeting scheduled |
 | WON | Deal closed |
 
 ---
